@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử - PO System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='enhancements.css') }}" rel="stylesheet">
+    {% include 'enhancements_head.html' %}
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row">
+            <div class="col-12">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="{{ url_for('index') }}">
+                            <i class="fas fa-history me-2"></i>Lịch sử PO
+                        </a>
+                        <div class="navbar-nav ms-auto">
+                            <a class="nav-link" href="{{ url_for('index') }}">
+                                <i class="fas fa-home"></i> Trang chủ
+                            </a>
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a>
+                            <a class="nav-link" href="{{ url_for('search_page') }}">
+                                <i class="fas fa-search"></i> Tìm kiếm
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="row mt-4">
+            <!-- Filters -->
+            <div class="col-lg-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-filter me-2"></i>Bộ lọc
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="filterForm">
+                            <!-- Date Range -->
+                            <div class="mb-3">
+                                <label class="form-label">Khoảng thời gian</label>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <input type="date" class="form-control form-control-sm" 
+                                               id="startDate">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="date" class="form-control form-control-sm" 
+                                               id="endDate">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Filter -->
+                            <div class="mb-3">
+                                <label class="form-label">Sản phẩm</label>
+                                <select class="form-select form-select-sm" id="productFilter">
+                                    <option value="">Tất cả sản phẩm</option>
+                                    <option value="LA800">LA800</option>
+                                    <option value="SV2000">SV2000</option>
+                                    <option value="LA555">LA555</option>
+                                    <option value="UV730">UV730</option>
+                                    <option value="HX100">HX100</option>
+                                </select>
+                            </div>
+
+                            <!-- Quick Filters -->
+                            <div class="mb-3">
+                                <label class="form-label">Bộ lọc nhanh</label>
+                                <div class="btn-group-vertical w-100" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="applyQuickFilter('today')">Hôm nay</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="applyQuickFilter('yesterday')">Hôm qua</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="applyQuickFilter('this_week')">Tuần này</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                            onclick="applyQuickFilter('this_month')">Tháng này</button>
+                                </div>
+                            </div>
+
+                            <!-- Apply Filters -->
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Áp dụng
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Thống kê
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="text-primary" id="totalRecords">{{ history|length }}</h4>
+                                <small>Tổng records</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success" id="uniqueProducts">
+                                    {{ history|map(attribute='product_id')|unique|list|length }}
+                                </h4>
+                                <small>Sản phẩm</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History List -->
+            <div class="col-lg-9">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Lịch sử tạo file PO
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    onclick="exportHistory()">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    onclick="refreshHistory()">
+                                <i class="fas fa-refresh"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- History Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                        </th>
+                                        <th>Sản phẩm</th>
+                                        <th>PO Number</th>
+                                        <th>Serial Numbers</th>
+                                        <th>Ngày tạo</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    {% for record in history %}
+                                    <tr data-record-id="{{ record.id }}">
+                                        <td>
+                                            <input type="checkbox" class="record-checkbox" 
+                                                   value="{{ record.id }}">
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-cube text-primary me-2"></i>
+                                                <div>
+                                                    <strong>{{ record.product_name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ record.product_id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <code>{{ record.po_number }}</code>
+                                        </td>
+                                        <td>
+                                            <div class="serial-numbers">
+                                                {% for serial in record.serial_numbers %}
+                                                <span class="badge bg-secondary me-1">{{ serial }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                {{ record.created_at[:10] }}
+                                                <br>
+                                                <small class="text-muted">{{ record.created_at[11:19] }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        onclick="viewDetails({{ record.id }})" 
+                                                        title="Xem chi tiết">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        onclick="downloadFile('{{ record.file_path }}')" 
+                                                        title="Tải file">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-info" 
+                                                        onclick="copySerials({{ record.id }})" 
+                                                        title="Copy serials">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger" 
+                                                        onclick="deleteRecord({{ record.id }})" 
+                                                        title="Xóa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav aria-label="History pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page - 1 }}&per_page={{ per_page }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for p in range(max(1, page - 2), min(page + 3, 10)) %}
+                                <li class="page-item {% if p == page %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ p }}&per_page={{ per_page }}">{{ p }}</a>
+                                </li>
+                                {% endfor %}
+                                
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page + 1 }}&per_page={{ per_page }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                        <!-- Bulk Actions -->
+                        <div id="bulkActions" class="mt-3" style="display: none;">
+                            <div class="alert alert-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span id="selectedCount">0 records được chọn</span>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                onclick="bulkExport()">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                onclick="bulkDelete()">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chi tiết Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailModalBody">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="editRecord()">Chỉnh sửa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='enhancements.js') }}"></script>
+    <script>
+        let selectedRecords = new Set();
+
+        // Filter form submission
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            applyFilters();
+        });
+
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const product = document.getElementById('productFilter').value;
+
+            const params = new URLSearchParams();
+            if (startDate) params.set('start_date', startDate);
+            if (endDate) params.set('end_date', endDate);
+            if (product) params.set('product_id', product);
+
+            window.location.href = '?' + params.toString();
+        }
+
+        function applyQuickFilter(filterType) {
+            const today = new Date();
+            let startDate, endDate;
+
+            switch (filterType) {
+                case 'today':
+                    startDate = endDate = today.toISOString().split('T')[0];
+                    break;
+                case 'yesterday':
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    startDate = endDate = yesterday.toISOString().split('T')[0];
+                    break;
+                case 'this_week':
+                    const startOfWeek = new Date(today);
+                    startOfWeek.setDate(today.getDate() - today.getDay());
+                    startDate = startOfWeek.toISOString().split('T')[0];
+                    endDate = today.toISOString().split('T')[0];
+                    break;
+                case 'this_month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                    endDate = today.toISOString().split('T')[0];
+                    break;
+            }
+
+            document.getElementById('startDate').value = startDate;
+            document.getElementById('endDate').value = endDate;
+            applyFilters();
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.record-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                if (selectAll.checked) {
+                    selectedRecords.add(checkbox.value);
+                } else {
+                    selectedRecords.delete(checkbox.value);
+                }
+            });
+            
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const bulkActionsDiv = document.getElementById('bulkActions');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            
+            if (selectedRecords.size > 0) {
+                bulkActionsDiv.style.display = 'block';
+                selectedCountSpan.textContent = `${selectedRecords.size} records được chọn`;
+            } else {
+                bulkActionsDiv.style.display = 'none';
+            }
+        }
+
+        // Handle individual checkbox changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('record-checkbox')) {
+                if (e.target.checked) {
+                    selectedRecords.add(e.target.value);
+                } else {
+                    selectedRecords.delete(e.target.value);
+                }
+                updateBulkActions();
+            }
+        });
+
+        function viewDetails(recordId) {
+            // Find record data
+            const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            if (!row) return;
+
+            const cells = row.querySelectorAll('td');
+            const productName = cells[1].querySelector('strong').textContent;
+            const productId = cells[1].querySelector('small').textContent;
+            const poNumber = cells[2].querySelector('code').textContent;
+            const serialNumbers = Array.from(cells[3].querySelectorAll('.badge')).map(badge => badge.textContent);
+            const createdAt = cells[4].textContent.trim();
+
+            const modalBody = document.getElementById('detailModalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Thông tin sản phẩm</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Tên sản phẩm:</strong></td>
+                                <td>${productName}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Product ID:</strong></td>
+                                <td>${productId}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PO Number:</strong></td>
+                                <td><code>${poNumber}</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ngày tạo:</strong></td>
+                                <td>${createdAt}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Serial Numbers</h6>
+                        <div class="serial-list">
+                            ${serialNumbers.map(serial => `
+                                <span class="badge bg-primary me-1 mb-1">${serial}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+            modal.show();
+        }
+
+        function downloadFile(filePath) {
+            if (!filePath) {
+                showToast('File không tồn tại', 'warning');
+                return;
+            }
+
+            // Create download link
+            const link = document.createElement('a');
+            link.href = filePath;
+            link.download = filePath.split('/').pop();
+            link.click();
+            
+            showToast('Đang tải file...', 'info');
+        }
+
+        function copySerials(recordId) {
+            const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            if (!row) return;
+
+            const serialNumbers = Array.from(row.querySelectorAll('.serial-numbers .badge'))
+                .map(badge => badge.textContent.trim());
+
+            const serialText = serialNumbers.join('\n');
+            
+            navigator.clipboard.writeText(serialText).then(() => {
+                showToast('Đã copy serial numbers', 'success');
+            }).catch(() => {
+                showToast('Không thể copy', 'error');
+            });
+        }
+
+        function deleteRecord(recordId) {
+            if (!confirm('Bạn có chắc muốn xóa record này?')) {
+                return;
+            }
+
+            // This would make an API call to delete the record
+            showToast('Đang xóa record...', 'info');
+            
+            // Simulate deletion
+            setTimeout(() => {
+                const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+                if (row) {
+                    row.remove();
+                    showToast('Record đã được xóa', 'success');
+                }
+            }, 1000);
+        }
+
+        function bulkExport() {
+            if (selectedRecords.size === 0) {
+                showToast('Vui lòng chọn records để export', 'warning');
+                return;
+            }
+
+            showToast(`Đang export ${selectedRecords.size} records...`, 'info');
+            
+            // This would make an API call to export selected records
+            setTimeout(() => {
+                showToast('Export hoàn thành', 'success');
+            }, 2000);
+        }
+
+        function bulkDelete() {
+            if (selectedRecords.size === 0) {
+                showToast('Vui lòng chọn records để xóa', 'warning');
+                return;
+            }
+
+            if (!confirm(`Bạn có chắc muốn xóa ${selectedRecords.size} records?`)) {
+                return;
+            }
+
+            showToast(`Đang xóa ${selectedRecords.size} records...`, 'info');
+            
+            // This would make an API call to delete selected records
+            setTimeout(() => {
+                selectedRecords.forEach(recordId => {
+                    const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                });
+                
+                selectedRecords.clear();
+                updateBulkActions();
+                showToast('Records đã được xóa', 'success');
+            }, 2000);
+        }
+
+        function exportHistory() {
+            showToast('Đang export lịch sử...', 'info');
+            
+            // This would make an API call to export all history
+            setTimeout(() => {
+                showToast('Export hoàn thành', 'success');
+            }, 2000);
+        }
+
+        function refreshHistory() {
+            window.location.reload();
+        }
+
+        function editRecord() {
+            showToast('Chức năng chỉnh sửa đang được phát triển', 'info');
+        }
+    </script>
+</body>
+</html>
+

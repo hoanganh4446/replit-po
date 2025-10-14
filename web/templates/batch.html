@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xử lý hàng loạt - Hệ thống PO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Phase 1 Enhancements -->
+    <link rel="stylesheet" href="/static/enhancements.css">
+    <script src="/static/enhancements.js" defer></script>
+    
+    <!-- Batch Auto-save -->
+    <script src="/static/batch-autosave.js" defer></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            animation: backgroundFloat 20s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes backgroundFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.15),
+                0 0 0 1px rgba(255,255,255,0.1);
+            margin: 20px auto;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: containerFloat 6s ease-in-out infinite;
+        }
+        
+        @keyframes containerFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .batch-section {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 25px;
+            padding: 35px;
+            margin-bottom: 35px;
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .batch-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea, #764ba2);
+            background-size: 300% 100%;
+            animation: cardShimmer 4s ease-in-out infinite;
+        }
+        
+        /* Enhanced Product Selector Styles */
+        .product-selector-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 
+                0 15px 30px rgba(0,0,0,0.08),
+                0 0 0 1px rgba(255,255,255,0.1);
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-selector-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            padding: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 200%;
+            animation: cardShimmer 3s ease-in-out infinite;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        @keyframes cardShimmer {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        
+        .product-selector-card .card-body {
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Fix button hover border */
+        .btn-outline-danger {
+            border-radius: 0 15px 15px 0;
+            border-left: none;
+            border-color: rgba(220, 53, 69, 0.3);
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-danger:hover {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+        }
+        
+        .enhanced-product-selector .search-section,
+        .enhanced-product-selector .filter-section {
+            position: relative;
+        }
+        
+        .enhanced-product-selector .search-input-group {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .enhanced-product-selector .search-input-group .input-group-text {
+            border: none;
+            font-weight: bold;
+        }
+        
+        .enhanced-product-selector .search-input {
+            border: none;
+            font-size: 1rem;
+            padding: 12px 15px;
+        }
+        
+        .enhanced-product-selector .search-input:focus {
+            box-shadow: none;
+            border-color: transparent;
+        }
+        
+        .enhanced-product-selector .filter-buttons {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .enhanced-product-selector .filter-btn {
+            border: none;
+            font-weight: 600;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .enhanced-product-selector .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .enhanced-product-selector .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+        }
+        
+        .enhanced-product-selector .view-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+        }
+        
+        .enhanced-product-selector .view-mode-btn {
+            border: none;
+            font-weight: 600;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .enhanced-product-selector .view-mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .enhanced-product-selector .view-mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .products-grid.grid-mode {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+        
+        .products-grid.list-mode {
+            grid-template-columns: 1fr;
+        }
+        
+        .products-grid.compact-mode {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        
+        .product-item {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            box-shadow: 
+                0 6px 20px rgba(0,0,0,0.06),
+                0 0 0 1px rgba(255,255,255,0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+        
+        .product-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 15px;
+            padding: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 200%;
+            animation: shimmer 3s ease-in-out infinite;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .product-item-body {
+            position: relative;
+            z-index: 2;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        
+        .product-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 
+                0 12px 30px rgba(0,0,0,0.12),
+                0 0 0 1px rgba(102, 126, 234, 0.3);
+        }
+        
+        .product-item.selected::before {
+            background: linear-gradient(135deg, #28a745, #20c997, #28a745);
+            animation: shimmer-selected 2s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer-selected {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        
+        .product-item-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-item-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: headerShine 4s ease-in-out infinite;
+        }
+        
+        @keyframes headerShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .product-item-body {
+            padding: 12px;
+        }
+        
+        .product-checkbox {
+            margin-bottom: 10px;
+        }
+        
+        .product-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .product-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background: var(--light-bg);
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .product-template-status {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .product-template-status.has-template {
+            color: var(--success-color);
+        }
+        
+        .product-template-status.no-template {
+            color: var(--danger-color);
+        }
+        
+        .batch-item {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.08),
+                0 0 0 1px rgba(255,255,255,0.5);
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .batch-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        .batch-item:hover {
+            border-color: #667eea;
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.12),
+                0 0 0 2px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .batch-item.selected {
+            border-color: var(--success-color);
+            background: #e8f5e8;
+        }
+        
+        .batch-item.collapsed {
+            padding: 10px 20px;
+        }
+        
+        .batch-item.expanded {
+            padding: 20px;
+        }
+        
+        .batch-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .batch-summary .Based on Product Name Template {
+            flex: 1;
+        }
+        
+        .batch-summary .Based on Product Name Template h6 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+        
+        .batch-summary .Based on Product Name Template .details {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .batch-summary .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .file-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .file-item.collapsed {
+            padding: 8px 15px;
+        }
+        
+        .file-item.expanded {
+            padding: 15px;
+        }
+        
+        .file-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+        
+        .file-summary .file-info {
+            flex: 1;
+        }
+        
+        .file-summary .file-name {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .file-summary .file-status {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .file-summary .file-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .file-summary .file-controls .btn {
+            margin-right: 3px;
+        }
+        
+        .sort-controls {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .sort-controls .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.9em;
+        }
+        
+        .sort-controls .form-select-sm {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .sort-controls .form-select-sm:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .sort-controls .btn-sm {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .sort-controls .btn-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .filter-options {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        
+        .filter-options .form-check-label {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+        
+        .filter-options .form-check-input:checked {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .hidden-products {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        
+        .hidden-product-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-custom {
+            border-radius: 20px;
+            padding: 15px 30px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn-custom:hover::before {
+            left: 100%;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            color: white;
+        }
+        
+        .form-control {
+            border-radius: 15px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 15px 20px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(5px);
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 
+                0 0 0 3px rgba(102, 126, 234, 0.1),
+                0 8px 25px rgba(102, 126, 234, 0.15);
+            background: rgba(255,255,255,1);
+            transform: translateY(-2px);
+        }
+        
+        .form-control:hover {
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px 0;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 4px;
+            border-color: rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-section {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.08),
+                0 0 0 1px rgba(255,255,255,0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .progress {
+            height: 12px;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.6s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: progressShine 2s ease-in-out infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .result-item {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            box-shadow: 
+                0 6px 20px rgba(0,0,0,0.08),
+                0 0 0 1px rgba(255,255,255,0.5);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .result-item:hover {
+            transform: translateX(5px);
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.12),
+                0 0 0 1px rgba(102, 126, 234, 0.2);
+        }
+        
+        .result-item.success {
+            border-left-color: #27ae60;
+        }
+        
+        .result-item.error {
+            border-left-color: #e74c3c;
+        }
+        
+        .template-selector {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .template-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .template-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .template-item.selected {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .serial-generator {
+            background: #fff3cd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .batch-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <div class="main-container">
+                    <!-- Header -->
+                    <div class="header">
+                        <h1><i class="fas fa-layer-group"></i> Xử lý hàng loạt</h1>
+                        <p>Tạo nhiều file PO cùng lúc với dữ liệu tùy chỉnh</p>
+                        <a href="/" class="btn btn-outline-primary btn-custom">
+                            <i class="fas fa-home"></i> Trang chủ
+                        </a>
+                        <a href="/import" class="btn btn-primary-custom btn-custom ms-2">
+                            <i class="fas fa-upload"></i> Truy cập Import
+                        </a>
+                    </div>
+                    
+                    <!-- Enhanced Product Selector -->
+                    <div class="card product-selector-card">
+                        <div class="card-body">
+                            <div class="row align-items-center mb-4">
+                                <div class="col-lg-8">
+                                    <h5 class="mb-1">
+                                        Chọn sản phẩm
+                                    </h5>
+                                    <small class="text-muted">Chọn sản phẩm để xử lý hàng loạt</small>
+                                </div>
+                                <div class="col-lg-4 text-end">
+                                    <div class="batch-stats">
+                                        <span class="badge bg-primary me-1" id="selectedCount">0</span>
+                                        <span class="badge bg-secondary" id="totalCount">26</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Enhanced Product Selector -->
+                            <div class="enhanced-product-selector">
+                                <!-- Search & Filter -->
+                                <div class="row mb-2">
+                                    <div class="col-lg-8 mb-2 mb-lg-0">
+                                        <div class="input-group search-input-group">
+                                            <span class="input-group-text bg-primary text-white">
+                                                <i class="fas fa-search"></i>
+                                            </span>
+                                            <input type="text" class="form-control search-input" id="batchSearchInput" 
+                                                   placeholder="Tìm sản phẩm..." onkeyup="searchBatchProducts()">
+                                            <button class="btn btn-outline-danger" type="button" onclick="clearBatchSearch()" title="Xóa">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-lg-4">
+                                        <div class="btn-group w-100 filter-buttons" role="group">
+                                            <button class="btn btn-outline-primary btn-sm filter-btn active" onclick="filterBatchProducts('all')" title="Tất cả">
+                                                Tất cả
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm filter-btn" onclick="filterBatchProducts('HD')" title="HD">
+                                                HD
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm filter-btn" onclick="filterBatchProducts('LA')" title="LA">
+                                                LA
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm filter-btn" onclick="filterBatchProducts('UV')" title="UV">
+                                                UV
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- View Mode Toggle -->
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <div class="btn-group float-end" role="group">
+                                            <button class="btn btn-outline-primary btn-sm view-mode-btn active" onclick="setBatchViewMode('grid')" title="Lưới">
+                                                <i class="fas fa-th"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm view-mode-btn" onclick="setBatchViewMode('list')" title="Danh sách">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-sm view-mode-btn" onclick="setBatchViewMode('compact')" title="Compact">
+                                                <i class="fas fa-compress-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Product Grid -->
+                                <div class="template-selector" id="templateSelector">
+                                    <div id="templateList" class="products-grid"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Batch Items -->
+                    <div class="batch-section" id="batchItems" style="display: none;">
+                        <h4><i class="fas fa-edit"></i> Thông tin sản phẩm</h4>
+                        
+                        <!-- Sort Controls -->
+                        <div class="sort-controls">
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label mb-1">Sắp xếp theo:</label>
+                                    <select class="form-select form-select-sm" id="sortSelect" onchange="sortProducts()">
+                                        <option value="name">Tên sản phẩm</option>
+                                        <option value="time">Thời gian nhập</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()">
+                                            <i class="fas fa-compress-alt"></i> Thu nhỏ tất cả
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()">
+                                            <i class="fas fa-expand-alt"></i> Mở rộng tất cả
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Sử dụng các nút để quản lý hiển thị sản phẩm
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Options -->
+                        <div class="filter-options">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="hideCompleted" onchange="toggleCompletedFilter()">
+                                <label class="form-check-label" for="hideCompleted">
+                                    Ẩn sản phẩm đã hoàn thành
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="batchItemsList"></div>
+                        
+                        <!-- Hidden Products Section -->
+                        <div class="hidden-products" id="hiddenProducts" style="display: none;">
+                            <h6><i class="fas fa-eye-slash"></i> Sản phẩm đã ẩn</h6>
+                            <div id="hiddenProductsList"></div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <button class="btn btn-primary-custom btn-custom w-100" onclick="processBatch()">
+                                    <i class="fas fa-play"></i> Xử lý hàng loạt (<span id="totalFiles">0</span> files)
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-secondary btn-custom w-100" onclick="clearAll()">
+                                    <i class="fas fa-trash"></i> Xóa tất cả
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                    
+                    <!-- Loading -->
+                    <div class="loading" id="loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang xử lý...</span>
+                        </div>
+                        <p class="mt-3">Đang xử lý hàng loạt...</p>
+                    </div>
+                    
+                    <!-- Progress -->
+                    <div class="progress-section" id="progressSection">
+                        <h5><i class="fas fa-tasks"></i> Tiến trình xử lý</h5>
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" style="width: 0%" id="progressBar"></div>
+                        </div>
+                        <div id="progressText">Chuẩn bị...</div>
+                    </div>
+                    
+                    <!-- Results -->
+                    <div id="results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedProducts = [];
+        let batchData = [];
+        let products = {};
+        let completedProducts = [];
+        let hiddenCompleted = false;
+        let sortOrder = 'time';
+        
+        // Batch Prediction functions
+        function predictPOForBatch() {
+            const productName = document.getElementById('batchPredictionProduct').value.trim();
+            
+            if (!productName) {
+                showBatchNotification('Vui lòng nhập tên sản phẩm', 'warning');
+                return;
+            }
+            
+            showBatchNotification('Đang tiên đoán PO...', 'info');
+            
+            fetch('/api/predict/po', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_name: productName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('batchPredictionResults');
+                const contentDiv = document.getElementById('batchPredictionContent');
+                
+                if (data.success) {
+                    const statusClass = data.is_processed ? 'warning' : 'success';
+                    const statusText = data.is_processed ? ' (đã xử lý)' : ' (chưa xử lý)';
+                    
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-${statusClass}">
+                            <strong>Sản phẩm:</strong> ${productName}<br>
+                            <strong>PO dự đoán:</strong> ${data.predicted_po}<br>
+                            <strong>Trạng thái:</strong> ${statusText}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showBatchNotification(data.message, statusClass);
+                    
+                    // Auto-fill PO number in batch items if found
+                    autoFillPOInBatch(data.predicted_po);
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <strong>Sản phẩm:</strong> ${productName}<br>
+                            <strong>Kết quả:</strong> ${data.message}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showBatchNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showBatchNotification('Lỗi khi tiên đoán PO', 'error');
+            });
+        }
+
+        function predictProductForBatch() {
+            const poNumber = document.getElementById('batchPredictionPO').value.trim();
+            
+            if (!poNumber) {
+                showBatchNotification('Vui lòng nhập số PO', 'warning');
+                return;
+            }
+            
+            showBatchNotification('Đang tìm sản phẩm...', 'info');
+            
+            fetch('/api/predict/product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ po_number: poNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('batchPredictionResults');
+                const contentDiv = document.getElementById('batchPredictionContent');
+                
+                if (data.success) {
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>PO Number:</strong> ${poNumber}<br>
+                            <strong>Sản phẩm:</strong> ${data.product_name}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showBatchNotification(data.message, 'success');
+                    
+                    // Auto-fill product name in batch items if found
+                    autoFillProductInBatch(data.product_name);
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <strong>PO Number:</strong> ${poNumber}<br>
+                            <strong>Kết quả:</strong> ${data.message}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showBatchNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showBatchNotification('Lỗi khi tìm sản phẩm', 'error');
+            });
+        }
+
+        // Auto-fill PO number in batch items
+        function autoFillPOInBatch(poNumber) {
+            batchData.forEach((item, itemIndex) => {
+                if (item.files) {
+                    item.files.forEach((file, fileIndex) => {
+                        if (!file.po_number || file.po_number.trim() === '') {
+                            updateFileData(itemIndex, fileIndex, 'po_number', poNumber);
+                        }
+                    });
+                }
+            });
+            displayBatchItems();
+            showBatchNotification(`Đã tự động điền PO ${poNumber} vào các file chưa có PO`, 'success');
+        }
+
+        // Auto-fill product name in batch items
+        function autoFillProductInBatch(productName) {
+            batchData.forEach((item, itemIndex) => {
+                if (item.files) {
+                    item.files.forEach((file, fileIndex) => {
+                        if (!file.product_name || file.product_name.trim() === '') {
+                            updateFileData(itemIndex, fileIndex, 'product_name', productName);
+                        }
+                    });
+                }
+            });
+            displayBatchItems();
+            showBatchNotification(`Đã tự động điền sản phẩm "${productName}" vào các file chưa có tên sản phẩm`, 'success');
+        }
+
+        // Auto-predict functions for individual fields
+        function autoPredictPOFromProduct(itemIndex, fileIndex, productName) {
+            if (!productName || productName.trim() === '') return;
+            
+            // Check if PO is already filled
+            const currentFile = batchData[itemIndex]?.files?.[fileIndex];
+            if (currentFile && currentFile.po_number && currentFile.po_number.trim() !== '') {
+                return; // Don't override existing PO
+            }
+            
+            fetch('/api/predict/po', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_name: productName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.predicted_po) {
+                    updateFileData(itemIndex, fileIndex, 'po_number', data.predicted_po);
+                    displayBatchItems();
+                    showBatchNotification(`Tự động điền PO: ${data.predicted_po}`, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Auto-predict PO error:', error);
+            });
+        }
+
+        function autoPredictProductFromPO(itemIndex, fileIndex, poNumber) {
+            if (!poNumber || poNumber.trim() === '') return;
+            
+            // Check if product name is already filled
+            const currentFile = batchData[itemIndex]?.files?.[fileIndex];
+            if (currentFile && currentFile.product_name && currentFile.product_name.trim() !== '') {
+                return; // Don't override existing product name
+            }
+            
+            fetch('/api/predict/product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ po_number: poNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.product_name) {
+                    updateFileData(itemIndex, fileIndex, 'product_name', data.product_name);
+                    displayBatchItems();
+                    showBatchNotification(`Tự động điền sản phẩm: ${data.product_name}`, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Auto-predict product error:', error);
+            });
+        }
+
+        // Batch notification system
+        function showBatchNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts().then(() => {
+                loadSelectedPOsFromImport();
+            });
+        });
+        
+        // Load selected POs from import page
+        function loadSelectedPOsFromImport() {
+            try {
+                const selectedPOData = sessionStorage.getItem('selectedPOData');
+                const productMapping = sessionStorage.getItem('productMapping');
+                
+                if (selectedPOData) {
+                    const poData = JSON.parse(selectedPOData);
+                    const mapping = productMapping ? JSON.parse(productMapping) : {};
+                    
+                    console.log('Loading selected PO data:', poData);
+                    console.log('Product mapping:', mapping);
+                    
+                    // Auto-select products based on mapping and fill with PO data
+                    autoSelectProductsFromMapping(mapping, poData);
+                    
+                    // Clear sessionStorage after loading
+                    sessionStorage.removeItem('selectedPOs');
+                    sessionStorage.removeItem('selectedPOData');
+                    sessionStorage.removeItem('productMapping');
+                    
+                    showBatchNotification(`Đã tự động điền ${poData.length} PO từ Import page với Based Product mapping`, 'success');
+                }
+            } catch (error) {
+                console.error('Error loading selected POs:', error);
+            }
+        }
+        
+        
+        // Auto-select products based on mapping and fill with PO data
+        function autoSelectProductsFromMapping(mapping, poData) {
+            const uniqueBasedProducts = [...new Set(Object.values(mapping))];
+            
+            console.log('Auto-selecting products:', uniqueBasedProducts);
+            console.log('Available products:', Object.keys(products));
+            console.log('Current batchData:', batchData);
+            
+            uniqueBasedProducts.forEach(basedProduct => {
+                if (basedProduct && products[basedProduct]) {
+                    console.log(`Processing based product: ${basedProduct}`);
+                    
+                    // Check if product is not already selected
+                    if (!selectedProducts.includes(basedProduct)) {
+                        selectedProducts.push(basedProduct);
+                        console.log(`Added ${basedProduct} to selectedProducts:`, selectedProducts);
+                        
+                        // Add visual selection
+                        const productItem = document.querySelector(`[onclick="toggleProduct('${basedProduct}')"]`);
+                        if (productItem) {
+                            productItem.closest('.product-item').classList.add('selected');
+                            console.log(`Added visual selection for ${basedProduct}`);
+                        }
+                        
+                        // Add to batch data with PO information
+                        addBatchItemWithPOData(basedProduct, mapping, poData);
+                    } else {
+                        console.log(`${basedProduct} already selected`);
+                    }
+                } else {
+                    console.log(`Product ${basedProduct} not found in products or invalid`);
+                }
+            });
+            
+            console.log('Final selectedProducts:', selectedProducts);
+            console.log('Final batchData:', batchData);
+            
+            updateBatchStats();
+            updateBatchSection();
+            
+            console.log(`Auto-selected products: ${uniqueBasedProducts.join(', ')}`);
+        }
+        
+        // Smart product mapping function
+        function mapProductToBaseSpec(productName) {
+            if (!productName) return '';
+            
+            // Get all available products
+            const availableProducts = Object.keys(products || {});
+            
+            // Direct match first
+            if (availableProducts.includes(productName)) {
+                return productName;
+            }
+            
+            // Smart mapping patterns
+            const patterns = [
+                // Pattern 1: Remove last digit and try (LA701 -> LA700)
+                (name) => {
+                    const baseName = name.replace(/\d+$/, '');
+                    const candidates = availableProducts.filter(p => p.startsWith(baseName));
+                    if (candidates.length > 0) {
+                        // Find the one with smallest number suffix
+                        return candidates.sort((a, b) => {
+                            const aNum = parseInt(a.replace(baseName, '')) || 0;
+                            const bNum = parseInt(b.replace(baseName, '')) || 0;
+                            return aNum - bNum;
+                        })[0];
+                    }
+                    return null;
+                },
+                
+                // Pattern 2: Remove suffix and try (SV2000UK -> SV2000)
+                (name) => {
+                    const baseName = name.replace(/[A-Z]+$/, '');
+                    if (availableProducts.includes(baseName)) {
+                        return baseName;
+                    }
+                    return null;
+                },
+                
+                // Pattern 3: Remove prefix and try
+                (name) => {
+                    const baseName = name.replace(/^[A-Z]+/, '');
+                    const candidates = availableProducts.filter(p => p.endsWith(baseName));
+                    if (candidates.length > 0) {
+                        return candidates[0];
+                    }
+                    return null;
+                },
+                
+                // Pattern 4: Partial match
+                (name) => {
+                    const candidates = availableProducts.filter(p => 
+                        p.includes(name.substring(0, 3)) || 
+                        name.includes(p.substring(0, 3))
+                    );
+                    if (candidates.length > 0) {
+                        return candidates[0];
+                    }
+                    return null;
+                }
+            ];
+            
+            // Try each pattern
+            for (const pattern of patterns) {
+                const result = pattern(productName);
+                if (result) {
+                    console.log(`Mapped ${productName} -> ${result}`);
+                    return result;
+                }
+            }
+            
+            // Fallback: return original name
+            console.log(`Could not map ${productName}, using original`);
+            return productName;
+        }
+        
+        // Load products
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                products = await response.json();
+                displayTemplateList();
+                updateBatchStats();
+                console.log('Products loaded:', products);
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+        
+        // Product detailed information
+        const productDetails = {
+            'WD261': {
+                category: 'Máy hút bụi 3 trong 1',
+                specs: 'Không dây, Pin 21.6V, Thời gian sử dụng 23 phút, Trọng lượng 8.5 lbs',
+                description: 'Shark HydroVac MessMaster Cordless 3-in-1 Cleaner - Máy hút bụi không dây 3 trong 1, hút bụi, lau sàn và tự làm sạch'
+            },
+            'WD161': {
+                category: 'Máy hút bụi 3 trong 1',
+                specs: 'Có dây, Công suất cao, Tự làm sạch brushroll',
+                description: 'Shark HydroVac MessMaster Corded 3-in-1 Vacuum Mop - Máy hút bụi có dây 3 trong 1, hút bụi và lau sàn'
+            },
+            'AZ3002': {
+                category: 'Máy hút bụi đứng',
+                specs: 'DuoClean, PowerFins, HairPro, Công nghệ chống tắc',
+                description: 'Shark Stratos DuoClean PowerFins HairPro Upright Vacuum - Máy hút bụi đứng với công nghệ PowerFins và HairPro'
+            },
+            'FA222': {
+                category: 'Quạt làm mát',
+                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
+                description: 'Shark FlexBreeze Fan with InstaCool Mist Attachment - Quạt làm mát với phụ kiện phun sương'
+            },
+            'HD700': {
+                category: 'Máy sấy tóc',
+                specs: 'SpeedStyle Pro, 3 tốc độ, 2 chế độ nhiệt, Ion technology',
+                description: 'Shark SpeedStyle Pro Hair Dryer - Máy sấy tóc chuyên nghiệp cho tóc thẳng và xoăn'
+            },
+            'HD600': {
+                category: 'Máy sấy tóc',
+                specs: 'Glam Ceramic, 3 tốc độ, 2 chế độ nhiệt, Ceramic technology',
+                description: 'Shark Glam Ceramic Powerful Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng gốm'
+            },
+            'HD500': {
+                category: 'Máy sấy tóc',
+                specs: 'SpeedStyle Pro Flex, Tùy chỉnh, 3 tốc độ, Ion technology',
+                description: 'Shark SpeedStyle Pro Flex - Máy sấy tóc linh hoạt có thể tùy chỉnh'
+            },
+            'HD400': {
+                category: 'Máy sấy tóc',
+                specs: 'FlexStyle, Air styling, 3 tốc độ, 2 chế độ nhiệt',
+                description: 'Shark FlexStyle Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng không khí'
+            },
+            'HD300': {
+                category: 'Máy sấy tóc',
+                specs: 'SpeedStyle 3-in-1, Tóc thẳng và xoăn, 3 tốc độ',
+                description: 'Shark SpeedStyle 3-in-1 Hair Dryer - Máy sấy tóc 3 trong 1 cho tóc thẳng và xoăn'
+            },
+            'HP152': {
+                category: 'Máy lọc không khí',
+                specs: 'NeverChange, HEPA filter, CADR 200, 3 tốc độ',
+                description: 'Shark NeverChange Air Purifier - Máy lọc không khí không cần thay bộ lọc'
+            },
+            'HP301': {
+                category: 'Máy lọc không khí',
+                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
+                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
+            },
+            'HX100': {
+                category: 'Máy làm sạch vết bẩn',
+                specs: 'StainForce, Không dây, Pin lithium, Áp suất cao',
+                description: 'Shark StainForce Cordless Spot Cleaner - Máy làm sạch vết bẩn không dây'
+            },
+            'IX141': {
+                category: 'Máy hút bụi không dây',
+                specs: 'Pet cordless, DuoClean, PowerFins, Pin lithium',
+                description: 'Shark Pet Cordless Stick Vacuum - Máy hút bụi không dây chuyên dụng cho thú cưng'
+            },
+            'IZ381H': {
+                category: 'Máy hút bụi không dây',
+                specs: 'PowerPro Flex, Reveal Plus, DuoClean, Pin lithium',
+                description: 'Shark PowerPro Flex Reveal Plus Cordless Vacuum - Máy hút bụi không dây linh hoạt cao cấp'
+            },
+            'LA480': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Lift Away, PowerFins, HairPro, Odor neutralizer',
+                description: 'Shark Lift Away with PowerFins HairPro - Máy hút bụi có thể tháo rời với công nghệ PowerFins'
+            },
+            'LA555': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Lift Away Deluxe, DuoClean, PowerFins',
+                description: 'Shark Lift Away Deluxe - Máy hút bụi cao cấp có thể tháo rời'
+            },
+            'LA700': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Rotator Pet, Lift Away Advanced, DuoClean, PowerFins',
+                description: 'Shark Rotator Pet Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp cho thú cưng'
+            },
+            'LA800': {
+                category: 'Máy hút bụi đứng',
+                specs: 'DetectPro, Lift Away Advanced, DuoClean, PowerFins',
+                description: 'Shark DetectPro Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp với công nghệ DetectPro'
+            },
+            'NV360': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
+                description: 'Shark Navigator Lift Away Deluxe Upright Vacuum - Máy hút bụi đứng cao cấp Navigator'
+            },
+            'SV2000': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Freestyle Pro, Không dây, DuoClean, Pin lithium',
+                description: 'Shark Freestyle Pro Cordless Upright Vacuum - Máy hút bụi đứng không dây Freestyle Pro'
+            },
+            'UA1450': {
+                category: 'Máy lọc không khí',
+                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
+                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
+            },
+            'UH205': {
+                category: 'Quạt làm mát',
+                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
+                description: 'Shark FlexBreeze Fan with InstaCool Mist - Quạt làm mát với phụ kiện phun sương'
+            },
+            'UV440': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
+                description: 'Shark Navigator Lift Away Deluxe - Máy hút bụi đứng cao cấp Navigator'
+            },
+            'UV730': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
+                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
+            },
+            'VS100': {
+                category: 'Máy hút bụi cầm tay',
+                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
+                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
+            },
+            'VX100': {
+                category: 'Máy hút bụi cầm tay',
+                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
+                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
+            },
+            'ZU660': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Navigator, Lift Away, Self-Cleaning, Anti-Allergen',
+                description: 'Shark Navigator Lift Away Self-Cleaning Anti-Allergen - Máy hút bụi Navigator tự làm sạch'
+            },
+            'ZD201': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
+                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
+            }
+        };
+
+        // Enhanced product display
+        function displayTemplateList() {
+            const templateList = document.getElementById('templateList');
+            templateList.innerHTML = '';
+            
+            // Get current view mode
+            const currentViewMode = window.batchViewMode || 'grid';
+            templateList.className = `products-grid ${currentViewMode}-mode`;
+            
+            // Get current filter
+            const activeFilterBtn = document.querySelector('.filter-btn.active');
+            const currentFilter = activeFilterBtn ? activeFilterBtn.getAttribute('onclick').match(/filterBatchProducts\('([^']+)'\)/)[1] : 'all';
+            
+            // Sort products based on sortOrder
+            let sortedProducts = Object.keys(products);
+            if (sortOrder === 'name') {
+                sortedProducts.sort((a, b) => products[a].name.localeCompare(products[b].name));
+            } else if (sortOrder === 'name-desc') {
+                sortedProducts.sort((a, b) => products[b].name.localeCompare(products[a].name));
+            } else if (sortOrder === 'id') {
+                sortedProducts.sort();
+            } else if (sortOrder === 'id-desc') {
+                sortedProducts.sort().reverse();
+            }
+            
+            // Filter products
+            const filteredProducts = sortedProducts.filter(productId => {
+                return currentFilter === 'all' || productId.startsWith(currentFilter);
+            });
+            
+            filteredProducts.forEach(productId => {
+                const product = products[productId];
+                const details = productDetails[productId];
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                
+                if (details) {
+                    productItem.innerHTML = `
+                        <div class="product-item-body" onclick="toggleProduct('${productId}')">
+                            <div class="product-name mb-2">${product.name}</div>
+                            <div class="product-summary mb-2" style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 500;">
+                                ${details.category} • ${productId}
+                            </div>
+                            <div class="product-info" style="font-size: 0.8rem; color: #666; line-height: 1.4;">
+                                <div style="margin-bottom: 3px;"><strong>Thông số:</strong> ${details.specs}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    productItem.innerHTML = `
+                        <div class="product-item-body" onclick="toggleProduct('${productId}')">
+                            <div class="product-name mb-2">${product.name}</div>
+                            <div class="product-summary mb-2" style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 500;">
+                                Sản phẩm • ${productId}
+                            </div>
+                            <div class="product-info" style="font-size: 0.8rem; color: #666; line-height: 1.4;">
+                                <div>Không có thông tin chi tiết</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                templateList.appendChild(productItem);
+            });
+            
+            updateBatchStats();
+        }
+        
+        // Toggle product selection
+        function toggleProduct(productId) {
+            const productItem = document.querySelector(`[onclick="toggleProduct('${productId}')"]`).closest('.product-item');
+            
+            if (selectedProducts.includes(productId)) {
+                // Deselect
+                selectedProducts = selectedProducts.filter(id => id !== productId);
+                productItem.classList.remove('selected');
+                removeBatchItem(productId);
+            } else {
+                // Select
+                selectedProducts.push(productId);
+                productItem.classList.add('selected');
+                addBatchItem(productId);
+            }
+            
+            updateBatchStats();
+            updateBatchSection();
+        }
+        
+        // Update batch stats
+        function updateBatchStats() {
+            const selectedCount = document.getElementById('selectedCount');
+            const totalCount = document.getElementById('totalCount');
+            
+            if (selectedCount) {
+                selectedCount.textContent = `${selectedProducts.length} sản phẩm`;
+            }
+            if (totalCount) {
+                totalCount.textContent = `${Object.keys(products).length} tổng cộng`;
+            }
+        }
+        
+        // Search batch products
+        function searchBatchProducts() {
+            const searchTerm = document.getElementById('batchSearchInput').value.toLowerCase();
+            const productItems = document.querySelectorAll('.product-item');
+            
+            productItems.forEach(item => {
+                const productId = item.querySelector('input[type="checkbox"]').value;
+                const product = products[productId];
+                const searchText = `${productId} ${product.name} ${product.type}`.toLowerCase();
+                
+                if (searchText.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Clear batch search
+        function clearBatchSearch() {
+            document.getElementById('batchSearchInput').value = '';
+            searchBatchProducts();
+        }
+        
+        // Filter batch products
+        function filterBatchProducts(filter) {
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Refresh the product list with current filter
+            displayTemplateList();
+        }
+        
+        // Set batch view mode
+        function setBatchViewMode(mode) {
+            window.batchViewMode = mode;
+            
+            // Update active view mode button
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update grid class
+            const templateList = document.getElementById('templateList');
+            templateList.className = `products-grid ${mode}-mode`;
+        }
+        
+        // Add batch item
+        function addBatchItem(productId) {
+            const product = products[productId];
+            if (product) {
+                const newItem = {
+                    product_id: productId,
+                    product_name: product.name,
+                    quantity: 1,
+                    files: [{
+                        po_number: '',
+                        date_code: getCurrentDate(),
+                        serial_numbers: ['', '', '', '', ''],
+                        product_name: product.name,
+                        is_collapsed: false
+                    }],
+                    is_collapsed: false,
+                    status: 'active',
+                    created_at: new Date().toISOString()
+                };
+                
+                batchData.push(newItem);
+                displayBatchItems();
+            }
+        }
+        
+        // Add batch item with PO data from import
+        function addBatchItemWithPOData(productId, mapping, poData) {
+            const product = products[productId];
+            if (product) {
+                // Find all PO data for this based product
+                const relatedPOs = poData.filter(po => mapping[po.po_number] === productId);
+                
+                const files = relatedPOs.map(po => ({
+                    po_number: po.po_number,
+                    date_code: getCurrentDate(),
+                    serial_numbers: ['', '', '', '', ''],
+                    product_name: product.name,
+                    is_collapsed: false
+                }));
+                
+                const newItem = {
+                    product_id: productId,
+                    product_name: product.name,
+                    quantity: files.length,
+                    files: files,
+                    is_collapsed: false,
+                    status: 'active',
+                    created_at: new Date().toISOString()
+                };
+                
+                batchData.push(newItem);
+                console.log('Added batch item:', newItem);
+                displayBatchItems();
+            }
+        }
+        
+        // Remove batch item by index
+        function removeBatchItemByIndex(itemIndex) {
+            if (batchData[itemIndex]) {
+                batchData.splice(itemIndex, 1);
+                displayBatchItems();
+            }
+        }
+        
+        // Remove batch item
+        function removeBatchItem(productId) {
+            batchData = batchData.filter(item => item.product_id !== productId);
+            displayBatchItems();
+        }
+        
+        // Display batch items
+        function displayBatchItems() {
+            const batchItemsList = document.getElementById('batchItemsList');
+            const hiddenProductsList = document.getElementById('hiddenProductsList');
+            const hiddenProducts = document.getElementById('hiddenProducts');
+            
+            batchItemsList.innerHTML = '';
+            hiddenProductsList.innerHTML = '';
+            
+            // Separate active and completed items
+            const activeItems = batchData.filter(item => item.status !== 'completed');
+            const completedItems = batchData.filter(item => item.status === 'completed');
+            
+            // Sort active items
+            const sortedItems = sortOrder === 'name' 
+                ? [...activeItems].sort((a, b) => a.product_name.localeCompare(b.product_name))
+                : [...activeItems].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            
+            // Display active items
+            sortedItems.forEach((item, index) => {
+                const originalIndex = batchData.findIndex(batchItem => batchItem === item);
+                batchItemsList.appendChild(createBatchItemElement(item, originalIndex));
+            });
+            
+            // Display completed items if not hidden
+            if (!hiddenCompleted && completedItems.length > 0) {
+                hiddenProducts.style.display = 'block';
+                completedItems.forEach((item, index) => {
+                    const originalIndex = batchData.findIndex(batchItem => batchItem === item);
+                    hiddenProductsList.appendChild(createHiddenItemElement(item, originalIndex));
+                });
+            } else {
+                hiddenProducts.style.display = 'none';
+            }
+            
+            updateTotalFiles();
+        }
+        
+        // Create batch item element
+        function createBatchItemElement(item, index) {
+            const batchItem = document.createElement('div');
+            batchItem.className = `batch-item ${item.is_collapsed ? 'collapsed' : 'expanded'}`;
+            batchItem.setAttribute('data-index', index);
+            
+            const quantity = item.quantity || 1;
+            const fileInputs = [];
+            
+            for (let i = 0; i < quantity; i++) {
+                const fileData = item.files[i] || {
+                    po_number: '',
+                    date_code: '',
+                    serial_numbers: ['', '', '', '', ''],
+                    product_name: item.product_name,
+                    is_collapsed: false
+                };
+                
+                fileInputs.push(createFileDetailsHTML(fileData, index, i));
+            }
+            
+            if (item.is_collapsed) {
+                batchItem.innerHTML = `
+                    <div class="batch-summary">
+                        <div class="Based on Product Name Template">
+                            <h6>Based on ${item.product_id} spec.</h6>
+                            <div class="details">
+                                ${item.files && item.files[0] ? `${item.files[0].po_number || 'Chưa nhập PO'} - ${item.files[0].date_code || 'Chưa nhập ngày'}` : 'Chưa nhập thông tin'}
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleCollapse(${index})">
+                                <i class="fas fa-expand-alt"></i>
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="markAsCompleted(${index})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="removeBatchItemByIndex(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                batchItem.innerHTML = `
+                    <div class="batch-summary">
+                        <div class="Based on Product Name Template">
+                            <h6>Based on ${item.product_id} spec.</h6>
+                            <div class="details">
+                                ${quantity} file(s) - ${item.files && item.files[0] ? `${item.files[0].po_number || 'Chưa nhập PO'} - ${item.files[0].date_code || 'Chưa nhập ngày'}` : 'Chưa nhập thông tin'}
+                            </div>
+                        </div>
+                        <div class="controls">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleCollapse(${index})">
+                                <i class="fas fa-compress-alt"></i>
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="markAsCompleted(${index})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="removeBatchItemByIndex(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="addFile(${index})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ${fileInputs.join('')}
+                `;
+            }
+            
+            return batchItem;
+        }
+        
+        // Create hidden item element
+        function createHiddenItemElement(item, index) {
+            const hiddenItem = document.createElement('div');
+            hiddenItem.className = 'hidden-product-item';
+            
+            hiddenItem.innerHTML = `
+                <div>
+                    <strong>${item.product_id} - ${item.product_name}</strong>
+                    <small class="text-muted ms-2">${item.files && item.files[0] ? `${item.files[0].po_number} - ${item.files[0].date_code}` : 'Chưa nhập thông tin'}</small>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm" onclick="restoreProduct(${index})">
+                        <i class="fas fa-undo"></i> Khôi phục
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="removeCompletedProduct(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            return hiddenItem;
+        }
+        
+        // Create file details HTML
+        function createFileDetailsHTML(fileData, itemIndex, fileIndex) {
+            const isCollapsed = fileData.is_collapsed || false;
+            const fileName = generateFileName(fileData);
+            
+            if (isCollapsed) {
+                return `
+                    <div class="file-item collapsed">
+                        <div class="file-summary">
+                            <div class="file-info">
+                                <h6 class="file-name">${fileData.product_name || 'Chưa nhập'} - ${fileData.po_number || 'Chưa nhập'} - ${fileData.date_code || 'Chưa nhập'}</h6>
+                                <div class="file-status">${fileData.po_number || 'Chưa nhập PO'} - ${fileData.date_code || 'Chưa nhập ngày'}</div>
+                            </div>
+                            <div class="file-controls">
+                                <button class="btn btn-outline-primary btn-sm" onclick="toggleFileCollapse(${itemIndex}, ${fileIndex})">
+                                    <i class="fas fa-expand-alt"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="removeFile(${itemIndex}, ${fileIndex})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="file-item expanded">
+                        <div class="file-summary">
+                            <div class="file-info">
+                                <h6 class="file-name">${fileData.product_name || 'Chưa nhập'} - ${fileData.po_number || 'Chưa nhập'} - ${fileData.date_code || 'Chưa nhập'}</h6>
+                                <div class="file-status">File ${fileIndex + 1}</div>
+                            </div>
+                            <div class="file-controls">
+                                <button class="btn btn-outline-primary btn-sm" onclick="toggleFileCollapse(${itemIndex}, ${fileIndex})">
+                                    <i class="fas fa-compress-alt"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="removeFile(${itemIndex}, ${fileIndex})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            ${getInputOrderForProduct(batchData[itemIndex].product_id).map(field => {
+                                switch(field) {
+                                    case 'serial_numbers':
+                                        return `
+                                            <div class="col-md-12">
+                                                <label class="form-label">Serial Numbers</label>
+                                                <div class="row">
+                                                    ${[1,2,3,4,5].map(j => `
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control form-control-sm" 
+                                                                   placeholder="Serial ${j}" 
+                                                                   value="${fileData.serial_numbers[j-1] || ''}"
+                                                                   onchange="updateSerialNumber(${itemIndex}, ${fileIndex}, ${j-1}, this.value)">
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                                <button class="btn btn-outline-info btn-sm mt-2" onclick="generateSerialsForFile(${itemIndex}, ${fileIndex})">
+                                                    <i class="fas fa-magic"></i> Tự động tạo cho file này
+                                                </button>
+                                            </div>
+                                        `;
+                                    case 'product_name':
+                                        return `
+                                            <div class="col-md-4">
+                                                <label class="form-label">Tên sản phẩm</label>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                       value="${fileData.product_name || batchData[itemIndex].product_name}"
+                                                       onchange="updateFileData(${itemIndex}, ${fileIndex}, 'product_name', this.value)"
+                                                       onblur="autoPredictPOFromProduct(${itemIndex}, ${fileIndex}, this.value)">
+                                            </div>
+                                        `;
+                                    case 'po_number':
+                                        return `
+                                            <div class="col-md-4">
+                                                <label class="form-label">Số PO</label>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                       placeholder="Ví dụ: 20206330" 
+                                                       value="${fileData.po_number}"
+                                                       onchange="updateFileData(${itemIndex}, ${fileIndex}, 'po_number', this.value)"
+                                                       onblur="autoPredictProductFromPO(${itemIndex}, ${fileIndex}, this.value)">
+                                            </div>
+                                        `;
+                                    case 'date_code':
+                                        return `
+                                            <div class="col-md-4">
+                                                <label class="form-label">Mã ngày</label>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                       placeholder="YYYYMMDD" 
+                                                       value="${fileData.date_code}"
+                                                       onchange="updateFileData(${itemIndex}, ${fileIndex}, 'date_code', this.value)">
+                                            </div>
+                                        `;
+                                    default:
+                                        return '';
+                                }
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Generate file name based on product data
+        function generateFileName(fileData) {
+            const productName = fileData.product_name || '';
+            const poNumber = fileData.po_number || '';
+            const dateCode = fileData.date_code || '';
+            
+            if (productName && poNumber && dateCode) {
+                return `Document - PO#${poNumber} - ${dateCode}`;
+            } else if (productName) {
+                return `Document - Chưa nhập đầy đủ`;
+            } else {
+                return 'Document chưa có tên';
+            }
+        }
+        
+        // Update total files count
+        function updateTotalFiles() {
+            const totalFiles = batchData.reduce((sum, item) => {
+                return sum + (item.quantity || 1);
+            }, 0);
+            
+            document.getElementById('totalFiles').textContent = totalFiles;
+        }
+        
+        // Update batch item
+        function updateBatchItem(index, field, value) {
+            if (batchData[index]) {
+                batchData[index][field] = value;
+            }
+        }
+        
+        // Toggle collapse/expand for product
+        function toggleCollapse(index) {
+            if (batchData[index]) {
+                batchData[index].is_collapsed = !batchData[index].is_collapsed;
+                displayBatchItems();
+            }
+        }
+        
+        // Mark product as completed
+        function markAsCompleted(index) {
+            if (batchData[index]) {
+                batchData[index].status = 'completed';
+                batchData[index].completed_at = new Date().toISOString();
+                displayBatchItems();
+            }
+        }
+        
+        // Toggle completed filter
+        function toggleCompletedFilter() {
+            hiddenCompleted = !hiddenCompleted;
+            displayBatchItems();
+        }
+        
+        // Sort products
+        function sortProducts() {
+            const sortSelect = document.getElementById('sortSelect');
+            sortOrder = sortSelect.value;
+            displayTemplateList(); // Sort product cards
+            displayBatchItems(); // Sort batch items
+        }
+        
+        // Collapse all products
+        function collapseAll() {
+            batchData.forEach(item => {
+                item.is_collapsed = true;
+            });
+            displayBatchItems();
+        }
+        
+        // Expand all products
+        function expandAll() {
+            batchData.forEach(item => {
+                item.is_collapsed = false;
+            });
+            displayBatchItems();
+        }
+        
+        // Restore completed product
+        function restoreProduct(index) {
+            if (batchData[index]) {
+                batchData[index].status = 'active';
+                delete batchData[index].completed_at;
+                displayBatchItems();
+            }
+        }
+        
+        // Remove completed product
+        function removeCompletedProduct(index) {
+            batchData.splice(index, 1);
+            displayBatchItems();
+        }
+        
+        // Add new file to product
+        function addFile(index) {
+            if (batchData[index]) {
+                const newFile = {
+                    po_number: '',
+                    date_code: getCurrentDate(),
+                    serial_numbers: ['', '', '', '', ''],
+                    product_name: batchData[index].product_name,
+                    is_collapsed: false
+                };
+                
+                if (!batchData[index].files) {
+                    batchData[index].files = [];
+                }
+                
+                batchData[index].files.push(newFile);
+                batchData[index].quantity = batchData[index].files.length;
+                displayBatchItems();
+            }
+        }
+        
+        // Remove file from product
+        function removeFile(itemIndex, fileIndex) {
+            if (batchData[itemIndex] && batchData[itemIndex].files) {
+                batchData[itemIndex].files.splice(fileIndex, 1);
+                batchData[itemIndex].quantity = batchData[itemIndex].files.length;
+                
+                if (batchData[itemIndex].quantity === 0) {
+                    batchData.splice(itemIndex, 1);
+                }
+                displayBatchItems();
+            }
+        }
+        
+        // Toggle file collapse
+        function toggleFileCollapse(itemIndex, fileIndex) {
+            if (batchData[itemIndex] && batchData[itemIndex].files && batchData[itemIndex].files[fileIndex]) {
+                batchData[itemIndex].files[fileIndex].is_collapsed = !batchData[itemIndex].files[fileIndex].is_collapsed;
+                displayBatchItems();
+            }
+        }
+        
+        // Update file data
+        function updateFileData(itemIndex, fileIndex, field, value) {
+            if (batchData[itemIndex] && batchData[itemIndex].files && batchData[itemIndex].files[fileIndex]) {
+                batchData[itemIndex].files[fileIndex][field] = value;
+                
+                // Update file name if needed
+                if (field === 'product_name' || field === 'po_number' || field === 'date_code') {
+                    updateFileName(itemIndex, fileIndex);
+                }
+            }
+        }
+        
+        // Update file name
+        function updateFileName(itemIndex, fileIndex) {
+            if (batchData[itemIndex] && batchData[itemIndex].files && batchData[itemIndex].files[fileIndex]) {
+                const fileData = batchData[itemIndex].files[fileIndex];
+                const fileName = generateFileName(fileData);
+                // File name will be updated when displayBatchItems is called
+            }
+        }
+        
+        // Update quantity and adjust files array
+        function updateQuantity(index, newQuantity) {
+            if (batchData[index]) {
+                const oldQuantity = batchData[index].quantity || 1;
+                batchData[index].quantity = newQuantity;
+                
+                // Initialize files array if not exists
+                if (!batchData[index].files) {
+                    batchData[index].files = [];
+                }
+                
+                // Add or remove files based on quantity change
+                if (newQuantity > oldQuantity) {
+                    // Add new files
+                    for (let i = oldQuantity; i < newQuantity; i++) {
+                        batchData[index].files.push({
+                            po_number: '',
+                            date_code: getCurrentDate(),
+                            serial_numbers: ['', '', '', '', '']
+                        });
+                    }
+                } else if (newQuantity < oldQuantity) {
+                    // Remove excess files
+                    batchData[index].files = batchData[index].files.slice(0, newQuantity);
+                }
+                
+                displayBatchItems();
+            }
+        }
+        
+        // Update file data
+        function updateFileData(index, fileIndex, field, value) {
+            if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
+                batchData[index].files[fileIndex][field] = value;
+            }
+        }
+        
+        // Update serial number for specific file
+        function updateSerialNumber(index, fileIndex, serialIndex, value) {
+            if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
+                if (!batchData[index].files[fileIndex].serial_numbers) {
+                    batchData[index].files[fileIndex].serial_numbers = ['', '', '', '', ''];
+                }
+                batchData[index].files[fileIndex].serial_numbers[serialIndex] = value;
+            }
+        }
+        
+        // Generate serials for specific file
+        function generateSerialsForFile(index, fileIndex) {
+            const pattern = document.getElementById('serialPattern').value;
+            const basePattern = pattern.substring(0, pattern.length - 2);
+            
+            if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
+                for (let i = 0; i < 5; i++) {
+                    const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                                  Math.floor(Math.random() * 10);
+                    const serial = basePattern + suffix;
+                    updateSerialNumber(index, fileIndex, i, serial);
+                }
+                
+                displayBatchItems(); // Refresh display
+            }
+        }
+        
+        // Generate serials for specific item (legacy - for all files)
+        function generateSerials(index) {
+            const pattern = document.getElementById('serialPattern').value;
+            const basePattern = pattern.substring(0, pattern.length - 2);
+            
+            if (batchData[index] && batchData[index].files) {
+                batchData[index].files.forEach((file, fileIndex) => {
+                    for (let i = 0; i < 5; i++) {
+                        const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                                      Math.floor(Math.random() * 10);
+                        const serial = basePattern + suffix;
+                        updateSerialNumber(index, fileIndex, i, serial);
+                    }
+                });
+                
+                displayBatchItems(); // Refresh display
+            }
+        }
+        
+        // Generate all serials
+        function generateAllSerials() {
+            const pattern = document.getElementById('serialPattern').value;
+            const basePattern = pattern.substring(0, pattern.length - 2);
+            
+            batchData.forEach((item, index) => {
+                if (item.files) {
+                    item.files.forEach((file, fileIndex) => {
+                        for (let i = 0; i < 5; i++) {
+                            const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                                          Math.floor(Math.random() * 10);
+                            const serial = basePattern + suffix;
+                            updateSerialNumber(index, fileIndex, i, serial);
+                        }
+                    });
+                }
+            });
+            
+            displayBatchItems(); // Refresh display
+        }
+        
+        // Update batch section visibility
+        function updateBatchSection() {
+            const batchItems = document.getElementById('batchItems');
+            if (selectedProducts.length > 0) {
+                batchItems.style.display = 'block';
+            } else {
+                batchItems.style.display = 'none';
+            }
+        }
+        
+        // Get current date
+        function getCurrentDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return year + month + day;
+        }
+        
+        // Get input order based on product type
+        function getInputOrderForProduct(productId) {
+            const inputOrders = {
+                // NV360: Serial → Random → Product Name → PO → Date
+                'NV360': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // LA480: Serial → Random → Product Name → PO → Date
+                'LA480': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // HX100: Serial → Random → PO → Date → Product Name
+                'HX100': ['serial_numbers', 'po_number', 'date_code', 'product_name'],
+                
+                // HP152: Serial → Random → Product Name → PO → Date
+                'HP152': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // HD600: Product Name → PO → Date → Serial → Random
+                'HD600': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
+                
+                // HD500: Product Name → PO → Date → Serial → Random
+                'HD500': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
+                
+                // HD300: Product Name → PO → Date → Serial → Random
+                'HD300': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
+                
+                // UA1450: Serial → Random → Product Name → PO → Date
+                'UA1450': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // UH205: Serial → Random → Product Name → PO → Date
+                'UH205': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // AW261: Serial → Random → Product Name → PO → Date
+                'AW261': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // LA800: Product Name → Serial → Random → PO → Date
+                'LA800': ['product_name', 'serial_numbers', 'po_number', 'date_code'],
+                
+                // HD400: Product Name → PO → Date → Serial → Random
+                'HD400': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
+                
+                // LA700: Serial → Random → Product Name → PO → Date
+                'LA700': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // LA555: Serial → Random → Product Name → PO → Date
+                'LA555': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // IZ381H: Product Name → Serial → Random → PO → Date
+                'IZ381H': ['product_name', 'serial_numbers', 'po_number', 'date_code'],
+                
+                // AZ3002: Serial → Random → PO → Date → Product Name
+                'AZ3002': ['serial_numbers', 'po_number', 'date_code', 'product_name'],
+                
+                // UV730: Serial → Random → Product Name → PO → Date
+                'UV730': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // VS100: Serial → Random → Product Name → PO → Date
+                'VS100': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
+                
+                // SV2000: Product Name → Serial → Random → PO → Date
+                'SV2000': ['product_name', 'serial_numbers', 'po_number', 'date_code'],
+                
+                // Default order for other products
+                'default': ['serial_numbers', 'product_name', 'po_number', 'date_code']
+            };
+            
+            return inputOrders[productId] || inputOrders['default'];
+        }
+        
+        // Process batch
+        async function processBatch() {
+            // Validate data and expand based on files
+            const expandedData = [];
+            
+            batchData.forEach(item => {
+                if (item.files) {
+                    item.files.forEach(file => {
+                        if (file.po_number && file.date_code && 
+                            file.serial_numbers.every(s => s.trim() !== '')) {
+                            
+                            const expandedItem = {
+                                product_id: item.product_id,
+                                data: {
+                                    product_name: file.product_name || item.product_name,
+                                    po_number: file.po_number,
+                                    date_code: file.date_code,
+                                    serial_numbers: [...file.serial_numbers]
+                                }
+                            };
+                            
+                            expandedData.push(expandedItem);
+                        }
+                    });
+                }
+            });
+            
+            if (expandedData.length === 0) {
+                alert('Vui lòng điền đầy đủ thông tin cho ít nhất một file');
+                return;
+            }
+            
+            showLoading();
+            showProgress();
+            
+            try {
+                const response = await fetch('/api/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        data: expandedData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showBatchResults(result);
+                } else {
+                    showError(result.message);
+                }
+                
+            } catch (error) {
+                showError('Lỗi kết nối: ' + error.message);
+            } finally {
+                hideLoading();
+                hideProgress();
+            }
+        }
+        
+        // Show progress
+        function showProgress() {
+            document.getElementById('progressSection').style.display = 'block';
+            updateProgress(0, 'Chuẩn bị xử lý...');
+        }
+        
+        // Hide progress
+        function hideProgress() {
+            document.getElementById('progressSection').style.display = 'none';
+        }
+        
+        // Update progress
+        function updateProgress(percent, text) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+        
+        // Show batch results
+        function showBatchResults(result) {
+            const resultsDiv = document.getElementById('results');
+            let html = `
+                <div class="alert alert-success alert-custom">
+                    <h5><i class="fas fa-check-circle"></i> Xử lý hoàn thành!</h5>
+                    <p>${result.message}</p>
+                </div>
+            `;
+            
+            result.results.forEach(item => {
+                const statusClass = item.success ? 'success' : 'error';
+                const statusIcon = item.success ? 'check-circle' : 'exclamation-triangle';
+                const statusText = item.success ? 'Thành công' : 'Thất bại';
+                
+                html += `
+                    <div class="result-item ${statusClass}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${item.product}</strong>
+                                <br>
+                                <small>${statusText}</small>
+                            </div>
+                            <div>
+                                ${item.success ? 
+                                    `<a href="${item.download_url}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-download"></i> Tải về
+                                    </a>` : 
+                                    `<span class="text-danger">${item.message}</span>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Show error
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger alert-custom">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Lỗi!</h5>
+                    <p>${message}</p>
+                    <button class="btn btn-outline-danger btn-custom" onclick="processBatch()">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Clear all
+        function clearAll() {
+            // Clear data arrays
+            selectedProducts = [];
+            batchData = [];
+            
+            // Clear batch items display immediately
+            document.getElementById('batchItemsList').innerHTML = '';
+            document.getElementById('hiddenProductsList').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+            
+            // Hide batch section
+            document.getElementById('batchItems').style.display = 'none';
+            
+            // Uncheck checkboxes (do this last to avoid UI lag)
+            setTimeout(() => {
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.closest('.template-item').classList.remove('selected');
+                });
+            }, 0);
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+    
+    <!-- Auto-save Indicator -->
+    <div id="saveIndicator" style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-check-circle"></i>
+        <span>Draft saved</span>
+    </div>
+</body>
+</html>

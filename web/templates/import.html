@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Excel - Hệ thống PO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #667eea !important;
+        }
+        .nav-link {
+            color: #6c757d !important;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #667eea !important;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .progress {
+            height: 25px;
+            border-radius: 15px;
+        }
+        .progress-bar {
+            border-radius: 15px;
+        }
+        .import-stats {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-industry me-2"></i>
+                Hệ thống PO
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">
+                    <i class="fas fa-home me-1"></i>Trang chủ
+                </a>
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-chart-line me-1"></i>Dashboard
+                </a>
+                <a class="nav-link" href="{{ url_for('bulk_page') }}">
+                    <i class="fas fa-layer-group me-1"></i>Bulk Operations
+                </a>
+                <a class="nav-link active" href="{{ url_for('import_page') }}">
+                    <i class="fas fa-file-excel me-1"></i>Import Excel
+                </a>
+                <a class="nav-link" href="{{ url_for('analytics_page') }}">
+                    <i class="fas fa-analytics me-1"></i>Analytics
+                </a>
+                {% if session.role == 'admin' %}
+                <a class="nav-link" href="{{ url_for('users_page') }}">
+                    <i class="fas fa-users me-1"></i>Quản lý người dùng
+                </a>
+                {% endif %}
+                <a class="nav-link" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Import Excel Data
+                </h2>
+            </div>
+        </div>
+
+        <!-- Import Excel Section -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload và Import dữ liệu từ Excel
+                    </h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="excelFile" class="form-label">Chọn file Excel</label>
+                                <input type="file" class="form-control" id="excelFile" accept=".xlsx,.xls">
+                                <small class="text-muted">Chỉ import các hàng có màu vàng trong cột B và C</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="maxRows" class="form-label">Số hàng kiểm tra (từ cuối file)</label>
+                                <select class="form-control" id="maxRows">
+                                    <option value="50" selected>50 hàng cuối</option>
+                                    <option value="100">100 hàng cuối</option>
+                                    <option value="500">500 hàng cuối</option>
+                                    <option value="1000">1000 hàng cuối</option>
+                                </select>
+                                <small class="text-muted">Càng ít hàng càng nhanh (mặc định: 50)</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="skipColorCheck">
+                                    <label class="form-check-label" for="skipColorCheck">
+                                        Bỏ qua kiểm tra màu vàng (import tất cả)
+                                    </label>
+                                </div>
+                                <small class="text-muted">Chỉ dùng để test khi color detection không hoạt động</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-success" onclick="importExcelFile()">
+                                    <i class="fas fa-upload me-2"></i>
+                                    Import Excel
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="clearImportData()">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Xóa dữ liệu
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="import-stats">
+                                <h6 class="mb-3">Trạng thái Import</h6>
+                                <div id="importStatus">
+                                    <div class="text-white-50">Chưa có dữ liệu import</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Hướng dẫn Import
+                    </h5>
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-lightbulb me-2"></i>Lưu ý quan trọng:</h6>
+                        <ul class="mb-0">
+                            <li>File Excel phải có cột B (PO Number) và cột C (Product Name)</li>
+                            <li>Chỉ import các hàng có màu vàng trong cột B</li>
+                            <li>Hệ thống sẽ kiểm tra từ cuối file lên</li>
+                            <li>Có thể điều chỉnh số hàng kiểm tra</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Tips:</h6>
+                        <ul class="mb-0">
+                            <li>Dùng "Bỏ qua kiểm tra màu vàng" để test</li>
+                            <li>Giảm số hàng để tăng tốc độ</li>
+                            <li>Xóa dữ liệu cũ trước khi import mới</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6><i class="fas fa-history me-2"></i>Lịch sử Import</h6>
+                        <div id="importHistory">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-history fa-3x mb-3"></i>
+                                <p>Lịch sử import sẽ được implement sau</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import History -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>
+                            <i class="fas fa-history me-2"></i>
+                            Lịch sử Import - Danh sách PO đã import
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" onclick="loadImportedPOList()">
+                                <i class="fas fa-sync me-2"></i>
+                                Làm mới
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="selectAllPending()">
+                                <i class="fas fa-check-square me-2"></i>
+                                Chọn tất cả chưa làm
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="goToBatch()">
+                                <i class="fas fa-arrow-right me-2"></i>
+                                Chuyển sang Batch
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter và Search -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="poSearchInput" placeholder="Tìm kiếm PO hoặc sản phẩm..." onkeyup="filterPOList()">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control" id="statusFilter" onchange="filterPOList()">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chưa làm</option>
+                                <option value="completed">Đã hoàn thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control" id="dateFilter" onchange="filterPOList()">
+                                <option value="">Tất cả ngày</option>
+                                <option value="today">Hôm nay</option>
+                                <option value="week">Tuần này</option>
+                                <option value="month">Tháng này</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                <label class="form-check-label" for="selectAllCheckbox">
+                                    Chọn tất cả
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PO List Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="5%">
+                                        <input type="checkbox" id="selectAllHeader" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th width="10%">DDMMYYYY - File Import</th>
+                                    <th width="18%">Tên sản phẩm</th>
+                                    <th width="15%">Product Data</th>
+                                    <th width="15%">Based Product</th>
+                                    <th width="10%">PO Number</th>
+                                    <th width="10%">Ngày nhập</th>
+                                    <th width="10%">Ngày hoàn thành</th>
+                                    <th width="12%">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poListTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                                        <p>Đang tải dữ liệu...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <span class="text-muted">Tổng: <span id="totalPOs">0</span> PO</span>
+                        </div>
+                        <div>
+                            <span class="text-muted">Đã chọn: <span id="selectedCount">0</span> PO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Clear import data
+        function clearImportData() {
+            if (!confirm('Bạn có chắc chắn muốn xóa TẤT CẢ dữ liệu đã import?\n\nHành động này không thể hoàn tác!')) {
+                return;
+            }
+            
+            showNotification('Đang xóa dữ liệu import...', 'info');
+            
+            fetch('/api/import/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                console.log('Clear response status:', response.status);
+                console.log('Clear response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                console.log('Clear response data:', data);
+                if (data && data.success) {
+                    showNotification(data.message, 'success');
+                    updateImportStatus();
+                    loadImportHistory();
+                } else {
+                    showNotification(data ? data.message : 'Lỗi không xác định', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Clear data error:', error);
+                showNotification('Lỗi khi xóa dữ liệu: ' + error.message, 'error');
+            });
+        }
+
+        // Import Excel functions
+        function importExcelFile() {
+            const fileInput = document.getElementById('excelFile');
+            const maxRowsElement = document.getElementById('maxRows');
+            const skipColorCheckElement = document.getElementById('skipColorCheck');
+            
+            if (!fileInput || !maxRowsElement || !skipColorCheckElement) {
+                console.warn('Import form elements not found');
+                showNotification('Lỗi: Không tìm thấy form elements', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const maxRows = maxRowsElement.value;
+            const skipColorCheck = skipColorCheckElement.checked;
+            
+            if (!file) {
+                showNotification('Vui lòng chọn file Excel', 'warning');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('max_rows', maxRows);
+            formData.append('skip_color_check', skipColorCheck);
+            
+            const message = skipColorCheck ? 
+                `Đang import file Excel (bỏ qua color check, ${maxRows} hàng cuối)...` :
+                `Đang import file Excel (kiểm tra ${maxRows} hàng cuối)...`;
+            showNotification(message, 'info');
+            
+            fetch('/api/import/excel', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Import response status:', response.status);
+                console.log('Import response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                console.log('Import response data:', data);
+                if (data && data.success) {
+                    showNotification(data.message, 'success');
+                    updateImportStatus();
+                    loadImportHistory();
+                    console.log('Calling showImportDetails with:', data.details);
+                    if (data.details) {
+                        showImportDetails(data.details);
+                    }
+                } else {
+                    showNotification(data ? data.message : 'Lỗi không xác định', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Import error:', error);
+                showNotification('Lỗi khi import file: ' + error.message, 'error');
+            });
+        }
+
+        // Update import status
+        function updateImportStatus() {
+            fetch('/api/import/status')
+                .then(response => {
+                    console.log('Import status response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Import status response data:', data);
+                    if (data && data.success) {
+                        const statusDiv = document.getElementById('importStatus');
+                        if (statusDiv) {
+                            statusDiv.innerHTML = `
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="h5">${data.total_imported}</div>
+                                        <small>Tổng import</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="h5">${data.processed_pos}</div>
+                                        <small>Đã xử lý</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="h5">${data.pending_pos}</div>
+                                        <small>Chờ xử lý</small>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="progress bg-white bg-opacity-25">
+                                        <div class="progress-bar bg-white" style="width: ${data.completion_rate}%"></div>
+                                    </div>
+                                    <small>Hoàn thành: ${data.completion_rate}%</small>
+                                </div>
+                            `;
+                        } else {
+                            console.warn('Element importStatus not found');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading import status:', error);
+                });
+        }
+
+        // Load import history
+        function loadImportHistory() {
+            // TODO: Implement import history API
+            const historyDiv = document.getElementById('importHistory');
+            if (historyDiv) {
+                historyDiv.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-history fa-3x mb-3"></i>
+                        <p>Lịch sử import sẽ được implement sau</p>
+                    </div>
+                `;
+            } else {
+                console.warn('Element importHistory not found');
+            }
+        }
+
+        // Show import details modal
+        function showImportDetails(details) {
+            console.log('showImportDetails called with:', details);
+            
+            // Kiểm tra dữ liệu
+            if (!details) {
+                console.error('No details provided to showImportDetails');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Chi tiết Import</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h4>${details.imported_count}</h4>
+                                            <small>Đã import</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-warning text-white">
+                                        <div class="card-body text-center">
+                                            <h4>${details.skipped_count}</h4>
+                                            <small>Đã bỏ qua</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-danger text-white">
+                                        <div class="card-body text-center">
+                                            <h4>${details.error_count}</h4>
+                                            <small>Lỗi</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h4>${details.rows_processed || 0}</h4>
+                                            <small>Hàng đã xử lý</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${details.processing_efficiency ? `
+                                <div class="alert alert-info">
+                                    <strong>Hiệu suất:</strong> ${details.processing_efficiency} 
+                                    ${details.total_rows_in_file ? `(tổng ${details.total_rows_in_file} hàng)` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${details.imported_data && details.imported_data.length > 0 ? `
+                                <h6>Dữ liệu đã import:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>PO Number</th>
+                                                <th>Product Name</th>
+                                                <th>Row</th>
+                                                <th>File Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${details.imported_data.map(item => `
+                                                <tr>
+                                                    <td>${item.po_number || 'N/A'}</td>
+                                                    <td>${item.product_name || 'N/A'}</td>
+                                                    <td>${item.row_number || 'N/A'}</td>
+                                                    <td>${item.file_import_date || 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ` : '<p class="text-muted">Không có dữ liệu được import</p>'}
+                            
+                            ${details.skipped_rows && details.skipped_rows.length > 0 ? `
+                                <h6>Hàng đã bỏ qua:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>PO Number</th>
+                                                <th>Product Name</th>
+                                                <th>Row</th>
+                                                <th>Lý do</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${details.skipped_rows.map(item => `
+                                                <tr>
+                                                    <td>${item.po_number || 'N/A'}</td>
+                                                    <td>${item.product_name || 'N/A'}</td>
+                                                    <td>${item.row_number || 'N/A'}</td>
+                                                    <td>${item.reason || 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ` : ''}
+                            
+                            ${details.errors && details.errors.length > 0 ? `
+                                <h6>Lỗi:</h6>
+                                <div class="alert alert-danger">
+                                    ${details.errors.map(error => `
+                                        <div>• ${error.error || error}</div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            try {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                console.log('Modal shown successfully');
+            } catch (error) {
+                console.error('Error showing modal:', error);
+                // Fallback: show alert instead
+                alert(`Import thành công!\nĐã import: ${details.imported_count}\nĐã bỏ qua: ${details.skipped_count}\nLỗi: ${details.error_count}`);
+            }
+            
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            updateImportStatus();
+            loadImportedPOList();
+        });
+
+        // PO List Management
+        let importedPOList = [];
+        let selectedPOs = new Set();
+
+        function loadImportedPOList() {
+            fetch('/api/import/po-list')
+                .then(response => {
+                    console.log('PO list response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('PO list response data:', data);
+                    if (data && data.success) {
+                        importedPOList = data.data;
+                        displayPOList(importedPOList);
+                        updateTotalCount();
+                    } else {
+                        showNotification(data ? data.message : 'Lỗi không xác định', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading PO list:', error);
+                    showNotification('Lỗi khi tải danh sách PO: ' + error.message, 'error');
+                });
+        }
+
+        // Available products for based product selection
+        const availableProducts = [
+            'AW261', 'AZ3002', 'FA225', 'HD300', 'HD400', 'HD500', 'HD600', 'HD700',
+            'HP152', 'HP301', 'HX100', 'IX141', 'IZ381H', 'LA480', 'LA555', 'LA700',
+            'LA800', 'NV360', 'SV2000', 'UA1450', 'UH205', 'UV440', 'UV730', 'VS100',
+            'VX100', 'WD161', 'ZD201', 'ZU660'
+        ];
+
+        // Product data mapping from products folder
+        const productDataMap = {
+            'HD700': { po_number: '20183786', date_code: '20250807', template: 'HD700.xlsx' },
+            'HD600': { po_number: '20183785', date_code: '20250806', template: 'HD600.xlsx' },
+            'HD500': { po_number: '20183784', date_code: '20250805', template: 'HD500.xlsx' },
+            'HD400': { po_number: '20183783', date_code: '20250804', template: 'HD400.xlsx' },
+            'HD300': { po_number: '20183782', date_code: '20250803', template: 'HD300.xlsx' },
+            'LA800': { po_number: '20206330', date_code: '20201001', template: 'LA800-PO#20164015-20250320.xlsx' },
+            'LA700': { po_number: '20206329', date_code: '20201001', template: 'LA700.xlsx' },
+            'LA555': { po_number: '20206328', date_code: '20201001', template: 'LA555.xlsx' },
+            'LA480': { po_number: '20206327', date_code: '20201001', template: 'LA480.xlsx' },
+            'UV730': { po_number: '20206326', date_code: '20201001', template: 'UV730.xlsx' },
+            'UV440': { po_number: '20206325', date_code: '20201001', template: 'UV440.xlsx' },
+            'WD261': { po_number: '20206324', date_code: '20201001', template: 'WD261.xlsx' },
+            'WD161': { po_number: '20206323', date_code: '20201001', template: 'WD161.xlsx' },
+            'AZ3002': { po_number: '20206322', date_code: '20201001', template: 'AZ3002.xlsx' },
+            'FA225': { po_number: '20206321', date_code: '20201001', template: 'FA225.xlsx' },
+            'HP152': { po_number: '20206320', date_code: '20201001', template: 'HP152.xlsx' },
+            'HP301': { po_number: '20206319', date_code: '20201001', template: 'HP301.xlsx' },
+            'HX100': { po_number: '20206318', date_code: '20201001', template: 'HX100.xlsx' },
+            'IX141': { po_number: '20206317', date_code: '20201001', template: 'IX141.xlsx' },
+            'IZ381H': { po_number: '20206316', date_code: '20201001', template: 'IZ381H.xlsx' },
+            'NV360': { po_number: '20206315', date_code: '20201001', template: 'NV360.xlsx' },
+            'SV2000': { po_number: '20206314', date_code: '20201001', template: 'SV2000.xlsx' },
+            'UA1450': { po_number: '20206313', date_code: '20201001', template: 'UA1450.xlsx' },
+            'UH205': { po_number: '20206312', date_code: '20201001', template: 'UH205.xlsx' },
+            'VS100': { po_number: '20206311', date_code: '20201001', template: 'VS100.xlsx' },
+            'VX100': { po_number: '20206310', date_code: '20201001', template: 'VX100.xlsx' },
+            'ZU660': { po_number: '20206309', date_code: '20201001', template: 'ZU660.xlsx' },
+            'ZD201': { po_number: '20206308', date_code: '20201001', template: 'ZD201.xlsx' },
+            'AW261': { po_number: '20206307', date_code: '20201001', template: 'AW261.xlsx' }
+        };
+
+        function getProductSpecs(productName) {
+            // Extract product ID from product name (e.g., "Shark SpeedStyle Pro HD700" -> "HD700")
+            const productId = productName.match(/([A-Z]{2}\d+)/)?.[1];
+            if (!productId || !productDataMap[productId]) {
+                return 'Không có dữ liệu';
+            }
+            
+            const data = productDataMap[productId];
+            return `PO: ${data.po_number} | Date: ${data.date_code} | Template: ${data.template}`;
+        }
+
+        function createBasedProductDropdown(poNumber, currentValue = '') {
+            const options = availableProducts.map(product => 
+                `<option value="${product}" ${currentValue === product ? 'selected' : ''}>${product}</option>`
+            ).join('');
+            
+            return `
+                <select class="form-select form-select-sm" onchange="updateBasedProduct('${poNumber}', this.value)">
+                    <option value="">Chọn Based Product</option>
+                    ${options}
+                </select>
+            `;
+        }
+
+        function updateBasedProduct(poNumber, basedProduct) {
+            // Store the mapping in sessionStorage for batch page
+            const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
+            mapping[poNumber] = basedProduct;
+            sessionStorage.setItem('productMapping', JSON.stringify(mapping));
+            
+            showNotification(`Đã chọn Based Product: ${basedProduct} cho PO: ${poNumber}`, 'success');
+        }
+
+        function displayPOList(poList) {
+            const tbody = document.getElementById('poListTableBody');
+            
+            if (!tbody) {
+                console.warn('Element poListTableBody not found');
+                return;
+            }
+            
+            if (poList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Chưa có dữ liệu import</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = poList.map(po => {
+                const isSelected = selectedPOs.has(po.po_number);
+                const statusClass = po.status === 'completed' ? 'success' : 'warning';
+                const statusText = po.status === 'completed' ? 'Đã hoàn thành' : 'Chưa làm';
+                
+                // Get product specs from productDetails
+                const productSpecs = getProductSpecs(po.product_name);
+                
+                // Get current based product mapping
+                const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
+                const currentBasedProduct = mapping[po.po_number] || '';
+                
+                return `
+                    <tr class="${isSelected ? 'table-active' : ''}">
+                        <td>
+                            <input type="checkbox" class="po-checkbox" 
+                                   value="${po.po_number}" 
+                                   ${isSelected ? 'checked' : ''}
+                                   onchange="togglePOSelection('${po.po_number}')">
+                        </td>
+                        <td>
+                            <strong>${formatFileDate(po.file_import_date)}</strong><br>
+                            <small class="text-muted">${po.file_name || 'N/A'}</small>
+                        </td>
+                        <td>${po.product_name}</td>
+                        <td><small class="text-muted">${productSpecs}</small></td>
+                        <td>${createBasedProductDropdown(po.po_number, currentBasedProduct)}</td>
+                        <td><strong>${po.po_number}</strong></td>
+                        <td>${formatDate(po.import_date)}</td>
+                        <td>${po.completion_date ? formatDate(po.completion_date) : '-'}</td>
+                        <td>
+                            <span class="badge bg-${statusClass}">${statusText}</span>
+                            ${po.status === 'pending' ? 
+                                `<button class="btn btn-sm btn-outline-success ms-1" onclick="markAsCompleted('${po.po_number}')" title="Đánh dấu hoàn thành">
+                                    <i class="fas fa-check"></i>
+                                </button>` : 
+                                `<button class="btn btn-sm btn-outline-warning ms-1" onclick="markAsPending('${po.po_number}')" title="Đánh dấu chưa làm">
+                                    <i class="fas fa-undo"></i>
+                                </button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Update select all checkbox state after rendering
+            updateSelectAllCheckboxState();
+        }
+
+        function togglePOSelection(poNumber) {
+            if (selectedPOs.has(poNumber)) {
+                selectedPOs.delete(poNumber);
+            } else {
+                selectedPOs.add(poNumber);
+            }
+            
+            // Update select all checkbox state
+            updateSelectAllCheckboxState();
+            
+            updateSelectedCount();
+            displayPOList(importedPOList);
+        }
+
+        function updateSelectAllCheckboxState() {
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            if (!selectAllHeader) return;
+            
+            const pendingPOs = importedPOList.filter(po => po.status === 'pending');
+            const selectedPendingPOs = pendingPOs.filter(po => selectedPOs.has(po.po_number));
+            
+            if (pendingPOs.length === 0) {
+                selectAllHeader.checked = false;
+                selectAllHeader.indeterminate = false;
+            } else if (selectedPendingPOs.length === pendingPOs.length) {
+                selectAllHeader.checked = true;
+                selectAllHeader.indeterminate = false;
+            } else if (selectedPendingPOs.length > 0) {
+                selectAllHeader.checked = false;
+                selectAllHeader.indeterminate = true;
+            } else {
+                selectAllHeader.checked = false;
+                selectAllHeader.indeterminate = false;
+            }
+        }
+
+        function toggleSelectAll() {
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            
+            if (!selectAllHeader) {
+                console.warn('Select all header not found');
+                return;
+            }
+            
+            const isChecked = selectAllHeader.checked;
+            
+            if (isChecked) {
+                // Select all pending POs
+                importedPOList.forEach(po => {
+                    if (po.status === 'pending') {
+                        selectedPOs.add(po.po_number);
+                    }
+                });
+            } else {
+                // Deselect all
+                selectedPOs.clear();
+            }
+            
+            updateSelectedCount();
+            displayPOList(importedPOList);
+        }
+
+        function selectAllPending() {
+            selectedPOs.clear();
+            importedPOList.forEach(po => {
+                if (po.status === 'pending') {
+                    selectedPOs.add(po.po_number);
+                }
+            });
+            updateSelectedCount();
+            displayPOList(importedPOList);
+            showNotification(`Đã chọn ${selectedPOs.size} PO chưa làm`, 'success');
+        }
+
+        function updateSelectedCount() {
+            const selectedCountElement = document.getElementById('selectedCount');
+            if (selectedCountElement) {
+                selectedCountElement.textContent = selectedPOs.size;
+            } else {
+                console.warn('Element selectedCount not found');
+            }
+        }
+
+        function updateTotalCount() {
+            const totalPOsElement = document.getElementById('totalPOs');
+            if (totalPOsElement) {
+                totalPOsElement.textContent = importedPOList.length;
+            } else {
+                console.warn('Element totalPOs not found');
+            }
+        }
+
+        function filterPOList() {
+            const searchInput = document.getElementById('poSearchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const dateFilter = document.getElementById('dateFilter');
+            
+            if (!searchInput || !statusFilter || !dateFilter) {
+                console.warn('Filter elements not found');
+                return;
+            }
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusFilterValue = statusFilter.value;
+            const dateFilterValue = dateFilter.value;
+            
+            let filteredList = importedPOList.filter(po => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    po.po_number.toLowerCase().includes(searchTerm) ||
+                    po.product_name.toLowerCase().includes(searchTerm);
+                
+                // Status filter
+                const matchesStatus = !statusFilterValue || po.status === statusFilterValue;
+                
+                // Date filter
+                let matchesDate = true;
+                if (dateFilter) {
+                    const poDate = new Date(po.import_date);
+                    const now = new Date();
+                    
+                    switch (dateFilter) {
+                        case 'today':
+                            matchesDate = poDate.toDateString() === now.toDateString();
+                            break;
+                        case 'week':
+                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            matchesDate = poDate >= weekAgo;
+                            break;
+                        case 'month':
+                            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                            matchesDate = poDate >= monthAgo;
+                            break;
+                    }
+                }
+                
+                return matchesSearch && matchesStatus && matchesDate;
+            });
+            
+            displayPOList(filteredList);
+        }
+
+        function markAsCompleted(poNumber) {
+            updatePOStatus(poNumber, 'completed');
+        }
+
+        function markAsPending(poNumber) {
+            updatePOStatus(poNumber, 'pending');
+        }
+
+        function updatePOStatus(poNumber, status) {
+            fetch('/api/import/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    po_number: poNumber,
+                    status: status
+                })
+            })
+            .then(response => {
+                console.log('Update PO status response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Update PO status response data:', data);
+                if (data && data.success) {
+                    showNotification(data.message, 'success');
+                    loadImportedPOList();
+                } else {
+                    showNotification(data ? data.message : 'Lỗi không xác định', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating PO status:', error);
+                showNotification('Lỗi khi cập nhật trạng thái: ' + error.message, 'error');
+            });
+        }
+
+        function goToBatch() {
+            if (selectedPOs.size === 0) {
+                showNotification('Vui lòng chọn ít nhất một PO', 'warning');
+                return;
+            }
+            
+            // Lấy thông tin chi tiết của các PO đã chọn
+            const selectedPOData = importedPOList.filter(po => selectedPOs.has(po.po_number));
+            
+            // Lấy mapping based product
+            const productMapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
+            
+            // Lưu selected POs, data chi tiết và mapping vào sessionStorage
+            sessionStorage.setItem('selectedPOs', JSON.stringify(Array.from(selectedPOs)));
+            sessionStorage.setItem('selectedPOData', JSON.stringify(selectedPOData));
+            sessionStorage.setItem('productMapping', JSON.stringify(productMapping));
+            
+            console.log('Selected PO data:', selectedPOData);
+            console.log('Product mapping:', productMapping);
+            
+            // Chuyển sang batch page
+            window.location.href = '/batch';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        function formatFileDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            // Nếu là format DDMMYYYY (8 chữ số)
+            if (dateString.length === 8 && /^\d{8}$/.test(dateString)) {
+                const day = dateString.substring(0, 2);
+                const month = dateString.substring(2, 4);
+                const year = dateString.substring(4, 8);
+                return `${day}/${month}/${year}`;
+            }
+            
+            // Nếu là format khác, trả về nguyên gốc
+            return dateString;
+        }
+    </script>
+</body>
+</html>

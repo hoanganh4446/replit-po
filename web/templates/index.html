@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Hệ thống PO Tích hợp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Phase 1 Enhancements -->
+    <link rel="stylesheet" href="/static/enhancements.css">
+    <script src="/static/enhancements.js" defer></script>
+    
+    <!-- Enhanced Product Selector -->
+    <link rel="stylesheet" href="/static/product-selector-enhanced.css">
+    <script src="/static/product-selector-enhanced.js" defer></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            animation: backgroundFloat 20s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes backgroundFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.15),
+                0 0 0 1px rgba(255,255,255,0.1);
+            margin: 20px auto;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: containerFloat 6s ease-in-out infinite;
+        }
+        
+        @keyframes containerFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-color);
+            position: relative;
+        }
+        
+        .quick-jump-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        
+        .quick-jump-btn {
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .quick-jump-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .product-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(255,255,255,0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 20px;
+            overflow: hidden;
+            height: 100%;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+        
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.15),
+                0 0 0 1px rgba(102, 126, 234, 0.3);
+        }
+        
+        .product-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: headerShine 4s ease-in-out infinite;
+        }
+        
+        @keyframes headerShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .product-card-header h4 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .product-card-header p {
+            font-size: 0.8em;
+            margin-bottom: 0;
+        }
+        
+        .product-card-body {
+            padding: 15px;
+        }
+        
+        .product-type {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .type-standard { background: #e8f5e8; color: #27ae60; }
+        .type-special { background: #fff3cd; color: #f39c12; }
+        .type-merge_cells { background: #d1ecf1; color: #17a2b8; }
+        .type-complex { background: #f8d7da; color: #dc3545; }
+        .type-unique_row { background: #e2e3e5; color: #6c757d; }
+        
+        .btn-custom {
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .stats-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .stats-label {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .alert-custom {
+            border-radius: 15px;
+            border: none;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Search & Sort Card Styles */
+        .search-sort-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(255,255,255,0.1);
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .search-sort-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea, #764ba2);
+            background-size: 300% 100%;
+            animation: cardShimmer 4s ease-in-out infinite;
+        }
+        
+        @keyframes cardShimmer {
+            0% { background-position: -300% 0; }
+            100% { background-position: 300% 0; }
+        }
+        
+        .search-section, .sort-section {
+            position: relative;
+        }
+        
+        .search-input-group {
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(102, 126, 234, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input-group:focus-within {
+            box-shadow: 
+                0 12px 35px rgba(102, 126, 234, 0.2),
+                0 0 0 2px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .search-input-group .input-group-text {
+            border: none;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .search-input {
+            border: none;
+            font-size: 1rem;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(5px);
+        }
+        
+        .search-input:focus {
+            box-shadow: none;
+            border-color: transparent;
+            background: rgba(255,255,255,1);
+        }
+        
+        .search-input-group .btn-outline-danger {
+            border-radius: 0 15px 15px 0;
+            border-left: none;
+            border-color: rgba(220, 53, 69, 0.3);
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input-group .btn-outline-danger:hover {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .sort-buttons {
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.1),
+                0 0 0 1px rgba(255,255,255,0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+        
+        .sort-btn {
+            border: none;
+            font-weight: 600;
+            padding: 15px 20px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sort-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .sort-btn:hover::before {
+            left: 100%;
+        }
+        
+        .sort-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .sort-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 
+                0 8px 25px rgba(102, 126, 234, 0.3),
+                0 0 0 2px rgba(255,255,255,0.3);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+        }
+        
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(102, 126, 234, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Page Load Animation */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Stagger Animation for Cards */
+        .product-card {
+            animation: slideInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+        .product-card:nth-child(4) { animation-delay: 0.4s; }
+        .product-card:nth-child(5) { animation-delay: 0.5s; }
+        .product-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes slideInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(50px) scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        .taskbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 10px 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .taskbar .time {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .taskbar .username {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .taskbar .logout-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .taskbar .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        /* Logout Modal Styles */
+        .logout-modal {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+        }
+        
+        .logout-modal-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            border: none;
+            padding: 20px 25px;
+        }
+        
+        .logout-modal-header .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+        
+        .logout-modal-header .btn-close:hover {
+            opacity: 1;
+        }
+        
+        .logout-modal-body {
+            padding: 30px 25px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        
+        .logout-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+        }
+        
+        .logout-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .logout-modal-footer {
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 0 0 20px 20px;
+            border: none;
+            padding: 20px 25px;
+            gap: 10px;
+        }
+        
+        .logout-modal-footer .btn {
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-modal-footer .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        
+        .logout-modal-footer .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+        }
+        
+        .logout-modal-footer .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        }
+        
+        @media (max-width: 768px) {
+            .taskbar {
+                top: 10px;
+                right: 10px;
+                padding: 8px 15px;
+                font-size: 0.8rem;
+                gap: 10px;
+            }
+            
+            .taskbar .logout-btn {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="time" id="currentTime"></div>
+        <div class="username">
+            <i class="fas fa-user me-1"></i>
+            {% if session.username %}{{ session.username }}{% else %}Guest{% endif %}
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+        </button>
+    </div>
+    
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <div class="main-container fade-in">
+                    <!-- Header -->
+                    <div class="header">
+                        <h1><i class="fas fa-industry"></i> Hệ thống PO Tích hợp</h1>
+                        <p>Quản lý và tạo file PO cho tất cả sản phẩm một cách dễ dàng</p>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number" id="total-products">{{ products|length }}</div>
+                                <div class="stats-label">Sản phẩm</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number" id="active-products">0</div>
+                                <div class="stats-label">Hoạt động</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number" id="files-generated">0</div>
+                                <div class="stats-label">File đã tạo</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number" id="success-rate">100%</div>
+                                <div class="stats-label">Tỷ lệ thành công</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Box -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card search-sort-card">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <!-- Search Section -->
+                                        <div class="col-lg-6 mb-3 mb-lg-0">
+                                            <div class="search-section">
+                                                <label class="form-label fw-bold text-primary mb-2">
+                                                    <i class="fas fa-search me-2"></i>Tìm kiếm sản phẩm
+                                                </label>
+                                                <div class="input-group search-input-group">
+                                                    <span class="input-group-text bg-primary text-white">
+                                                        <i class="fas fa-search"></i>
+                                                    </span>
+                                                    <input type="text" class="form-control search-input" id="searchInput" 
+                                                           placeholder="Nhập tên sản phẩm..." onkeyup="searchProducts()" 
+                                                           autocomplete="off" value="">
+                                                    <button class="btn btn-outline-danger" type="button" onclick="clearSearch()" title="Xóa tìm kiếm">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Sort Section -->
+                                        <div class="col-lg-6">
+                                            <div class="sort-section">
+                                                <label class="form-label fw-bold text-primary mb-2">
+                                                    <i class="fas fa-sort me-2"></i>Sắp xếp
+                                                </label>
+                                                <div class="btn-group w-100 sort-buttons" role="group">
+                                                    <button class="btn btn-outline-primary sort-btn" onclick="sortProducts('name')" title="Sắp xếp A-Z">
+                                                        <i class="fas fa-sort-alpha-down me-1"></i>A-Z
+                                                    </button>
+                                                    <button class="btn btn-outline-success sort-btn" onclick="sortProducts('type')" title="Sắp xếp theo loại">
+                                                        <i class="fas fa-layer-group me-1"></i>Loại
+                                                    </button>
+                                                    <button class="btn btn-outline-info sort-btn" onclick="sortProducts('recent')" title="Sản phẩm gần đây">
+                                                        <i class="fas fa-clock me-1"></i>Gần đây
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Info Text -->
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Tìm kiếm theo tên sản phẩm, loại, hoặc template. Kết quả hiển thị ngay lập tức.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                    <div class="alert alert-info alert-custom">
+                        <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
+                        <div class="row">
+                            <div class="col-md-2 col-sm-6 mb-2">
+                                <button class="btn btn-primary-custom btn-custom w-100" onclick="showBatchModal()">
+                                    <i class="fas fa-layer-group"></i> Xử lý hàng loạt
+                                </button>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-2">
+                                <button class="btn btn-success btn-custom w-100" onclick="window.location.href='/dashboard'">
+                                    <i class="fas fa-chart-line"></i> Dashboard
+                                </button>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-2">
+                                <button class="btn btn-info btn-custom w-100" onclick="window.location.href='/analytics'">
+                                    <i class="fas fa-analytics"></i> Analytics
+                                </button>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-2">
+                                <button class="btn btn-warning btn-custom w-100" onclick="showConfigModal()">
+                                    <i class="fas fa-cog"></i> Cấu hình
+                                </button>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-2">
+                                <button class="btn btn-secondary btn-custom w-100" onclick="showHelpModal()">
+                                    <i class="fas fa-question-circle"></i> Trợ giúp
+                                </button>
+                            </div>
+                            <div class="col-md-2 col-sm-6 mb-2">
+                                <button class="btn btn-outline-primary btn-custom w-100" onclick="refreshProducts()">
+                                    <i class="fas fa-sync-alt"></i> Làm mới
+                                </button>
+                            </div>
+                        </div>
+                        {% if session.role == 'admin' %}
+                        <div class="row mt-2">
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-danger btn-custom w-100" onclick="window.location.href='/users'">
+                                    <i class="fas fa-users"></i> Quản lý người dùng
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-info btn-custom w-100" onclick="showBulkUserModal()">
+                                    <i class="fas fa-user-plus"></i> Bulk User Management
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-success btn-custom w-100" onclick="window.location.href='/bulk'">
+                                    <i class="fas fa-layer-group"></i> Bulk Operations
+                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-warning btn-custom w-100" onclick="showExportModal()">
+                                    <i class="fas fa-download"></i> Export Data
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-primary btn-custom w-100" onclick="filterProducts('all')">
+                                    <i class="fas fa-list"></i> Tất cả sản phẩm
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-success btn-custom w-100" onclick="window.location.href='/import'">
+                                    <i class="fas fa-upload"></i> Import
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Products Grid -->
+                    <div class="row" id="products-grid">
+                        {% for product_id in products %}
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <div class="product-card" data-product="{{ product_id }}">
+                                <div class="product-card-header">
+                                    <h4>{{ product_id }}</h4>
+                                    <p class="mb-0">Sản phẩm PO</p>
+                                </div>
+                                <div class="product-card-body">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-primary-custom btn-custom" onclick="openProduct('{{ product_id }}')">
+                                            <i class="fas fa-edit"></i> Chỉnh sửa & Tạo file
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-custom" onclick="viewProductInfo('{{ product_id }}')">
+                                            <i class="fas fa-info-circle"></i> Thông tin chi tiết
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Loading -->
+                    <div class="loading" id="loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p class="mt-3">Đang xử lý...</p>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="footer">
+                        <p>&copy; 2024 Hệ thống PO Tích hợp. Được phát triển để quản lý và tạo file PO một cách hiệu quả.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal fade" id="batchModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-layer-group"></i> Xử lý hàng loạt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Chức năng xử lý hàng loạt cho phép bạn tạo nhiều file PO cùng lúc.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Tính năng này sẽ được tích hợp với Google Sheets để tự động lấy dữ liệu.
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='/batch'">
+                        <i class="fas fa-external-link-alt"></i> Mở trang xử lý hàng loạt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="configModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cog"></i> Cấu hình hệ thống</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Cấu hình và tùy chỉnh hệ thống PO.</p>
+                    <button class="btn btn-primary" onclick="window.location.href='/config'">
+                        <i class="fas fa-external-link-alt"></i> Mở trang cấu hình
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="helpModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-question-circle"></i> Trợ giúp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6><i class="fas fa-play-circle"></i> Cách sử dụng:</h6>
+                    <ol>
+                        <li>Chọn sản phẩm từ danh sách</li>
+                        <li>Nhập thông tin sản phẩm (tên, PO, ngày, serial)</li>
+                        <li>Nhấn "Tạo file" để xuất file Excel</li>
+                        <li>Download file về máy</li>
+                    </ol>
+                    
+                    <h6><i class="fas fa-lightbulb"></i> Mẹo:</h6>
+                    <ul>
+                        <li>Sử dụng "Xử lý hàng loạt" để tạo nhiều file cùng lúc</li>
+                        <li>Kiểm tra template trước khi tạo file</li>
+                        <li>Lưu cấu hình để sử dụng lại</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bulk User Management Modal -->
+    <div class="modal fade" id="bulkUserModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Bulk User Management</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-upload me-2"></i>Import Users từ CSV</h6>
+                            <div class="mb-3">
+                                <label for="csvFile" class="form-label">Chọn file CSV</label>
+                                <input type="file" class="form-control" id="csvFile" accept=".csv" onchange="handleCSVUpload()">
+                            </div>
+                            <div class="alert alert-info">
+                                <small>
+                                    <strong>Format CSV:</strong><br>
+                                    username,password,email,role<br>
+                                    user1,pass123,user1@email.com,user<br>
+                                    admin1,admin123,admin1@email.com,admin
+                                </small>
+                            </div>
+                            <button class="btn btn-primary" onclick="importUsers()" id="importBtn" disabled>
+                                <i class="fas fa-upload me-2"></i>Import Users
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-plus me-2"></i>Thêm User nhanh</h6>
+                            <div class="mb-3">
+                                <label for="quickUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="quickUsername" placeholder="Nhập username...">
+                            </div>
+                            <div class="mb-3">
+                                <label for="quickPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="quickPassword" placeholder="Nhập password...">
+                            </div>
+                            <div class="mb-3">
+                                <label for="quickEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="quickEmail" placeholder="Nhập email...">
+                            </div>
+                            <div class="mb-3">
+                                <label for="quickRole" class="form-label">Role</label>
+                                <select class="form-control" id="quickRole">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-success" onclick="addQuickUser()">
+                                <i class="fas fa-plus me-2"></i>Thêm User
+                            </button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6><i class="fas fa-list me-2"></i>Danh sách Users</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="usersTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Created</th>
+                                            <th>Last Login</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                                Đang tải...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export Data Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-download"></i> Export Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-filter me-2"></i>Bộ lọc dữ liệu</h6>
+                            <div class="mb-3">
+                                <label for="exportStartDate" class="form-label">Từ ngày</label>
+                                <input type="date" class="form-control" id="exportStartDate">
+                            </div>
+                            <div class="mb-3">
+                                <label for="exportEndDate" class="form-label">Đến ngày</label>
+                                <input type="date" class="form-control" id="exportEndDate">
+                            </div>
+                            <div class="mb-3">
+                                <label for="exportProduct" class="form-label">Sản phẩm</label>
+                                <select class="form-control" id="exportProduct">
+                                    <option value="">Tất cả sản phẩm</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="exportStatus" class="form-label">Trạng thái</label>
+                                <select class="form-control" id="exportStatus">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="completed">Thành công</option>
+                                    <option value="failed">Thất bại</option>
+                                    <option value="error">Lỗi</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-cog me-2"></i>Tùy chọn export</h6>
+                            <div class="mb-3">
+                                <label for="exportFormat" class="form-label">Định dạng</label>
+                                <select class="form-control" id="exportFormat">
+                                    <option value="csv">CSV</option>
+                                    <option value="excel">Excel</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="exportFields" class="form-label">Các trường dữ liệu</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportId" checked>
+                                    <label class="form-check-label" for="exportId">ID</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportOperation" checked>
+                                    <label class="form-check-label" for="exportOperation">Loại hoạt động</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportProductName" checked>
+                                    <label class="form-check-label" for="exportProductName">Tên sản phẩm</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportPONumber" checked>
+                                    <label class="form-check-label" for="exportPONumber">Số PO</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportStatus" checked>
+                                    <label class="form-check-label" for="exportStatus">Trạng thái</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportUser" checked>
+                                    <label class="form-check-label" for="exportUser">Người thực hiện</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportDate" checked>
+                                    <label class="form-check-label" for="exportDate">Ngày tạo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <button class="btn btn-primary btn-lg" onclick="exportData()">
+                            <i class="fas fa-download me-2"></i>Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content logout-modal">
+                <div class="modal-header logout-modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Xác nhận đăng xuất
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body logout-modal-body">
+                    <div class="text-center">
+                        <div class="logout-icon mb-3">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <h6 class="mb-3">Bạn có chắc chắn muốn đăng xuất?</h6>
+                        <p class="text-muted mb-0">Bạn sẽ được chuyển về trang đăng nhập sau khi đăng xuất.</p>
+                    </div>
+                </div>
+                <div class="modal-footer logout-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Hủy
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="confirmLogout()">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        Đăng xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let products = {};
+        let filteredProducts = {};
+        let currentSort = 'default';
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clear search input on page load
+            document.getElementById('searchInput').value = '';
+            
+            loadProducts();
+            updateStats();
+            updateTime();
+            setInterval(updateTime, 1000); // Update time every second
+        });
+        
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('vi-VN', {
+                weekday: 'short',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        
+        // Logout function
+        function logout() {
+            const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
+            logoutModal.show();
+        }
+        
+        // Confirm logout function
+        function confirmLogout() {
+            window.location.href = '/logout';
+        }
+        
+        // Load products data
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                products = await response.json();
+                
+                // Sort products alphabetically by default
+                const sortedProducts = {};
+                const productIds = Object.keys(products).sort();
+                
+                productIds.forEach(id => {
+                    sortedProducts[id] = products[id];
+                });
+                
+                products = sortedProducts;
+                filteredProducts = {...products};
+                currentSort = 'name'; // Set default sort to alphabetical
+                updateProductCards();
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+        
+        // Update product cards
+        function updateProductCards() {
+            Object.keys(filteredProducts).forEach(productId => {
+                const product = filteredProducts[productId];
+                const typeElement = document.getElementById(`type-${productId}`);
+                
+                if (typeElement) {
+                    typeElement.textContent = product.type;
+                    typeElement.className = `product-type type-${product.type}`;
+                }
+            });
+            
+            updateStats();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const totalProducts = Object.keys(products).length;
+            const activeProducts = Object.values(products).filter(p => p.template_exists).length;
+            const filteredTotal = Object.keys(filteredProducts).length;
+            const filteredActive = Object.values(filteredProducts).filter(p => p.template_exists).length;
+            
+            document.getElementById('total-products').textContent = filteredTotal;
+            document.getElementById('active-products').textContent = filteredActive;
+            
+            if (totalProducts > 0) {
+                const successRate = Math.round((activeProducts / totalProducts) * 100);
+                document.getElementById('success-rate').textContent = successRate + '%';
+            }
+        }
+        
+        // Open product page
+        function openProduct(productId) {
+            window.location.href = `/product/${productId}`;
+        }
+        
+        // Product detailed information
+        const productDetails = {
+            'WD261': {
+                category: 'Máy hút bụi 3 trong 1',
+                specs: 'Không dây, Pin 21.6V, Thời gian sử dụng 23 phút, Trọng lượng 8.5 lbs',
+                description: 'Shark HydroVac MessMaster Cordless 3-in-1 Cleaner - Máy hút bụi không dây 3 trong 1, hút bụi, lau sàn và tự làm sạch'
+            },
+            'WD161': {
+                category: 'Máy hút bụi 3 trong 1',
+                specs: 'Có dây, Công suất cao, Tự làm sạch brushroll',
+                description: 'Shark HydroVac MessMaster Corded 3-in-1 Vacuum Mop - Máy hút bụi có dây 3 trong 1, hút bụi và lau sàn'
+            },
+            'AZ3002': {
+                category: 'Máy hút bụi đứng',
+                specs: 'DuoClean, PowerFins, HairPro, Công nghệ chống tắc',
+                description: 'Shark Stratos DuoClean PowerFins HairPro Upright Vacuum - Máy hút bụi đứng với công nghệ PowerFins và HairPro'
+            },
+            'FA222': {
+                category: 'Quạt làm mát',
+                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
+                description: 'Shark FlexBreeze Fan with InstaCool Mist Attachment - Quạt làm mát với phụ kiện phun sương'
+            },
+            'HD700': {
+                category: 'Máy sấy tóc',
+                specs: 'SpeedStyle Pro, 3 tốc độ, 2 chế độ nhiệt, Ion technology',
+                description: 'Shark SpeedStyle Pro Hair Dryer - Máy sấy tóc chuyên nghiệp cho tóc thẳng và xoăn'
+            },
+            'HD600': {
+                category: 'Máy sấy tóc',
+                specs: 'Glam Ceramic, 3 tốc độ, 2 chế độ nhiệt, Ceramic technology',
+                description: 'Shark Glam Ceramic Powerful Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng gốm'
+            },
+            'HD500': {
+                category: 'Máy sấy tóc',
+                specs: 'SpeedStyle Pro Flex, Tùy chỉnh, 3 tốc độ, Ion technology',
+                description: 'Shark SpeedStyle Pro Flex - Máy sấy tóc linh hoạt có thể tùy chỉnh'
+            },
+            'HD400': {
+                category: 'Máy sấy tóc',
+                specs: 'FlexStyle, Air styling, 3 tốc độ, 2 chế độ nhiệt',
+                description: 'Shark FlexStyle Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng không khí'
+            },
+            'HD300': {
+                category: 'Máy sấy tóc',
+                specs: 'SpeedStyle 3-in-1, Tóc thẳng và xoăn, 3 tốc độ',
+                description: 'Shark SpeedStyle 3-in-1 Hair Dryer - Máy sấy tóc 3 trong 1 cho tóc thẳng và xoăn'
+            },
+            'HP152': {
+                category: 'Máy lọc không khí',
+                specs: 'NeverChange, HEPA filter, CADR 200, 3 tốc độ',
+                description: 'Shark NeverChange Air Purifier - Máy lọc không khí không cần thay bộ lọc'
+            },
+            'HP301': {
+                category: 'Máy lọc không khí',
+                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
+                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
+            },
+            'HX100': {
+                category: 'Máy làm sạch vết bẩn',
+                specs: 'StainForce, Không dây, Pin lithium, Áp suất cao',
+                description: 'Shark StainForce Cordless Spot Cleaner - Máy làm sạch vết bẩn không dây'
+            },
+            'IX141': {
+                category: 'Máy hút bụi không dây',
+                specs: 'Pet cordless, DuoClean, PowerFins, Pin lithium',
+                description: 'Shark Pet Cordless Stick Vacuum - Máy hút bụi không dây chuyên dụng cho thú cưng'
+            },
+            'IZ381H': {
+                category: 'Máy hút bụi không dây',
+                specs: 'PowerPro Flex, Reveal Plus, DuoClean, Pin lithium',
+                description: 'Shark PowerPro Flex Reveal Plus Cordless Vacuum - Máy hút bụi không dây linh hoạt cao cấp'
+            },
+            'LA480': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Lift Away, PowerFins, HairPro, Odor neutralizer',
+                description: 'Shark Lift Away with PowerFins HairPro - Máy hút bụi có thể tháo rời với công nghệ PowerFins'
+            },
+            'LA555': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Lift Away Deluxe, DuoClean, PowerFins',
+                description: 'Shark Lift Away Deluxe - Máy hút bụi cao cấp có thể tháo rời'
+            },
+            'LA700': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Rotator Pet, Lift Away Advanced, DuoClean, PowerFins',
+                description: 'Shark Rotator Pet Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp cho thú cưng'
+            },
+            'LA800': {
+                category: 'Máy hút bụi đứng',
+                specs: 'DetectPro, Lift Away Advanced, DuoClean, PowerFins',
+                description: 'Shark DetectPro Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp với công nghệ DetectPro'
+            },
+            'NV360': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
+                description: 'Shark Navigator Lift Away Deluxe Upright Vacuum - Máy hút bụi đứng cao cấp Navigator'
+            },
+            'SV2000': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Freestyle Pro, Không dây, DuoClean, Pin lithium',
+                description: 'Shark Freestyle Pro Cordless Upright Vacuum - Máy hút bụi đứng không dây Freestyle Pro'
+            },
+            'UA1450': {
+                category: 'Máy lọc không khí',
+                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
+                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
+            },
+            'UH205': {
+                category: 'Quạt làm mát',
+                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
+                description: 'Shark FlexBreeze Fan with InstaCool Mist - Quạt làm mát với phụ kiện phun sương'
+            },
+            'UV440': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
+                description: 'Shark Navigator Lift Away Deluxe - Máy hút bụi đứng cao cấp Navigator'
+            },
+            'UV730': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
+                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
+            },
+            'VS100': {
+                category: 'Máy hút bụi cầm tay',
+                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
+                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
+            },
+            'VX100': {
+                category: 'Máy hút bụi cầm tay',
+                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
+                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
+            },
+            'ZU660': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Navigator, Lift Away, Self-Cleaning, Anti-Allergen',
+                description: 'Shark Navigator Lift Away Self-Cleaning Anti-Allergen - Máy hút bụi Navigator tự làm sạch'
+            },
+            'ZD201': {
+                category: 'Máy hút bụi đứng',
+                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
+                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
+            }
+        };
+
+        // View product info
+        function viewProductInfo(productId) {
+            const product = products[productId];
+            const details = productDetails[productId];
+            if (product && details) {
+                alert(`Sản phẩm: ${productId}\nTên: ${product.name}\nLoại: ${product.type}\n\n📋 Thông tin chi tiết:\nLoại sản phẩm: ${details.category}\nThông số: ${details.specs}\n\n📝 Mô tả:\n${details.description}\n\nTemplate: ${product.template_exists ? 'Có sẵn' : 'Thiếu'}`);
+            } else if (product) {
+                alert(`Sản phẩm: ${productId}\nTên: ${product.name}\nLoại: ${product.type}\nTemplate: ${product.template_exists ? 'Có sẵn' : 'Thiếu'}`);
+            }
+        }
+        
+        // Show modals
+        function showBatchModal() {
+            new bootstrap.Modal(document.getElementById('batchModal')).show();
+        }
+        
+        function showConfigModal() {
+            new bootstrap.Modal(document.getElementById('configModal')).show();
+        }
+        
+        function showHelpModal() {
+            new bootstrap.Modal(document.getElementById('helpModal')).show();
+        }
+        
+        function showBulkUserModal() {
+            new bootstrap.Modal(document.getElementById('bulkUserModal')).show();
+            loadUsers();
+            loadProductsForExport();
+        }
+        
+        function showExportModal() {
+            new bootstrap.Modal(document.getElementById('exportModal')).show();
+            loadProductsForExport();
+        }
+        
+        // Bulk User Management Functions
+        let csvData = [];
+        
+        function handleCSVUpload() {
+            const file = document.getElementById('csvFile').files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                csvData = [];
+                
+                for (let i = 1; i < lines.length; i++) { // Skip header
+                    const line = lines[i].trim();
+                    if (line) {
+                        const [username, password, email, role] = line.split(',');
+                        if (username && password) {
+                            csvData.push({
+                                username: username.trim(),
+                                password: password.trim(),
+                                email: email ? email.trim() : '',
+                                role: role ? role.trim() : 'user'
+                            });
+                        }
+                    }
+                }
+                
+                document.getElementById('importBtn').disabled = csvData.length === 0;
+                if (csvData.length > 0) {
+                    alert(`Đã đọc ${csvData.length} users từ file CSV`);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function importUsers() {
+            if (csvData.length === 0) {
+                alert('Không có dữ liệu để import!');
+                return;
+            }
+            
+            const importBtn = document.getElementById('importBtn');
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang import...';
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            Promise.all(csvData.map(user => 
+                fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.success) successCount++;
+                    else errorCount++;
+                })
+                .catch(() => errorCount++)
+            )).then(() => {
+                alert(`Import hoàn thành: ${successCount} thành công, ${errorCount} thất bại`);
+                loadUsers();
+                importBtn.disabled = false;
+                importBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Import Users';
+            });
+        }
+        
+        function addQuickUser() {
+            const username = document.getElementById('quickUsername').value;
+            const password = document.getElementById('quickPassword').value;
+            const email = document.getElementById('quickEmail').value;
+            const role = document.getElementById('quickRole').value;
+            
+            if (!username || !password) {
+                alert('Vui lòng nhập username và password!');
+                return;
+            }
+            
+            fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, email, role })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Thêm user thành công!');
+                    document.getElementById('quickUsername').value = '';
+                    document.getElementById('quickPassword').value = '';
+                    document.getElementById('quickEmail').value = '';
+                    loadUsers();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            });
+        }
+        
+        function loadUsers() {
+            fetch('/api/users')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('usersTableBody');
+                    if (data.users && data.users.length > 0) {
+                        tbody.innerHTML = data.users.map(user => `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email || '-'}</td>
+                                <td>
+                                    <span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-primary'}">
+                                        ${user.role}
+                                    </span>
+                                </td>
+                                <td>${new Date(user.created_at).toLocaleDateString('vi-VN')}</td>
+                                <td>${user.last_login ? new Date(user.last_login).toLocaleDateString('vi-VN') : 'Chưa đăng nhập'}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${user.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu</td></tr>';
+                });
+        }
+        
+        function editUser(userId) {
+            // Implement edit user functionality
+            alert('Chức năng edit user sẽ được implement sau');
+        }
+        
+        function deleteUser(userId) {
+            if (confirm('Bạn có chắc muốn xóa user này?')) {
+                // Implement delete user functionality
+                alert('Chức năng delete user sẽ được implement sau');
+            }
+        }
+        
+        // Export Data Functions
+        function loadProductsForExport() {
+            fetch('/api/products')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('exportProduct');
+                    select.innerHTML = '<option value="">Tất cả sản phẩm</option>';
+                    Object.keys(data).forEach(productId => {
+                        const option = document.createElement('option');
+                        option.value = data[productId].name;
+                        option.textContent = data[productId].name;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading products for export:', error);
+                });
+        }
+        
+        function exportData() {
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+            const productName = document.getElementById('exportProduct').value;
+            const status = document.getElementById('exportStatus').value;
+            
+            const filters = {};
+            if (startDate) filters.start_date = startDate;
+            if (endDate) filters.end_date = endDate;
+            if (productName) filters.product_name = productName;
+            if (status) filters.status = status;
+            
+            const exportBtn = document.querySelector('#exportModal .btn-primary');
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang export...';
+            
+            fetch('/api/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filters })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.open(data.download_url, '_blank');
+                    bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                alert('Có lỗi xảy ra khi export!');
+            })
+            .finally(() => {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '<i class="fas fa-download me-2"></i>Export Data';
+            });
+        }
+        
+        // Refresh products
+        function refreshProducts() {
+            document.getElementById('loading').style.display = 'block';
+            loadProducts().then(() => {
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Search products
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                filteredProducts = {...products};
+            } else {
+                filteredProducts = {};
+                Object.keys(products).forEach(productId => {
+                    const product = products[productId];
+                    const searchableText = `${productId} ${product.name} ${product.type} ${product.template}`.toLowerCase();
+                    
+                    if (searchableText.includes(searchTerm)) {
+                        filteredProducts[productId] = product;
+                    }
+                });
+            }
+            
+            // Apply alphabetical sort by default
+            if (currentSort !== 'name') {
+                sortProducts('name', false);
+            }
+            
+            updateProductCards();
+            updateProductVisibility();
+        }
+        
+        // Clear search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filteredProducts = {...products};
+            currentSort = 'name'; // Reset to alphabetical sort
+            updateProductCards();
+            updateProductVisibility();
+        }
+        
+        // Sort products
+        function sortProducts(sortType, updateSort = true) {
+            if (updateSort) {
+                currentSort = sortType;
+            }
+            
+            const productIds = Object.keys(filteredProducts);
+            
+            if (sortType === 'name') {
+                productIds.sort((a, b) => a.localeCompare(b));
+            } else if (sortType === 'type') {
+                productIds.sort((a, b) => {
+                    const typeA = filteredProducts[a].type;
+                    const typeB = filteredProducts[b].type;
+                    if (typeA === typeB) {
+                        return a.localeCompare(b);
+                    }
+                    return typeA.localeCompare(typeB);
+                });
+            }
+            
+            // Reorder filteredProducts
+            const sortedProducts = {};
+            productIds.forEach(id => {
+                sortedProducts[id] = filteredProducts[id];
+            });
+            filteredProducts = sortedProducts;
+            
+            updateProductCards();
+            updateProductVisibility();
+        }
+        
+        // Update product visibility
+        function updateProductVisibility() {
+            const productCards = document.querySelectorAll('.product-card');
+            
+            productCards.forEach(card => {
+                const productId = card.dataset.product;
+                if (filteredProducts[productId]) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Filter products (legacy function for compatibility)
+        function filterProducts(filter) {
+            const productCards = document.querySelectorAll('.product-card');
+            
+            productCards.forEach(card => {
+                const productId = card.dataset.product;
+                const product = products[productId];
+                
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else if (filter === 'active') {
+                    if (product && product.template_exists) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Update stats
+            updateStats();
+        }
+    </script>
+    
+    <!-- Auto-save Indicator -->
+    <div id="saveIndicator" style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-check-circle"></i>
+        <span>Draft saved</span>
+    </div>
+</body>
+</html>

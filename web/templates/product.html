@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Hệ thống PO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Phase 1 Enhancements -->
+    <link rel="stylesheet" href="/static/enhancements.css">
+    <script src="/static/enhancements.js" defer></script>
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .form-label {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .btn-custom {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .serial-input {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .serial-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .serial-item label {
+            width: 100px;
+            margin-bottom: 0;
+            font-weight: bold;
+        }
+        
+        .product-info {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .product-type {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .type-standard { background: rgba(39, 174, 96, 0.2); color: #27ae60; }
+        .type-special { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+        .type-merge_cells { background: rgba(23, 162, 184, 0.2); color: #17a2b8; }
+        .type-complex { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+        .type-unique_row { background: rgba(108, 117, 125, 0.2); color: #6c757d; }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .alert-custom {
+            border-radius: 15px;
+            border: none;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .preview-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .preview-item:last-child {
+            border-bottom: none;
+        }
+        
+        .preview-label {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .preview-value {
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .serial-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .serial-item label {
+                width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <div class="main-container">
+                    <!-- Header -->
+                    <div class="header">
+                        <h1><i class="fas fa-edit"></i> {{ product.name }}</h1>
+                        <p>Chỉnh sửa thông tin và tạo file PO</p>
+                        <a href="/" class="btn btn-outline-secondary btn-custom">
+                            <i class="fas fa-arrow-left"></i> Quay lại trang chủ
+                        </a>
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div class="product-info">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h3>{{ product.name }}</h3>
+                                <div class="product-type type-{{ product.type }}">{{ product.type }}</div>
+                                <p class="mb-0">Template: {{ product.template }}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <i class="fas fa-industry" style="font-size: 4em; opacity: 0.3;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-form"></i> Thông tin sản phẩm</h4>
+                        <form id="productForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tên sản phẩm</label>
+                                        <input type="text" class="form-control" id="productName" name="product_name"
+                                               value="{{ product.name }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Số PO</label>
+                                        <input type="text" class="form-control" id="poNumber" name="po_number"
+                                               placeholder="Ví dụ: 20206330" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Mã ngày (YYYYMMDD)</label>
+                                        <input type="text" class="form-control" id="dateCode" name="date_code"
+                                               placeholder="Ví dụ: 20251001" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Ngày hiện tại</label>
+                                        <input type="text" class="form-control" id="currentDate" 
+                                               value="" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Serial Numbers -->
+                            <div class="mb-4">
+                                <label class="form-label">Serial Numbers (5 số)</label>
+                                <div class="serial-input">
+                                    <div class="serial-item">
+                                        <label>Serial 1:</label>
+                                        <input type="text" class="form-control" id="serial1" name="serial1"
+                                               placeholder="Ví dụ: U29ZX509Z4F9" required>
+                                    </div>
+                                    <div class="serial-item">
+                                        <label>Serial 2:</label>
+                                        <input type="text" class="form-control" id="serial2" name="serial2"
+                                               placeholder="Ví dụ: U29ZX509Z4A2" required>
+                                    </div>
+                                    <div class="serial-item">
+                                        <label>Serial 3:</label>
+                                        <input type="text" class="form-control" id="serial3" name="serial3"
+                                               placeholder="Ví dụ: U29ZX509Z4H5" required>
+                                    </div>
+                                    <div class="serial-item">
+                                        <label>Serial 4:</label>
+                                        <input type="text" class="form-control" id="serial4" name="serial4"
+                                               placeholder="Ví dụ: U29ZX509Z4J0" required>
+                                    </div>
+                                    <div class="serial-item">
+                                        <label>Serial 5:</label>
+                                        <input type="text" class="form-control" id="serial5" name="serial5"
+                                               placeholder="Ví dụ: U29ZX509Z4F3" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-primary-custom btn-custom w-100" 
+                                            onclick="generateFile()">
+                                        <i class="fas fa-file-excel"></i> Tạo file Excel
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-secondary btn-custom w-100" 
+                                            onclick="previewData()">
+                                        <i class="fas fa-eye"></i> Xem trước
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Preview Section -->
+                    <div class="preview-section" id="previewSection" style="display: none;">
+                        <h5><i class="fas fa-eye"></i> Xem trước dữ liệu</h5>
+                        <div id="previewContent"></div>
+                    </div>
+                    
+                    <!-- Loading -->
+                    <div class="loading" id="loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tạo file...</span>
+                        </div>
+                        <p class="mt-3">Đang tạo file Excel...</p>
+                    </div>
+                    
+                    <!-- Results -->
+                    <div id="results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const productId = '{{ product_id }}';
+        const product = {{ product|tojson }};
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            setCurrentDate();
+            loadSampleData();
+        });
+        
+        // Set current date
+        function setCurrentDate() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateString = year + month + day;
+            
+            document.getElementById('currentDate').value = dateString;
+            document.getElementById('dateCode').value = dateString;
+        }
+        
+        // Load sample data
+        function loadSampleData() {
+            // Set sample PO number
+            document.getElementById('poNumber').value = '20206330';
+            
+            // Set sample serial numbers
+            const sampleSerials = [
+                'U29ZX509Z4F9',
+                'U29ZX509Z4A2', 
+                'U29ZX509Z4H5',
+                'U29ZX509Z4J0',
+                'U29ZX509Z4F3'
+            ];
+            
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`serial${i}`).value = sampleSerials[i-1];
+            }
+        }
+        
+        // Preview data
+        function previewData() {
+            const data = getFormData();
+            if (!data) return;
+            
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                <div class="preview-item">
+                    <span class="preview-label">Tên sản phẩm:</span>
+                    <span class="preview-value">${data.product_name}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="preview-label">Số PO:</span>
+                    <span class="preview-value">${data.po_number}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="preview-label">Mã ngày:</span>
+                    <span class="preview-value">${data.date_code}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="preview-label">Serial Numbers:</span>
+                    <span class="preview-value">${data.serial_numbers.join(', ')}</span>
+                </div>
+                <div class="preview-item">
+                    <span class="preview-label">Tên file:</span>
+                    <span class="preview-value">${data.product_name} - PO#${data.po_number} - ${data.date_code}.xlsx</span>
+                </div>
+            `;
+            
+            document.getElementById('previewSection').style.display = 'block';
+        }
+        
+        // Get form data
+        function getFormData() {
+            const productName = document.getElementById('productName').value.trim();
+            const poNumber = document.getElementById('poNumber').value.trim();
+            const dateCode = document.getElementById('dateCode').value.trim();
+            
+            const serialNumbers = [];
+            for (let i = 1; i <= 5; i++) {
+                const serial = document.getElementById(`serial${i}`).value.trim();
+                if (!serial) {
+                    alert(`Vui lòng nhập Serial ${i}`);
+                    return null;
+                }
+                serialNumbers.push(serial);
+            }
+            
+            if (!productName || !poNumber || !dateCode) {
+                alert('Vui lòng điền đầy đủ thông tin');
+                return null;
+            }
+            
+            // Validate date code format
+            if (!/^\d{8}$/.test(dateCode)) {
+                alert('Mã ngày phải có định dạng YYYYMMDD (8 chữ số)');
+                return null;
+            }
+            
+            return {
+                product_name: productName,
+                po_number: poNumber,
+                date_code: dateCode,
+                serial_numbers: serialNumbers
+            };
+        }
+        
+        // Generate file
+        async function generateFile() {
+            const data = getFormData();
+            if (!data) return;
+            
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        data: data
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(result);
+                } else {
+                    showError(result.message);
+                }
+                
+            } catch (error) {
+                showError('Lỗi kết nối: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Show success
+        function showSuccess(result) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="alert alert-success alert-custom">
+                    <h5><i class="fas fa-check-circle"></i> Tạo file thành công!</h5>
+                    <p>File đã được tạo và sẵn sàng để tải về.</p>
+                    <div class="mt-3">
+                        <a href="${result.download_url}" class="btn btn-success btn-custom">
+                            <i class="fas fa-download"></i> Tải file về
+                        </a>
+                        <button class="btn btn-outline-primary btn-custom ms-2" onclick="generateFile()">
+                            <i class="fas fa-plus"></i> Tạo file khác
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Show error
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="alert alert-danger alert-custom">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Lỗi!</h5>
+                    <p>${message}</p>
+                    <button class="btn btn-outline-danger btn-custom" onclick="generateFile()">
+                        <i class="fas fa-redo"></i> Thử lại
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Hide loading
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Auto-generate serial numbers
+        function generateSerialNumbers() {
+            const basePatterns = [
+                'U29ZX509Z4', 'U24ZX505Z1', 'U27ZX501Z0', 'U27ZX506A1',
+                'U27ZX507Z4', 'S06ZX512Z1', 'U22ZX501Z1'
+            ];
+            
+            const basePattern = basePatterns[Math.floor(Math.random() * basePatterns.length)];
+            
+            for (let i = 1; i <= 5; i++) {
+                const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                              Math.floor(Math.random() * 10);
+                document.getElementById(`serial${i}`).value = basePattern + suffix;
+            }
+        }
+        
+        // Add generate button
+        document.addEventListener('DOMContentLoaded', function() {
+            const serialSection = document.querySelector('.serial-input');
+            const generateBtn = document.createElement('button');
+            generateBtn.type = 'button';
+            generateBtn.className = 'btn btn-outline-info btn-sm';
+            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Tự động tạo Serial';
+            generateBtn.onclick = generateSerialNumbers;
+            serialSection.appendChild(generateBtn);
+        });
+    </script>
+    
+    <!-- Auto-save Indicator -->
+    <div id="saveIndicator" style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-check-circle"></i>
+        <span>Draft saved</span>
+    </div>
+</body>
+</html>

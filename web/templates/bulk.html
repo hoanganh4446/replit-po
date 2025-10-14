@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Operations - Hệ thống PO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .navbar-brand {
+            font-weight: 600;
+        }
+        .nav-link {
+            color: #666 !important;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #007bff !important;
+        }
+        .nav-link.active {
+            color: #007bff !important;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .bulk-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .bulk-item:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        .progress {
+            height: 25px;
+            border-radius: 15px;
+        }
+        .progress-bar {
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-industry me-2"></i>
+                Hệ thống PO
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">
+                    <i class="fas fa-home me-1"></i>Trang chủ
+                </a>
+                <a class="nav-link" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-chart-line me-1"></i>Dashboard
+                </a>
+                <a class="nav-link active" href="{{ url_for('bulk_page') }}">
+                    <i class="fas fa-layer-group me-1"></i>Bulk Operations
+                </a>
+                <a class="nav-link" href="{{ url_for('import_page') }}">
+                    <i class="fas fa-file-excel me-1"></i>Import Excel
+                </a>
+                <a class="nav-link" href="{{ url_for('analytics_page') }}">
+                    <i class="fas fa-analytics me-1"></i>Analytics
+                </a>
+                {% if session.role == 'admin' %}
+                <a class="nav-link" href="{{ url_for('users_page') }}">
+                    <i class="fas fa-users me-1"></i>Quản lý người dùng
+                </a>
+                {% endif %}
+                <a class="nav-link" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-layer-group me-2"></i>
+                    Bulk Operations
+                </h2>
+            </div>
+        </div>
+
+        <!-- Form thêm bulk items -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-plus me-2"></i>
+                        Thêm sản phẩm để xử lý hàng loạt
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="poNumber" class="form-label">Số PO</label>
+                            <input type="text" class="form-control" id="poNumber" placeholder="Nhập số PO..." onblur="autoFillProduct()">
+                            <small class="text-muted">Nhập số PO để tự động điền sản phẩm</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="productSelect" class="form-label">Sản phẩm</label>
+                            <select class="form-control" id="productSelect" onchange="autoFillPO()">
+                                <option value="">Chọn sản phẩm...</option>
+                            </select>
+                            <small class="text-muted">Chọn sản phẩm để tự động điền PO</small>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dateCode" class="form-label">Mã ngày</label>
+                            <input type="text" class="form-control" id="dateCode" placeholder="YYYYMMDD">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="quantity" class="form-label">Số lượng</label>
+                            <input type="number" class="form-control" id="quantity" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-primary" onclick="addBulkItem()">
+                                <i class="fas fa-plus me-2"></i>
+                                Thêm vào danh sách
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-magic me-2"></i>
+                        Tiên đoán PO từ dữ liệu đã import
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="predictionProduct" class="form-label">Nhập tên sản phẩm để tiên đoán PO</label>
+                                <input type="text" class="form-control" id="predictionProduct" placeholder="Nhập tên sản phẩm...">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="predictPO()">
+                                <i class="fas fa-magic me-2"></i>
+                                Tiên đoán PO
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="predictionPO" class="form-label">Nhập số PO để tìm sản phẩm</label>
+                                <input type="text" class="form-control" id="predictionPO" placeholder="Nhập số PO...">
+                            </div>
+                            <button type="button" class="btn btn-info" onclick="predictProduct()">
+                                <i class="fas fa-search me-2"></i>
+                                Tìm sản phẩm
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div id="predictionResults" class="alert alert-light" style="display: none;">
+                                <h6><i class="fas fa-lightbulb me-2"></i>Kết quả tiên đoán:</h6>
+                                <div id="predictionContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách bulk items -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5>
+                            <i class="fas fa-list me-2"></i>
+                            Danh sách xử lý (<span id="itemCount">0</span> items)
+                        </h5>
+                        <div>
+                            <button type="button" class="btn btn-success me-2" onclick="processBulk()" id="processBtn" disabled>
+                                <i class="fas fa-play me-2"></i>
+                                Bắt đầu xử lý
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="clearBulkList()">
+                                <i class="fas fa-trash me-2"></i>
+                                Xóa tất cả
+                            </button>
+                        </div>
+                    </div>
+                    <div id="bulkList">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Chưa có sản phẩm nào trong danh sách</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kết quả xử lý -->
+        <div class="row" id="resultsSection" style="display: none;">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Kết quả xử lý
+                    </h5>
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-primary" id="totalProcessed">0</div>
+                                <div class="text-muted">Tổng số</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-success" id="successCount">0</div>
+                                <div class="text-muted">Thành công</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-danger" id="failedCount">0</div>
+                                <div class="text-muted">Thất bại</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-info" id="successRate">0%</div>
+                                <div class="text-muted">Tỷ lệ thành công</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div id="resultsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let bulkItems = [];
+        let products = [];
+
+        // Load products
+        fetch('/api/products')
+            .then(response => response.json())
+            .then(data => {
+                // API trả về trực tiếp object products, không phải {products: [...]}
+                products = Object.keys(data).map(productId => ({
+                    id: productId,
+                    name: data[productId].name,
+                    type: data[productId].type
+                }));
+                
+                const select = document.getElementById('productSelect');
+                products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = product.name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading products:', error);
+                alert('Lỗi tải danh sách sản phẩm!');
+            });
+
+        function addBulkItem() {
+            const productId = document.getElementById('productSelect').value;
+            const poNumber = document.getElementById('poNumber').value;
+            const dateCode = document.getElementById('dateCode').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            if (!productId || !poNumber) {
+                alert('Vui lòng chọn sản phẩm và nhập số PO!');
+                return;
+            }
+
+            const product = products.find(p => p.id === productId);
+            const item = {
+                product_name: product.name,
+                po_number: poNumber,
+                date_code: dateCode || new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+                quantity: quantity
+            };
+
+            bulkItems.push(item);
+            updateBulkList();
+            clearForm();
+        }
+
+        function updateBulkList() {
+            const container = document.getElementById('bulkList');
+            const count = document.getElementById('itemCount');
+            const processBtn = document.getElementById('processBtn');
+
+            count.textContent = bulkItems.length;
+            processBtn.disabled = bulkItems.length === 0;
+
+            if (bulkItems.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Chưa có sản phẩm nào trong danh sách</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = bulkItems.map((item, index) => `
+                <div class="bulk-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <strong>${item.product_name}</strong>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-primary">PO: ${item.po_number}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="text-muted">${item.date_code}</span>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="badge bg-info">SL: ${item.quantity}</span>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeBulkItem(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeBulkItem(index) {
+            bulkItems.splice(index, 1);
+            updateBulkList();
+        }
+
+        function clearBulkList() {
+            bulkItems = [];
+            updateBulkList();
+        }
+
+        function clearForm() {
+            document.getElementById('productSelect').value = '';
+            document.getElementById('poNumber').value = '';
+            document.getElementById('dateCode').value = '';
+            document.getElementById('quantity').value = '1';
+        }
+
+        // Auto-fill functions
+        function autoFillProduct() {
+            const poNumber = document.getElementById('poNumber').value.trim();
+            if (!poNumber) return;
+            
+            fetch('/api/predict/product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ po_number: poNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Tìm và chọn sản phẩm trong dropdown
+                    const select = document.getElementById('productSelect');
+                    for (let option of select.options) {
+                        if (option.textContent === data.product_name) {
+                            select.value = option.value;
+                            break;
+                        }
+                    }
+                    showNotification(`Tự động điền sản phẩm: ${data.product_name}`, 'success');
+                } else {
+                    showNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Lỗi khi tìm sản phẩm', 'error');
+            });
+        }
+
+        function autoFillPO() {
+            const productSelect = document.getElementById('productSelect');
+            const selectedProduct = productSelect.options[productSelect.selectedIndex];
+            if (!selectedProduct || !selectedProduct.value) return;
+            
+            const productName = selectedProduct.textContent;
+            
+            fetch('/api/predict/po', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_name: productName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('poNumber').value = data.predicted_po;
+                    const message = data.is_processed ? 
+                        `Tự động điền PO: ${data.predicted_po} (đã xử lý)` : 
+                        `Tự động điền PO: ${data.predicted_po}`;
+                    showNotification(message, data.is_processed ? 'warning' : 'success');
+                } else {
+                    showNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Lỗi khi tìm PO', 'error');
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            // Tạo notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Tự động xóa sau 3 giây
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Prediction functions
+        function predictPO() {
+            const productName = document.getElementById('predictionProduct').value.trim();
+            
+            if (!productName) {
+                showNotification('Vui lòng nhập tên sản phẩm', 'warning');
+                return;
+            }
+            
+            showNotification('Đang tiên đoán PO...', 'info');
+            
+            fetch('/api/predict/po', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_name: productName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('predictionResults');
+                const contentDiv = document.getElementById('predictionContent');
+                
+                if (data.success) {
+                    const statusClass = data.is_processed ? 'warning' : 'success';
+                    const statusText = data.is_processed ? ' (đã xử lý)' : ' (chưa xử lý)';
+                    
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-${statusClass}">
+                            <strong>Sản phẩm:</strong> ${productName}<br>
+                            <strong>PO dự đoán:</strong> ${data.predicted_po}<br>
+                            <strong>Trạng thái:</strong> ${statusText}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showNotification(data.message, statusClass);
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <strong>Sản phẩm:</strong> ${productName}<br>
+                            <strong>Kết quả:</strong> ${data.message}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Lỗi khi tiên đoán PO', 'error');
+            });
+        }
+
+        function predictProduct() {
+            const poNumber = document.getElementById('predictionPO').value.trim();
+            
+            if (!poNumber) {
+                showNotification('Vui lòng nhập số PO', 'warning');
+                return;
+            }
+            
+            showNotification('Đang tìm sản phẩm...', 'info');
+            
+            fetch('/api/predict/product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ po_number: poNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('predictionResults');
+                const contentDiv = document.getElementById('predictionContent');
+                
+                if (data.success) {
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>PO Number:</strong> ${poNumber}<br>
+                            <strong>Sản phẩm:</strong> ${data.product_name}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showNotification(data.message, 'success');
+                } else {
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <strong>PO Number:</strong> ${poNumber}<br>
+                            <strong>Kết quả:</strong> ${data.message}
+                        </div>
+                    `;
+                    resultsDiv.style.display = 'block';
+                    showNotification(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Lỗi khi tìm sản phẩm', 'error');
+            });
+        }
+
+        // Load import status khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Removed import status loading - moved to import page
+        });
+
+        function processBulk() {
+            if (bulkItems.length === 0) return;
+
+            const processBtn = document.getElementById('processBtn');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            processBtn.disabled = true;
+            processBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+            resultsSection.style.display = 'block';
+
+            const requests = bulkItems.map(item => ({
+                product_name: item.product_name,
+                po_number: item.po_number,
+                date_code: item.date_code,
+                quantity: item.quantity
+            }));
+
+            fetch('/api/bulk/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ requests: requests })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResults(data.results);
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra!');
+            })
+            .finally(() => {
+                processBtn.disabled = false;
+                processBtn.innerHTML = '<i class="fas fa-play me-2"></i>Bắt đầu xử lý';
+            });
+        }
+
+        function showResults(results) {
+            const total = results.total;
+            const success = results.success.length;
+            const failed = results.failed.length;
+            const successRate = total > 0 ? Math.round((success / total) * 100) : 0;
+
+            document.getElementById('totalProcessed').textContent = total;
+            document.getElementById('successCount').textContent = success;
+            document.getElementById('failedCount').textContent = failed;
+            document.getElementById('successRate').textContent = successRate + '%';
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('progressBar').className = `progress-bar ${successRate >= 80 ? 'bg-success' : successRate >= 50 ? 'bg-warning' : 'bg-danger'}`;
+
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            if (success > 0) {
+                resultsList.innerHTML += '<h6 class="text-success mt-3"><i class="fas fa-check me-2"></i>Thành công:</h6>';
+                results.success.forEach(item => {
+                    resultsList.innerHTML += `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check me-2"></i>
+                            ${item.product_name} - PO: ${item.po_number}
+                            <a href="${item.download_url}" class="btn btn-sm btn-outline-success float-end">
+                                <i class="fas fa-download me-1"></i>Tải về
+                            </a>
+                        </div>
+                    `;
+                });
+            }
+
+            if (failed > 0) {
+                resultsList.innerHTML += '<h6 class="text-danger mt-3"><i class="fas fa-times me-2"></i>Thất bại:</h6>';
+                results.failed.forEach(item => {
+                    resultsList.innerHTML += `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times me-2"></i>
+                            Item ${item.index + 1}: ${item.error}
+                        </div>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>

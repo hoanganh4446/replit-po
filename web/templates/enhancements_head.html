@@ -1,0 +1,45 @@
+<!-- PO System Enhancements - Phase 1 -->
+<link rel="stylesheet" href="/static/enhancements.css">
+<script src="/static/enhancements.js" defer></script>
+
+<!-- Auto-save Indicator -->
+<div id="saveIndicator">
+    <i class="fas fa-sync-alt"></i>
+    <span>Draft saved</span>
+</div>
+
+<!-- Global Styles for Enhancements -->
+<style>
+    /* Ensure smooth transitions */
+    body, .main-container, .batch-section {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Fix for buttons in dark mode */
+    body.dark-mode .btn-close {
+        filter: invert(1);
+    }
+    
+    /* Loading state */
+    .btn.loading {
+        position: relative;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+    
+    .btn.loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+    }
+</style>
+
