@@ -64,9 +64,6 @@ temp/*.xlsx
 temp_*
 *.tmp
 
-# Replit specific
-.replit
-replit.nix
 
 # Cache
 src/apps/cache/

@@ -28,16 +28,17 @@ from werkzeug.utils import secure_filename
 import openpyxl
 from openpyxl.styles import PatternFill
 
-app = Flask(__name__, 
-           template_folder='web/templates',
-           static_folder='web/static')
-app.secret_key = 'po_system_secret_key_2024'
-
-# Cấu hình global
+# Cấu hình global - Calculate BASE_DIR first
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # Trỏ về thư mục gốc
 # For Replit compatibility, use current working directory as base
 if os.path.exists('web'):
     BASE_DIR = os.getcwd()
+
+# Initialize Flask app with absolute paths
+app = Flask(__name__, 
+           template_folder=os.path.join(BASE_DIR, 'web', 'templates'),
+           static_folder=os.path.join(BASE_DIR, 'web', 'static'))
+app.secret_key = 'po_system_secret_key_2024'
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "web", "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "web", "static")
