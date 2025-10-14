@@ -56,8 +56,9 @@ temp/
 # Excel files (keep templates but ignore generated files)
 products/*/output/
 products/*/temp/
-*.xlsx
-*.xls
+# Only ignore generated Excel files, not templates
+output/*.xlsx
+temp/*.xlsx
 
 # Temporary files
 temp_*
