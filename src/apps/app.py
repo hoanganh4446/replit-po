@@ -65,17 +65,17 @@ DB_PATH = os.path.join(BASE_DIR, 'config', 'database', 'po_system.db')
 
 class DatabaseManager:
     """Quản lý database SQLite"""
-    
+
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.init_database()
-    
+
     def init_database(self):
         """Khởi tạo database và các bảng"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            
+
             # Bảng users
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS users (
@@ -88,7 +88,7 @@ class DatabaseManager:
                     last_login TIMESTAMP
                 )
             ''')
-            
+
             # Bảng sessions
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS sessions (
@@ -100,7 +100,7 @@ class DatabaseManager:
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
-            
+
             # Bảng operations
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS operations (
@@ -116,7 +116,7 @@ class DatabaseManager:
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
-            
+
             # Bảng analytics
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS analytics (
@@ -129,7 +129,7 @@ class DatabaseManager:
                     UNIQUE(date, product_name)
                 )
             ''')
-            
+
         # Bảng import_data để lưu dữ liệu từ Excel
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS import_data (
@@ -145,51 +145,51 @@ class DatabaseManager:
                 UNIQUE(po_number, product_name)
             )
         ''')
-        
+
         # Kiểm tra và thêm các cột cần thiết nếu chưa có
         cursor.execute("PRAGMA table_info(import_data)")
         columns = [column[1] for column in cursor.fetchall()]
-        
+
         if 'file_import_date' not in columns:
             cursor.execute('ALTER TABLE import_data ADD COLUMN file_import_date TEXT')
             logger.info("Added file_import_date column to import_data table")
-            
+
         if 'status' not in columns:
             cursor.execute('ALTER TABLE import_data ADD COLUMN status TEXT DEFAULT "pending"')
             logger.info("Added status column to import_data table")
-            
+
         if 'completion_date' not in columns:
             cursor.execute('ALTER TABLE import_data ADD COLUMN completion_date TIMESTAMP')
             logger.info("Added completion_date column to import_data table")
-            
-            # Bảng po_prediction để lưu lịch sử tiên đoán PO
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS po_prediction (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    product_name TEXT NOT NULL,
-                    predicted_po TEXT NOT NULL,
-                    confidence_score REAL DEFAULT 1.0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(product_name, predicted_po)
-                )
-            ''')
-            
-            conn.commit()
-    
+
+        # Bảng po_prediction để lưu lịch sử tiên đoán PO
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS po_prediction (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_name TEXT NOT NULL,
+                predicted_po TEXT NOT NULL,
+                confidence_score REAL DEFAULT 1.0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(product_name, predicted_po)
+            )
+        ''')
+
+        conn.commit()
+
     def get_connection(self):
         """Lấy kết nối database"""
         return sqlite3.connect(self.db_path)
 
 class UserManager:
     """Quản lý người dùng và xác thực"""
-    
+
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
-    
+
     def hash_password(self, password: str) -> str:
         """Mã hóa mật khẩu"""
         return hashlib.sha256(password.encode()).hexdigest()
-    
+
     def create_user(self, username: str, password: str, email: str = None, role: str = 'user') -> bool:
         """Tạo người dùng mới"""
         try:
@@ -204,7 +204,7 @@ class UserManager:
                 return True
         except sqlite3.IntegrityError:
             return False
-    
+
     def authenticate_user(self, username: str, password: str) -> Optional[Dict]:
         """Xác thực người dùng"""
         with self.db_manager.get_connection() as conn:
@@ -215,7 +215,7 @@ class UserManager:
                 WHERE username = ? AND password_hash = ?
             ''', (username, password_hash))
             result = cursor.fetchone()
-            
+
             if result:
                 # Cập nhật last_login
                 cursor.execute('''
@@ -223,7 +223,7 @@ class UserManager:
                     WHERE id = ?
                 ''', (result[0],))
                 conn.commit()
-                
+
                 return {
                     'id': result[0],
                     'username': result[1],
@@ -231,7 +231,7 @@ class UserManager:
                     'role': result[3]
                 }
             return None
-    
+
     def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Lấy thông tin người dùng theo ID"""
         with self.db_manager.get_connection() as conn:
@@ -241,7 +241,7 @@ class UserManager:
                 FROM users WHERE id = ?
             ''', (user_id,))
             result = cursor.fetchone()
-            
+
             if result:
                 return {
                     'id': result[0],
@@ -255,10 +255,10 @@ class UserManager:
 
 class AnalyticsManager:
     """Quản lý phân tích và thống kê"""
-    
+
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
-    
+
     def log_operation(self, user_id: int, operation_type: str, product_name: str = None, 
                      po_number: str = None, status: str = 'completed', error_message: str = None):
         """Ghi log hoạt động"""
@@ -269,19 +269,19 @@ class AnalyticsManager:
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (user_id, operation_type, product_name, po_number, status, error_message))
             conn.commit()
-    
+
     def get_dashboard_data(self, days: int = 30) -> Dict:
         """Lấy dữ liệu dashboard"""
         with self.db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             # Tổng số hoạt động trong 30 ngày
             cursor.execute('''
                 SELECT COUNT(*) FROM operations
                 WHERE created_at >= datetime('now', '-{} days')
             '''.format(days))
             total_operations = cursor.fetchone()[0]
-            
+
             # Hoạt động theo loại sản phẩm
             cursor.execute('''
                 SELECT product_name, COUNT(*) as count
@@ -293,7 +293,7 @@ class AnalyticsManager:
                 LIMIT 10
             '''.format(days))
             product_stats = cursor.fetchall()
-            
+
             # Hoạt động theo ngày
             cursor.execute('''
                 SELECT DATE(created_at) as date, COUNT(*) as count
@@ -303,7 +303,7 @@ class AnalyticsManager:
                 ORDER BY date DESC
             '''.format(days))
             daily_stats = cursor.fetchall()
-            
+
             # Tỷ lệ thành công
             cursor.execute('''
                 SELECT 
@@ -314,7 +314,7 @@ class AnalyticsManager:
             '''.format(days))
             success_data = cursor.fetchone()
             success_rate = (success_data[1] / success_data[0] * 100) if success_data[0] > 0 else 0
-            
+
             return {
                 'total_operations': total_operations,
                 'product_stats': [{'name': row[0], 'count': row[1]} for row in product_stats],
@@ -324,17 +324,17 @@ class AnalyticsManager:
 
 class ExcelImportManager:
     """Quản lý import dữ liệu từ Excel file"""
-    
+
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
-    
+
     def import_daily_line_data(self, file_path: str, max_rows_to_check: int = 50, skip_color_check: bool = False, original_filename: str = None) -> Dict:
         """Import dữ liệu từ file Daily Line Running and PSI"""
         import time
         import tempfile
         import shutil
         import gc
-        
+
         # Khởi tạo biến để tránh lỗi UnboundLocalError
         imported_data = []
         skipped_rows = []
@@ -344,7 +344,7 @@ class ExcelImportManager:
         start_row = 1
         last_data_row = 1
         max_row = 1
-        
+
         try:
             # Kiểm tra file có tồn tại không
             if not os.path.exists(file_path):
@@ -352,7 +352,7 @@ class ExcelImportManager:
                     'success': False,
                     'error': f'File không tồn tại: {file_path}'
                 }
-            
+
             # Kiểm tra file có đang được sử dụng không
             try:
                 # Thử mở file với exclusive access
@@ -375,7 +375,7 @@ class ExcelImportManager:
                             continue
                 except ImportError:
                     pass  # psutil không có sẵn
-                
+
                 return {
                     'success': False,
                     'error': f'File đang được sử dụng bởi ứng dụng khác. Vui lòng đóng Excel và thử lại.'
@@ -385,12 +385,12 @@ class ExcelImportManager:
                     'success': False,
                     'error': f'Không thể truy cập file: {str(e)}'
                 }
-            
+
             # Tạo temporary file để tránh conflict
             temp_dir = tempfile.gettempdir()
             temp_filename = f"excel_import_{int(time.time())}.xlsx"
             temp_path = os.path.join(temp_dir, temp_filename)
-            
+
             try:
                 # Copy file sang temp directory
                 max_retries = 3
@@ -410,49 +410,49 @@ class ExcelImportManager:
                     except Exception as e:
                         logger.warning(f"Could not create temp file: {e}")
                         break
-                        
+
             except Exception as e:
                 logger.warning(f"Temp file creation failed: {e}")
                 # Tiếp tục với file gốc
-            
+
             # Đóng file handle trước khi mở với openpyxl
             try:
                 gc.collect()  # Force garbage collection
                 time.sleep(0.2)  # Đợi lâu hơn
             except:
                 pass
-            
+
             # Sử dụng BytesIO để xử lý file trong memory hoàn toàn
             try:
                 with open(file_path, 'rb') as f:
                     # Đọc file vào memory
                     file_data = f.read()
-                
+
                 # Sử dụng BytesIO để xử lý file trong memory
                 from io import BytesIO
                 file_stream = BytesIO(file_data)
-                
+
                 # Mở workbook từ memory stream
                 workbook = openpyxl.load_workbook(file_stream, read_only=True, data_only=True)
                 worksheet = workbook.active
-                
+
                 logger.info("Using memory-based file processing with BytesIO")
-                
+
             except Exception as e:
                 logger.warning(f"Could not use memory-based processing: {e}")
                 # Fallback: sử dụng file trực tiếp
                 workbook = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
                 worksheet = workbook.active
-            
+
             # Biến đã được khởi tạo ở đầu hàm
-            
+
             # Màu vàng để kiểm tra (FFFF00)
             yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-            
+
             # Tối ưu hóa: bắt đầu từ cuối file và đi ngược lên
             max_row = worksheet.max_row
             start_row = max(1, max_row - max_rows_to_check)  # Chỉ kiểm tra số hàng cuối được chỉ định
-            
+
             # Tìm hàng cuối cùng có dữ liệu
             last_data_row = max_row
             for row_num in range(max_row, 0, -1):
@@ -460,24 +460,24 @@ class ExcelImportManager:
                 if po_cell.value is not None and str(po_cell.value).strip():
                     last_data_row = row_num
                     break
-            
+
             logger.info(f"Processing rows {start_row} to {last_data_row} (total: {max_row})")
-            
+
             # Duyệt từ cuối lên đầu để tìm hàng có màu vàng
             consecutive_empty_rows = 0
             max_consecutive_empty = 50  # Dừng sau 50 hàng trống liên tiếp
-            
+
             # Debug: Đếm số hàng có dữ liệu (biến đã được khởi tạo ở đầu hàm)
-            
+
             for row_num in range(last_data_row, start_row - 1, -1):
                 try:
                     # Lấy giá trị từ cột B và C
                     po_number_cell = worksheet.cell(row=row_num, column=2)  # Cột B
                     product_name_cell = worksheet.cell(row=row_num, column=3)  # Cột C
-                    
+
                     po_number = po_number_cell.value
                     product_name = product_name_cell.value
-                    
+
                     # Bỏ qua hàng trống
                     if not po_number or not product_name:
                         consecutive_empty_rows += 1
@@ -485,14 +485,14 @@ class ExcelImportManager:
                             logger.info(f"Stopping at row {row_num} - too many empty rows")
                             break
                         continue
-                    
+
                     rows_with_data += 1
                     consecutive_empty_rows = 0  # Reset counter
-                    
+
                     # Kiểm tra màu nền của cell PO number (cột B)
                     cell_fill = po_number_cell.fill
                     is_yellow = False
-                    
+
                     # Tùy chọn bỏ qua color check để test
                     if skip_color_check:
                         is_yellow = True
@@ -505,25 +505,25 @@ class ExcelImportManager:
                                 rgb = None
                                 indexed = None
                                 theme = None
-                                
+
                                 try:
                                     rgb = cell_fill.start_color.rgb
                                 except:
                                     pass
-                                    
+
                                 try:
                                     indexed = cell_fill.start_color.indexed
                                 except:
                                     pass
-                                    
+
                                 try:
                                     theme = cell_fill.start_color.theme
                                 except:
                                     pass
-                                
+
                                 # Convert RGB to string nếu cần
                                 rgb_str = str(rgb) if rgb else ""
-                                
+
                                 # Các cách detect màu vàng - mở rộng thêm
                                 is_yellow = (
                                     rgb_str == "FF0000FFFF" or  # ARGB yellow
@@ -546,18 +546,18 @@ class ExcelImportManager:
                                     rgb_str.upper() == "0000FFFF" or  # THÊM MỚI
                                     rgb_str.upper() == "FFFF00FF"     # THÊM MỚI
                                 )
-                                
+
                                 # Debug log với error handling
                                 logger.info(f"Row {row_num}: PO={po_number}, RGB={rgb_str}, Indexed={indexed}, Theme={theme}, FillType={cell_fill.fill_type}, Yellow={is_yellow}")
-                                
+
                             except Exception as e:
                                 logger.warning(f"Row {row_num}: Error reading color - {str(e)}")
                                 # KHÔNG dùng fallback nếu có lỗi đọc color
                                 is_yellow = False
-                        
+
                         # KHÔNG dùng fallback cho color detection thông thường
                         # Chỉ import nếu thực sự detect được màu vàng
-                    
+
                     if is_yellow:
                         rows_with_yellow += 1
                         # Lưu vào database
@@ -567,21 +567,21 @@ class ExcelImportManager:
                                 # Lấy ngày từ tên file (DDMMYYYY format) - đây là ngày của file
                                 filename_for_date = original_filename if original_filename else os.path.basename(file_path)
                                 file_import_date = self.extract_date_from_filename(filename_for_date)
-                                
+
                                 # Ngày import thực tế (thời gian hiện tại)
                                 from datetime import datetime
                                 import_date = datetime.now()
-                                
+
                                 # Sử dụng tên file gốc thay vì tên file tạm
                                 display_filename = original_filename if original_filename else os.path.basename(file_path)
-                                
+
                                 cursor.execute('''
                                     INSERT OR REPLACE INTO import_data 
                                     (po_number, product_name, row_number, file_name, file_import_date, import_date, status)
                                     VALUES (?, ?, ?, ?, ?, ?, ?)
                                 ''', (str(po_number), str(product_name), row_num, display_filename, file_import_date, import_date, 'pending'))
                                 conn.commit()
-                                
+
                                 imported_data.append({
                                     'po_number': str(po_number),
                                     'product_name': str(product_name),
@@ -589,9 +589,9 @@ class ExcelImportManager:
                                     'file_import_date': file_import_date,
                                     'import_date': import_date.strftime("%Y-%m-%d %H:%M:%S")
                                 })
-                                
+
                                 logger.info(f"Row {row_num}: Successfully imported PO {po_number} - {product_name} (File date: {file_import_date}, Import date: {import_date.strftime('%Y-%m-%d %H:%M:%S')})")
-                                
+
                             except sqlite3.IntegrityError:
                                 # Đã tồn tại, bỏ qua
                                 logger.info(f"Row {row_num}: PO {po_number} already exists, skipping")
@@ -609,23 +609,23 @@ class ExcelImportManager:
                             'product_name': str(product_name) if product_name else '',
                             'reason': 'Không có màu vàng'
                         })
-                        
+
                 except Exception as e:
                     errors.append({
                         'row_number': row_num,
                         'error': str(e)
                     })
-            
+
             # Debug summary
             logger.info(f"Import Summary: {rows_with_data} rows with data, {rows_with_yellow} rows with yellow, {len(imported_data)} imported, {len(skipped_rows)} skipped, {len(errors)} errors")
-            
+
             # Đóng workbook để giải phóng file handle
             try:
                 workbook.close()
                 logger.info("Workbook closed successfully")
             except Exception as e:
                 logger.warning(f"Could not close workbook: {e}")
-            
+
             return {
                 'success': True,
                 'imported_count': len(imported_data),
@@ -646,7 +646,7 @@ class ExcelImportManager:
                     'max_row': max_row
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Import error: {str(e)}")
             logger.error(f"Error type: {type(e).__name__}")
@@ -666,7 +666,7 @@ class ExcelImportManager:
                     logger.info("Workbook closed in finally block")
                 except Exception as e:
                     logger.warning(f"Could not close workbook in finally: {e}")
-            
+
             # Cleanup temp file gốc nếu có
             if 'temp_path' in locals() and os.path.exists(temp_path):
                 try:
@@ -677,41 +677,41 @@ class ExcelImportManager:
                 except Exception as e:
                     logger.warning(f"Could not remove temp file {temp_path} (will be cleaned up later): {e}")
                     # Không cần xử lý thêm, file sẽ được cleanup sau
-    
+
     def extract_date_from_filename(self, filename: str) -> str:
         """Extract date from filename (DDMMYYYY format)"""
         import re
         from datetime import datetime
-        
+
         # Tìm pattern MM.DD trong tên file (ví dụ: "10.11" = tháng 10, ngày 11)
         # Ví dụ: "Daily Line Runing and PSI 10.11.xlsx" -> "11102025" (11/10/2025)
         date_pattern = r'(\d{1,2})\.(\d{1,2})'
         match = re.search(date_pattern, filename)
-        
+
         if match:
             month, day = match.groups()  # Đổi thứ tự: month.day -> day.month
             # Lấy năm hiện tại
             current_year = datetime.now().year
             # Format: DDMMYYYY (day.month.year)
             return f"{day.zfill(2)}{month.zfill(2)}{current_year}"
-        
+
         # Fallback: tìm pattern khác DDMMYYYY
         date_pattern2 = r'(\d{2})(\d{2})(\d{4})'
         match2 = re.search(date_pattern2, filename)
-        
+
         if match2:
             day, month, year = match2.groups()
             return f"{day}{month}{year}"
-        
+
         # Fallback: sử dụng ngày hiện tại
         return datetime.now().strftime("%d%m%Y")
-    
+
     def predict_po_number(self, product_name: str) -> Optional[str]:
         """Tiên đoán số PO dựa trên tên sản phẩm"""
         try:
             with self.db_manager.get_connection() as conn:
                 cursor = conn.cursor()
-                
+
                 # Tìm PO gần nhất cho sản phẩm này
                 cursor.execute('''
                     SELECT po_number FROM import_data 
@@ -719,11 +719,11 @@ class ExcelImportManager:
                     ORDER BY import_date DESC 
                     LIMIT 1
                 ''', (product_name,))
-                
+
                 result = cursor.fetchone()
                 if result:
                     return result[0]
-                
+
                 # Nếu không tìm thấy, tìm sản phẩm tương tự
                 cursor.execute('''
                     SELECT po_number, product_name FROM import_data 
@@ -731,66 +731,66 @@ class ExcelImportManager:
                     ORDER BY import_date DESC 
                     LIMIT 1
                 ''', (f'%{product_name}%',))
-                
+
                 result = cursor.fetchone()
                 if result:
                     return result[0]
-                
+
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error predicting PO: {str(e)}")
             return None
-    
+
     def get_product_by_po(self, po_number: str) -> Optional[str]:
         """Lấy tên sản phẩm dựa trên số PO"""
         try:
             with self.db_manager.get_connection() as conn:
                 cursor = conn.cursor()
-                
+
                 cursor.execute('''
                     SELECT product_name FROM import_data 
                     WHERE po_number = ? 
                     ORDER BY import_date DESC 
                     LIMIT 1
                 ''', (po_number,))
-                
+
                 result = cursor.fetchone()
                 if result:
                     return result[0]
-                
+
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error getting product by PO: {str(e)}")
             return None
-    
+
     def is_po_processed(self, po_number: str) -> bool:
         """Kiểm tra xem PO đã được xử lý chưa"""
         try:
             with self.db_manager.get_connection() as conn:
                 cursor = conn.cursor()
-                
+
                 cursor.execute('''
                     SELECT COUNT(*) FROM operations 
                     WHERE po_number = ? AND status = 'completed'
                 ''', (po_number,))
-                
+
                 result = cursor.fetchone()
                 return result[0] > 0
-                
+
         except Exception as e:
             logger.error(f"Error checking PO status: {str(e)}")
             return False
 
 class BulkOperationsManager:
     """Quản lý các thao tác hàng loạt"""
-    
+
     def __init__(self, product_manager, db_manager: DatabaseManager):
         self.product_manager = product_manager
         self.db_manager = db_manager
         self.excel_import_manager = ExcelImportManager(db_manager)
-    
+
     def bulk_generate_pos(self, requests: List[Dict], user_id: int) -> Dict:
         """Tạo hàng loạt PO"""
         results = {
@@ -798,7 +798,7 @@ class BulkOperationsManager:
             'failed': [],
             'total': len(requests)
         }
-        
+
         for i, req in enumerate(requests):
             try:
                 # Validate request
@@ -808,7 +808,7 @@ class BulkOperationsManager:
                         'error': 'Missing product_name or po_number'
                     })
                     continue
-                
+
                 # Generate PO
                 result = self.product_manager.generate_po(
                     product_name=req['product_name'],
@@ -816,7 +816,7 @@ class BulkOperationsManager:
                     date_code=req.get('date_code', datetime.now().strftime('%Y%m%d')),
                     quantity=req.get('quantity', 1)
                 )
-                
+
                 if result['success']:
                     results['success'].append({
                         'index': i,
@@ -824,7 +824,7 @@ class BulkOperationsManager:
                         'po_number': req['po_number'],
                         'file_path': result['file_path']
                     })
-                    
+
                     # Log success
                     self.db_manager.log_operation(
                         user_id=user_id,
@@ -838,7 +838,7 @@ class BulkOperationsManager:
                         'index': i,
                         'error': result.get('error', 'Unknown error')
                     })
-                    
+
                     # Log failure
                     self.db_manager.log_operation(
                         user_id=user_id,
@@ -848,13 +848,13 @@ class BulkOperationsManager:
                         status='failed',
                         error_message=result.get('error')
                     )
-                    
+
             except Exception as e:
                 results['failed'].append({
                     'index': i,
                     'error': str(e)
                 })
-                
+
                 # Log error
                 self.db_manager.log_operation(
                     user_id=user_id,
@@ -864,9 +864,9 @@ class BulkOperationsManager:
                     status='error',
                     error_message=str(e)
                 )
-        
+
         return results
-    
+
     def export_data(self, filters: Dict = None) -> str:
         """Xuất dữ liệu ra file CSV"""
         with self.db_manager.get_connection() as conn:
@@ -877,7 +877,7 @@ class BulkOperationsManager:
                 FROM operations o
                 LEFT JOIN users u ON o.user_id = u.id
             '''
-            
+
             params = []
             if filters:
                 conditions = []
@@ -892,18 +892,18 @@ class BulkOperationsManager:
                     params.append(filters['product_name'])
                 if conditions:
                     query += " WHERE " + " AND ".join(conditions)
-            
+
             query += " ORDER BY o.created_at DESC"
-            
+
             cursor = conn.cursor()
             cursor.execute(query, params)
             results = cursor.fetchall()
-            
+
             # Tạo file CSV
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"po_export_{timestamp}.csv"
             filepath = os.path.join(OUTPUT_DIR, filename)
-            
+
             with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 # Header
@@ -911,7 +911,7 @@ class BulkOperationsManager:
                                'Status', 'Created At', 'Completed At', 'Error Message', 'Username'])
                 # Data
                 writer.writerows(results)
-            
+
             return filepath
 
 # Khởi tạo các manager
@@ -921,11 +921,11 @@ analytics_manager = AnalyticsManager(db_manager)
 
 class ProductManager:
     """Quản lý sản phẩm và cấu hình"""
-    
+
     def __init__(self):
         self.products = {}
         self.load_products()
-    
+
     def load_products(self):
         """Tải tất cả sản phẩm từ cấu hình"""
         # Cấu hình sản phẩm dựa trên phân tích
@@ -1107,7 +1107,7 @@ class ProductManager:
                 },
                 'serial_range': 'A11:A15'
             },
-            
+
             # === SẢN PHẨM MỚI ===
             'UV440': {
                 'name': 'UV440',
@@ -1326,7 +1326,7 @@ class ProductManager:
                 },
                 'serial_range': 'A11:A15'
             },
-            
+
             # === SẢN PHẨM HD SERIES ===
             'HD300': {
                 'name': 'HD300',
@@ -1481,32 +1481,32 @@ class ProductManager:
                 'serial_range': 'A11:A15'
             },
         }
-        
+
         self.products = product_configs
-    
+
     def get_product(self, product_id: str) -> Optional[Dict]:
         """Lấy thông tin sản phẩm"""
         return self.products.get(product_id)
-    
+
     def list_products(self) -> List[str]:
         """Liệt kê tất cả sản phẩm"""
         return list(self.products.keys())
-    
+
     def validate_template(self, product_id: str) -> bool:
         """Kiểm tra template file có tồn tại không"""
         product = self.get_product(product_id)
         if not product:
             return False
-        
+
         template_path = os.path.join(BASE_DIR, product['template'])
         return os.path.exists(template_path)
 
 class ExcelProcessor:
     """Xử lý Excel cho web"""
-    
+
     def __init__(self):
         random.seed(datetime.now().timestamp())
-    
+
     def apply_center(self, ws, cell_range):
         """Căn giữa văn bản"""
         try:
@@ -1515,25 +1515,25 @@ class ExcelProcessor:
             rng.api.VerticalAlignment = -4108
         except:
             pass
-    
+
     def generate_unique_randoms(self, a: int, b: int, count: int) -> List[int]:
         """Tạo số ngẫu nhiên duy nhất"""
         result = set()
         while len(result) < count:
             result.add(random.randint(a, b))
         return list(result)
-    
+
     def process_standard_product(self, ws, config: Dict, data: Dict):
         """Xử lý sản phẩm chuẩn"""
         # Serial numbers
         serial_range = config.get('serial_range', 'A11:A15')
         start_row = int(serial_range.split(':')[0][1:])
-        
+
         for i, sn in enumerate(data['serial_numbers']):
             cell = f"{serial_range[0]}{start_row + i}"
             ws.range(cell).value = sn
             self.apply_center(ws, cell)
-        
+
         # Random data
         if 'random_config' in config and 'random_columns' in config:
             for col_idx, config_item in enumerate(config['random_config']):
@@ -1569,10 +1569,10 @@ class ExcelProcessor:
                         cell = f"{config['random_columns'][col_idx]}{start_row + row_idx}"
                         ws.range(cell).value = val
                         self.apply_center(ws, cell)
-        
+
         # Product info
         merge_config = config.get('merge_config', {})
-        
+
         if 'product' in merge_config:
             product_cell = merge_config['product'].split(':')[0]
             try:
@@ -1582,7 +1582,7 @@ class ExcelProcessor:
             ws.range(product_cell).value = data['product_name']
             ws.range(merge_config['product']).merge()
             self.apply_center(ws, merge_config['product'])
-        
+
         if 'po' in merge_config:
             po_cell = merge_config['po'].split(':')[0]
             try:
@@ -1592,7 +1592,7 @@ class ExcelProcessor:
             ws.range(po_cell).value = data['po_number']
             ws.range(merge_config['po']).merge()
             self.apply_center(ws, merge_config['po'])
-        
+
         if 'date' in merge_config:
             date_cell = merge_config['date'].split(':')[0]
             try:
@@ -1603,7 +1603,7 @@ class ExcelProcessor:
             ws.range(date_cell).value = formatted_date
             ws.range(merge_config['date']).merge()
             self.apply_center(ws, merge_config['date'])
-    
+
     def process_special_product(self, ws, config: Dict, data: Dict):
         """Xử lý sản phẩm đặc biệt"""
         if config['type'] == 'merge_cells':
@@ -1617,14 +1617,14 @@ class ExcelProcessor:
                 self.process_vx100(ws, config, data)
         else:
             self.process_standard_product(ws, config, data)
-    
+
     def process_hx100(self, ws, config: Dict, data: Dict):
         """Xử lý HX100"""
         # Serial numbers
         for i, sn in enumerate(data['serial_numbers']):
             ws.range(f"A{11+i}").value = sn
             self.apply_center(ws, f"A{11+i}")
-        
+
         # Random data với merge cells
         special_config = config.get('special_config', {})
         if 'random_ranges' in special_config:
@@ -1633,14 +1633,14 @@ class ExcelProcessor:
                     val = random.randint(min_val, max_val)
                     if mode == "div100":
                         val = round(val / 100, 2)
-                    
+
                     start_cell = cell_range.split(":")[0]
                     ws.range(f"{start_cell}{row}").value = val
                     self.apply_center(ws, f"{cell_range}{row}")
-        
+
         # Product info
         merge_config = special_config.get('merge_config', {})
-        
+
         # Product name
         ws.range("C4").value = data['product_name']
         try:
@@ -1649,7 +1649,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('product', 'C4:E5')).merge()
         self.apply_center(ws, merge_config.get('product', 'C4:E5'))
-        
+
         # PO number
         ws.range("F4").value = data['po_number']
         try:
@@ -1658,7 +1658,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('po', 'F4:I4')).merge()
         self.apply_center(ws, merge_config.get('po', 'F4:I4'))
-        
+
         # Date
         formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
         ws.range("Q4").value = formatted_date
@@ -1668,7 +1668,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('date', 'Q4:T4')).merge()
         self.apply_center(ws, merge_config.get('date', 'Q4:T4'))
-    
+
     def process_hd400(self, ws, config: Dict, data: Dict):
         """Xử lý HD400"""
         # Serial numbers
@@ -1676,15 +1676,15 @@ class ExcelProcessor:
             cell = f"A{8 + i}"
             ws.range(cell).value = serial
             self.apply_center(ws, cell)
-        
+
         # Complex configuration
         complex_config = config.get('complex_config', [])
         used_rows = set()
-        
+
         while len(used_rows) < 5:
             current_row_values = []
             used_numbers_in_current_row = set()
-            
+
             for col_idx, (min_val, max_val, mode_or_fixed_value) in enumerate(complex_config):
                 cell_val = None
                 if min_val is None and max_val is None:
@@ -1696,30 +1696,30 @@ class ExcelProcessor:
                             used_numbers_in_current_row.add(generated_int)
                             cell_val = generated_int
                             break
-                    
+
                     if mode_or_fixed_value == "div100":
                         cell_val = round(cell_val / 100.0, 2)
-                
+
                 current_row_values.append(cell_val)
-            
+
             row_tuple = tuple(current_row_values)
             if row_tuple not in used_rows:
                 used_rows.add(row_tuple)
-        
+
         # Write data
         for i, row_data in enumerate(used_rows):
             for j, val_to_write in enumerate(row_data):
                 cell_obj = ws.range((8 + i, 2 + j))
                 cell_obj.value = val_to_write
                 self.apply_center(ws, cell_obj)
-        
+
         # Product info
         merge_config = config.get('merge_config', {})
-        
+
         # Product name
         ws.range("B3").value = data['product_name']
         self.apply_center(ws, "B3")
-        
+
         # PO number
         if ws.range("G3").merge_cells:
             ws.range("G3").unmerge()
@@ -1733,7 +1733,7 @@ class ExcelProcessor:
                 self.apply_center(ws, "G3")
         else:
             self.apply_center(ws, "G3")
-        
+
         # Date
         if ws.range("S3").merge_cells:
             ws.range("S3").unmerge()
@@ -1748,13 +1748,13 @@ class ExcelProcessor:
                 self.apply_center(ws, "S3")
         else:
             self.apply_center(ws, "S3")
-    
+
     def process_vx100(self, ws, config: Dict, data: Dict):
         """Xử lý VX100"""
         # Serial numbers
         for i, sn in enumerate(data['serial_numbers']):
             ws.range(f"A{11+i}").value = sn
-        
+
         # Unique row logic
         def generate_unique_row_e_to_g():
             while True:
@@ -1765,17 +1765,17 @@ class ExcelProcessor:
                 ]
                 if len(set(row)) == len(row):
                     return row
-        
+
         cols = ["E", "F", "G"]
         for row_idx in range(5):
             values = generate_unique_row_e_to_g()
             for col_idx, val in enumerate(values):
                 ws.range(f"{cols[col_idx]}{11+row_idx}").value = val
-        
+
         # Product info
         special_config = config.get('special_config', {})
         merge_config = special_config.get('merge_config', {})
-        
+
         # Product name
         ws.range("C4").value = data['product_name']
         try:
@@ -1784,7 +1784,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('product', 'C4:D5')).merge()
         self.apply_center(ws, merge_config.get('product', 'C4:D5'))
-        
+
         # PO number
         ws.range("F4").value = data['po_number']
         try:
@@ -1793,7 +1793,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('po', 'F4:G5')).merge()
         self.apply_center(ws, merge_config.get('po', 'F4:G5'))
-        
+
         # Date
         formatted_date = datetime.strptime(data['date_code'], "%Y%m%d").strftime("%Y.%m.%d")
         ws.range("M4").value = formatted_date
@@ -1803,18 +1803,18 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('date', 'M4:P5')).merge()
         self.apply_center(ws, merge_config.get('date', 'M4:P5'))
-        
+
         # Center alignment for data area
         ws.range("A11:G15").api.HorizontalAlignment = -4108
         ws.range("A11:G15").api.VerticalAlignment = -4108
-    
+
     def process_iz381h(self, ws, config: Dict, data: Dict):
         """Xử lý đặc biệt cho IZ381H"""
         # Serial numbers vào B9:B13
         for i, sn in enumerate(data['serial_numbers']):
             ws.range(f"B{9+i}").value = sn
             self.apply_center(ws, f"B{9+i}")
-        
+
         # Unique row logic cho D9:H13
         def generate_unique_row_d_to_h():
             while True:
@@ -1827,18 +1827,18 @@ class ExcelProcessor:
                 ]
                 if len(set(row)) == len(row):
                     return row
-        
+
         cols = ["D", "E", "F", "G", "H"]
         for row_idx in range(5):
             values = generate_unique_row_d_to_h()
             for col_idx, val in enumerate(values):
                 ws.range(f"{cols[col_idx]}{9+row_idx}").value = val
                 self.apply_center(ws, f"{cols[col_idx]}{9+row_idx}")
-        
+
         # Product info
         special_config = config.get('special_config', {})
         merge_config = special_config.get('merge_config', {})
-        
+
         # Product name
         ws.range("B3").value = data['product_name']
         try:
@@ -1847,7 +1847,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('product', 'B3:C3')).merge()
         self.apply_center(ws, merge_config.get('product', 'B3:C3'))
-        
+
         # PO number
         ws.range("E3").value = data['po_number']
         try:
@@ -1856,7 +1856,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('po', 'E3:F3')).merge()
         self.apply_center(ws, merge_config.get('po', 'E3:F3'))
-        
+
         # Date
         formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
         ws.range("I3").value = formatted_date
@@ -1866,7 +1866,7 @@ class ExcelProcessor:
             pass
         ws.range(merge_config.get('date', 'I3:J3')).merge()
         self.apply_center(ws, merge_config.get('date', 'I3:J3'))
-    
+
     def process_standard_product_openpyxl(self, ws, config: Dict, data: Dict):
         """Xử lý sản phẩm chuẩn với openpyxl"""
         try:
@@ -1874,17 +1874,17 @@ class ExcelProcessor:
             for field, cell in config.get('fields', {}).items():
                 if field in data:
                     ws[cell] = data[field]
-            
+
             # Fill date if available
             if 'date_code' in data:
                 formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
                 ws['I3'] = formatted_date
-            
+
             return True
         except Exception as e:
             print(f"Error processing standard product with openpyxl: {e}")
             return False
-    
+
     def process_special_product_openpyxl(self, ws, config: Dict, data: Dict):
         """Xử lý sản phẩm đặc biệt với openpyxl"""
         try:
@@ -1892,12 +1892,12 @@ class ExcelProcessor:
             for field, cell in config.get('fields', {}).items():
                 if field in data:
                     ws[cell] = data[field]
-            
+
             # Fill date if available
             if 'date_code' in data:
                 formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
                 ws['I3'] = formatted_date
-            
+
             # Handle special configurations
             if config.get('type') == 'merge_cells':
                 merge_config = config.get('merge_cells', {})
@@ -1906,40 +1906,207 @@ class ExcelProcessor:
                     date_range = merge_config['date']
                     ws.merge_cells(date_range)
                     ws[date_range.split(':')[0]].alignment = openpyxl.styles.Alignment(horizontal='center')
-            
+
             return True
         except Exception as e:
             print(f"Error processing special product with openpyxl: {e}")
             return False
-    
+
     def create_excel_file(self, product_id: str, data: Dict, output_path: str) -> bool:
-        """Tạo file Excel"""
+        """Tạo file Excel với xlwings để giữ hình ảnh"""
         try:
             product_manager = ProductManager()
             config = product_manager.get_product(product_id)
             if not config:
                 return False
-            
+
             template_path = os.path.join(BASE_DIR, config['template'])
             if not os.path.exists(template_path):
                 return False
-            
-            # Use openpyxl instead of xlwings for Replit compatibility
-            wb = openpyxl.load_workbook(template_path)
-            ws = wb.active
-            
-            if config['type'] in ['merge_cells', 'complex', 'unique_row']:
-                self.process_special_product_openpyxl(ws, config, data)
-            else:
-                self.process_standard_product_openpyxl(ws, config, data)
-            
-            wb.save(output_path)
-            
-            return True
-            
+
+            # Try xlwings first (preserves images)
+            try:
+                import xlwings as xw
+                return self._create_excel_with_xlwings(template_path, config, data, output_path)
+            except ImportError:
+                print("xlwings not available, falling back to openpyxl")
+                # Fallback to openpyxl
+                wb = openpyxl.load_workbook(template_path)
+                ws = wb.active
+
+                if config['type'] in ['merge_cells', 'complex', 'unique_row']:
+                    self.process_special_product_openpyxl(ws, config, data)
+                else:
+                    self.process_standard_product_openpyxl(ws, config, data)
+
+                wb.save(output_path)
+                return True
+
         except Exception as e:
             print(f"Error creating Excel file: {e}")
             return False
+
+    def _create_excel_with_xlwings(self, template_path: str, config: Dict, data: Dict, output_path: str) -> bool:
+        """Tạo file Excel với xlwings để giữ hình ảnh"""
+        try:
+            import xlwings as xw
+
+            app = xw.App(visible=False)
+            wb = app.books.open(template_path)
+            ws = wb.sheets[0]
+
+            # Disable alerts and screen updating for better performance
+            app.display_alerts = False
+            app.screen_updating = False
+
+            try:
+                # Process data based on product type
+                if config['type'] in ['merge_cells', 'complex', 'unique_row']:
+                    self.process_special_product_xlwings(ws, config, data)
+                else:
+                    self.process_standard_product_xlwings(ws, config, data)
+
+                # Save with new name (preserves all content including images)
+                wb.save(output_path)
+
+            finally:
+                wb.close()
+                app.quit()
+
+            return True
+
+        except Exception as e:
+            print(f"Error creating Excel with xlwings: {e}")
+            return False
+
+    def process_standard_product_xlwings(self, ws, config: Dict, data: Dict):
+        """Xử lý sản phẩm chuẩn với xlwings"""
+        try:
+            # Apply merge_config data
+            merge_config = config.get('merge_config', {})
+
+            # Product name
+            if 'product' in merge_config and 'product_name' in data:
+                product_range = merge_config['product']
+                ws.range(product_range).value = data['product_name']
+                ws.range(product_range).api.HorizontalAlignment = -4108
+                ws.range(product_range).api.VerticalAlignment = -4108
+
+            # PO number
+            if 'po' in merge_config and 'po_number' in data:
+                po_range = merge_config['po']
+                ws.range(po_range).value = data['po_number']
+                ws.range(po_range).api.HorizontalAlignment = -4108
+                ws.range(po_range).api.VerticalAlignment = -4108
+
+            # Date
+            if 'date' in merge_config and 'date_code' in data:
+                date_range = merge_config['date']
+                # Format date from YYYYMMDD to YYYY.MM.DD
+                try:
+                    from datetime import datetime
+                    formatted_date = datetime.strptime(data['date_code'], "%Y%m%d").strftime("%Y.%m.%d")
+                    ws.range(date_range).value = formatted_date
+                    ws.range(date_range).api.HorizontalAlignment = -4108
+                    ws.range(date_range).api.VerticalAlignment = -4108
+                except ValueError:
+                    ws.range(date_range).value = data['date_code']
+                    ws.range(date_range).api.HorizontalAlignment = -4108
+                    ws.range(date_range).api.VerticalAlignment = -4108
+
+            # Handle serial numbers if present
+            if 'serial_numbers' in data and config.get('serial_range'):
+                serial_range = config['serial_range']
+                if isinstance(serial_range, str):
+                    # Single range like 'A11:A15'
+                    start_row = int(''.join(filter(str.isdigit, serial_range.split(':')[0])))
+                    for i, serial in enumerate(data['serial_numbers']):
+                        if i < 5:  # Limit to 5 serials
+                            cell_ref = f"{serial_range[0]}{start_row + i}"
+                            ws.range(cell_ref).value = serial
+                            ws.range(cell_ref).api.HorizontalAlignment = -4108
+                            ws.range(cell_ref).api.VerticalAlignment = -4108
+                elif isinstance(serial_range, list):
+                    # List of ranges
+                    for i, serial in enumerate(data['serial_numbers']):
+                        if i < len(serial_range):
+                            ws.range(serial_range[i]).value = serial
+                            ws.range(serial_range[i]).api.HorizontalAlignment = -4108
+                            ws.range(serial_range[i]).api.VerticalAlignment = -4108
+
+            # Handle random data generation
+            if 'random_config' in config and 'random_columns' in config:
+                self._generate_random_data_xlwings(ws, config, data)
+
+        except Exception as e:
+            print(f"Error processing standard product with xlwings: {e}")
+
+    def _generate_random_data_xlwings(self, ws, config: Dict, data: Dict):
+        """Generate random data for xlwings"""
+        try:
+            import random
+            random.seed()
+
+            random_config = config.get('random_config', [])
+            random_columns = config.get('random_columns', [])
+
+            # Determine number of rows to fill
+            serial_count = len(data.get('serial_numbers', []))
+            rows_to_fill = min(serial_count, 5)  # Max 5 rows
+
+            for row in range(rows_to_fill):
+                used_numbers = set()
+                for col_idx, (min_val, max_val, mode) in enumerate(random_config):
+                    if col_idx >= len(random_columns):
+                        break
+
+                    col = random_columns[col_idx]
+                    # Determine row number based on serial range
+                    serial_range = config.get('serial_range', 'A11:A15')
+                    if isinstance(serial_range, str):
+                        start_row = int(''.join(filter(str.isdigit, serial_range.split(':')[0])))
+                        cell_row = start_row + row
+                    else:
+                        cell_row = 11 + row  # Default
+
+                    cell_ref = f"{col}{cell_row}"
+
+                    if min_val is None or max_val is None:
+                        # Fixed value
+                        ws.range(cell_ref).value = mode
+                    else:
+                        # Random number
+                        while True:
+                            val = random.randint(min_val, max_val)
+                            if val not in used_numbers:
+                                used_numbers.add(val)
+                                break
+
+                        if mode == "div100":
+                            val = round(val / 100.0, 2)
+                        elif mode == "div10":
+                            val = round(val / 10.0, 1)
+
+                        ws.range(cell_ref).value = val
+
+                    # Apply center alignment
+                    ws.range(cell_ref).api.HorizontalAlignment = -4108
+                    ws.range(cell_ref).api.VerticalAlignment = -4108
+
+        except Exception as e:
+            print(f"Error generating random data with xlwings: {e}")
+
+    def process_special_product_xlwings(self, ws, config: Dict, data: Dict):
+        """Xử lý sản phẩm đặc biệt với xlwings"""
+        try:
+            # Similar to standard but with special handling
+            self.process_standard_product_xlwings(ws, config, data)
+
+            # Additional special processing can be added here
+            # based on specific product requirements
+
+        except Exception as e:
+            print(f"Error processing special product with xlwings: {e}")
 
 # Khởi tạo managers
 product_manager = ProductManager()
@@ -1985,7 +2152,7 @@ def product_page(product_id):
     if not product:
         flash('Sản phẩm không tồn tại!', 'error')
         return redirect(url_for('index'))
-    
+
     return render_template('product.html', product_id=product_id, product=product)
 
 @app.route('/api/products')
@@ -2008,28 +2175,28 @@ def api_generate():
         data = request.get_json()
         product_id = data.get('product_id')
         product_data = data.get('data', {})
-        
+
         if not product_id or not product_data:
             return jsonify({'success': False, 'message': 'Thiếu dữ liệu'})
-        
+
         # Validate data
         required_fields = ['product_name', 'po_number', 'date_code', 'serial_numbers']
         for field in required_fields:
             if field not in product_data:
                 return jsonify({'success': False, 'message': f'Thiếu trường: {field}'})
-        
+
         if len(product_data['serial_numbers']) != 5:
             return jsonify({'success': False, 'message': 'Cần đúng 5 serial numbers'})
-        
+
         # Tạo file
         today_str = datetime.today().strftime("%Y-%m-%d")
         file_name = f"{product_data['product_name']} - PO#{product_data['po_number']} - {product_data['date_code']}"
         output_dir = os.path.join(OUTPUT_DIR, today_str, file_name)
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, f"{file_name}.xlsx")
-        
+
         success = excel_processor.create_excel_file(product_id, product_data, output_path)
-        
+
         if success:
             # URL encode filename để tránh lỗi với ký tự đặc biệt
             import urllib.parse
@@ -2042,7 +2209,7 @@ def api_generate():
             })
         else:
             return jsonify({'success': False, 'message': 'Tạo file thất bại!'})
-            
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2053,16 +2220,16 @@ def download_file(filename):
         # Decode filename từ URL
         import urllib.parse
         decoded_filename = urllib.parse.unquote(filename)
-        
+
         # Tìm file trong thư mục output
         for root, dirs, files in os.walk(OUTPUT_DIR):
             if decoded_filename in files:
                 file_path = os.path.join(root, decoded_filename)
                 return send_file(file_path, as_attachment=True)
-        
+
         flash('File không tồn tại!', 'error')
         return redirect(url_for('index'))
-        
+
     except Exception as e:
         flash(f'Lỗi download: {str(e)}', 'error')
         return redirect(url_for('index'))
@@ -2078,30 +2245,30 @@ def api_batch():
     try:
         data = request.get_json()
         batch_data = data.get('data', [])
-        
+
         if not batch_data:
             return jsonify({'success': False, 'message': 'Không có dữ liệu để xử lý'})
-        
+
         results = []
         success_count = 0
-        
+
         for item in batch_data:
             product_id = item.get('product_id')
             product_data = item.get('data', {})
-            
+
             if not product_id or not product_data:
                 results.append({'success': False, 'message': 'Thiếu dữ liệu'})
                 continue
-            
+
             # Tạo file
             today_str = datetime.today().strftime("%Y-%m-%d")
             file_name = f"{product_data['product_name']} - PO#{product_data['po_number']} - {product_data['date_code']}"
             output_dir = os.path.join(OUTPUT_DIR, today_str, file_name)
             os.makedirs(output_dir, exist_ok=True)
             output_path = os.path.join(output_dir, f"{file_name}.xlsx")
-            
+
             success = excel_processor.create_excel_file(product_id, product_data, output_path)
-            
+
             if success:
                 # URL encode filename để tránh lỗi với ký tự đặc biệt
                 import urllib.parse
@@ -2119,13 +2286,13 @@ def api_batch():
                     'product': product_data['product_name'],
                     'message': 'Tạo file thất bại'
                 })
-        
+
         return jsonify({
             'success': True,
             'message': f'Xử lý hoàn thành: {success_count}/{len(batch_data)} thành công',
             'results': results
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2137,7 +2304,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         user = user_manager.authenticate_user(username, password)
         if user:
             session['user_id'] = user['id']
@@ -2147,7 +2314,7 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Tên đăng nhập hoặc mật khẩu không đúng!', 'error')
-    
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -2175,7 +2342,7 @@ def users_page():
             FROM users ORDER BY created_at DESC
         ''')
         users = cursor.fetchall()
-    
+
     return render_template('users.html', users=users)
 
 @app.route('/api/users', methods=['GET'])
@@ -2190,7 +2357,7 @@ def get_users():
                 FROM users ORDER BY created_at DESC
             ''')
             users = cursor.fetchall()
-        
+
         return jsonify({
             'success': True,
             'users': [{
@@ -2202,7 +2369,7 @@ def get_users():
                 'last_login': user[5]
             } for user in users]
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2216,16 +2383,16 @@ def create_user():
         password = data.get('password')
         email = data.get('email')
         role = data.get('role', 'user')
-        
+
         if not username or not password:
             return jsonify({'success': False, 'message': 'Thiếu tên đăng nhập hoặc mật khẩu'})
-        
+
         success = user_manager.create_user(username, password, email, role)
         if success:
             return jsonify({'success': True, 'message': 'Tạo người dùng thành công!'})
         else:
             return jsonify({'success': False, 'message': 'Tên đăng nhập đã tồn tại!'})
-            
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2242,18 +2409,18 @@ def bulk_generate():
     try:
         data = request.get_json()
         requests = data.get('requests', [])
-        
+
         if not requests:
             return jsonify({'success': False, 'message': 'Không có dữ liệu để xử lý'})
-        
+
         results = bulk_manager.bulk_generate_pos(requests, session['user_id'])
-        
+
         return jsonify({
             'success': True,
             'results': results,
             'message': f'Xử lý hoàn thành: {len(results["success"])}/{results["total"]} thành công'
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2264,29 +2431,29 @@ def import_excel_data():
     try:
         if 'file' not in request.files:
             return jsonify({'success': False, 'message': 'Không có file được upload'})
-        
+
         file = request.files['file']
         if file.filename == '':
             return jsonify({'success': False, 'message': 'Không có file được chọn'})
-        
+
         if not file.filename.endswith(('.xlsx', '.xls')):
             return jsonify({'success': False, 'message': 'File phải có định dạng Excel (.xlsx hoặc .xls)'})
-        
+
         # Lưu file tạm thời
         original_filename = file.filename  # Tên file gốc
         filename = secure_filename(file.filename)
         temp_path = os.path.join(OUTPUT_DIR, f"temp_{filename}")
         file.save(temp_path)
-        
+
         # Import dữ liệu với tối ưu hóa
         excel_import_manager = ExcelImportManager(db_manager)
         max_rows = request.form.get('max_rows', 50, type=int)  # Có thể config từ frontend
         skip_color_check = request.form.get('skip_color_check', 'false').lower() == 'true'
         result = excel_import_manager.import_daily_line_data(temp_path, max_rows, skip_color_check, original_filename)
-        
+
         # Xóa file tạm
         os.remove(temp_path)
-        
+
         if result['success']:
             # Log operation
             analytics_manager.log_operation(
@@ -2294,13 +2461,13 @@ def import_excel_data():
                 operation_type='import_excel',
                 status='completed'
             )
-            
+
             response_data = {
                 'success': True,
                 'message': f'Import thành công: {result["imported_count"]} records',
                 'details': result
             }
-            
+
             logger.info(f"Import Excel response: {response_data}")
             return jsonify(response_data)
         else:
@@ -2310,7 +2477,7 @@ def import_excel_data():
             }
             logger.error(f"Import Excel error response: {error_response}")
             return jsonify(error_response)
-            
+
     except Exception as e:
         logger.error(f"Import Excel error: {str(e)}")
         logger.error(f"Error type: {type(e).__name__}")
@@ -2330,17 +2497,17 @@ def predict_po():
     try:
         data = request.get_json()
         product_name = data.get('product_name')
-        
+
         if not product_name:
             return jsonify({'success': False, 'message': 'Thiếu tên sản phẩm'})
-        
+
         excel_import_manager = ExcelImportManager(db_manager)
         predicted_po = excel_import_manager.predict_po_number(product_name)
-        
+
         if predicted_po:
             # Kiểm tra xem PO đã được xử lý chưa
             is_processed = excel_import_manager.is_po_processed(predicted_po)
-            
+
             return jsonify({
                 'success': True,
                 'predicted_po': predicted_po,
@@ -2352,7 +2519,7 @@ def predict_po():
                 'success': False,
                 'message': 'Không tìm thấy PO cho sản phẩm này'
             })
-            
+
     except Exception as e:
         logger.error(f"Predict PO error: {str(e)}")
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
@@ -2364,13 +2531,13 @@ def predict_product():
     try:
         data = request.get_json()
         po_number = data.get('po_number')
-        
+
         if not po_number:
             return jsonify({'success': False, 'message': 'Thiếu số PO'})
-        
+
         excel_import_manager = ExcelImportManager(db_manager)
         product_name = excel_import_manager.get_product_by_po(po_number)
-        
+
         if product_name:
             return jsonify({
                 'success': True,
@@ -2382,7 +2549,7 @@ def predict_product():
                 'success': False,
                 'message': 'Không tìm thấy sản phẩm cho PO này'
             })
-            
+
     except Exception as e:
         logger.error(f"Predict product error: {str(e)}")
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
@@ -2394,7 +2561,7 @@ def get_imported_po_list():
     try:
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             # Lấy danh sách PO đã import, sắp xếp theo ngày
             cursor.execute('''
                 SELECT 
@@ -2408,9 +2575,9 @@ def get_imported_po_list():
                 FROM import_data 
                 ORDER BY file_import_date DESC, import_date DESC
             ''')
-            
+
             rows = cursor.fetchall()
-            
+
             po_list = []
             for row in rows:
                 po_list.append({
@@ -2422,13 +2589,13 @@ def get_imported_po_list():
                     'status': row[5],
                     'file_name': row[6]
                 })
-            
+
             return jsonify({
                 'success': True,
                 'data': po_list,
                 'total': len(po_list)
             })
-            
+
     except Exception as e:
         logger.error(f"Get imported PO list error: {str(e)}")
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
@@ -2441,13 +2608,13 @@ def update_po_status():
         data = request.get_json()
         po_number = data.get('po_number')
         status = data.get('status', 'completed')
-        
+
         if not po_number:
             return jsonify({'success': False, 'message': 'Thiếu PO number'})
-        
+
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             if status == 'completed':
                 cursor.execute('''
                     UPDATE import_data 
@@ -2460,14 +2627,14 @@ def update_po_status():
                     SET status = ?, completion_date = NULL
                     WHERE po_number = ?
                 ''', (status, po_number))
-            
+
             conn.commit()
-            
+
             return jsonify({
                 'success': True,
                 'message': f'Cập nhật trạng thái PO {po_number} thành công'
             })
-            
+
     except Exception as e:
         logger.error(f"Update PO status error: {str(e)}")
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
@@ -2478,33 +2645,40 @@ def clear_import_data():
     """API xóa sạch dữ liệu đã import"""
     try:
         logger.info("Clear import data request received")
-        
+
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             # Đếm số records trước khi xóa
             cursor.execute('SELECT COUNT(*) FROM import_data')
             count_before = cursor.fetchone()[0]
             logger.info(f"Records before deletion: {count_before}")
-            
+
             # Xóa tất cả dữ liệu import
             cursor.execute('DELETE FROM import_data')
             deleted_import = cursor.rowcount
-            
-            # Xóa cả dữ liệu prediction
-            cursor.execute('DELETE FROM po_prediction')
-            deleted_prediction = cursor.rowcount
-            
+
+            # Xóa cả dữ liệu prediction (nếu bảng tồn tại)
+            try:
+                cursor.execute('DELETE FROM po_prediction')
+                deleted_prediction = cursor.rowcount
+            except sqlite3.OperationalError as e:
+                if 'no such table' in str(e).lower():
+                    logger.warning("po_prediction table does not exist, skipping deletion")
+                    deleted_prediction = 0
+                else:
+                    raise e
+
             conn.commit()
             logger.info(f"Deleted {deleted_import} import records and {deleted_prediction} prediction records")
-            
+
             # Log operation
             analytics_manager.log_operation(
                 user_id=session['user_id'],
                 operation_type='clear_import_data',
                 status='completed'
             )
-            
+
             response_data = {
                 'success': True,
                 'message': f'Đã xóa {count_before} records import data',
@@ -2512,10 +2686,10 @@ def clear_import_data():
                 'deleted_import': deleted_import,
                 'deleted_prediction': deleted_prediction
             }
-            
+
             logger.info(f"Clear import data response: {response_data}")
             return jsonify(response_data)
-            
+
     except Exception as e:
         logger.error(f"Clear import data error: {str(e)}")
         import traceback
@@ -2533,18 +2707,18 @@ def get_import_status():
     try:
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             # Tổng số records đã import
             cursor.execute('SELECT COUNT(*) FROM import_data')
             total_imported = cursor.fetchone()[0]
-            
+
             # Số PO đã được xử lý
             cursor.execute('''
                 SELECT COUNT(DISTINCT po_number) FROM operations 
                 WHERE status = 'completed' AND po_number IS NOT NULL
             ''')
             processed_pos = cursor.fetchone()[0]
-            
+
             # Số PO chưa xử lý
             cursor.execute('''
                 SELECT COUNT(DISTINCT po_number) FROM import_data 
@@ -2554,7 +2728,7 @@ def get_import_status():
                 )
             ''')
             pending_pos = cursor.fetchone()[0]
-            
+
             return jsonify({
                 'success': True,
                 'total_imported': total_imported,
@@ -2562,7 +2736,7 @@ def get_import_status():
                 'pending_pos': pending_pos,
                 'completion_rate': round((processed_pos / total_imported * 100) if total_imported > 0 else 0, 2)
             })
-            
+
     except Exception as e:
         logger.error(f"Get import status error: {str(e)}")
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
@@ -2579,7 +2753,7 @@ def analytics_page():
     """Trang analytics chi tiết"""
     days = request.args.get('days', 30, type=int)
     dashboard_data = analytics_manager.get_dashboard_data(days)
-    
+
     return render_template('analytics.html', data=dashboard_data, days=days)
 
 @app.route('/api/analytics/operations')
@@ -2591,10 +2765,10 @@ def get_operations():
         per_page = request.args.get('per_page', 20, type=int)
         product_name = request.args.get('product_name')
         status = request.args.get('status')
-        
+
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             query = '''
                 SELECT o.id, o.operation_type, o.product_name, o.po_number, 
                        o.status, o.created_at, o.completed_at, o.error_message,
@@ -2602,30 +2776,30 @@ def get_operations():
                 FROM operations o
                 LEFT JOIN users u ON o.user_id = u.id
             '''
-            
+
             conditions = []
             params = []
-            
+
             if product_name:
                 conditions.append("o.product_name = ?")
                 params.append(product_name)
-            
+
             if status:
                 conditions.append("o.status = ?")
                 params.append(status)
-            
+
             if conditions:
                 query += " WHERE " + " AND ".join(conditions)
-            
+
             query += " ORDER BY o.created_at DESC"
-            
+
             # Pagination
             offset = (page - 1) * per_page
             query += f" LIMIT {per_page} OFFSET {offset}"
-            
+
             cursor.execute(query, params)
             operations = cursor.fetchall()
-            
+
             # Count total
             count_query = '''
                 SELECT COUNT(*) FROM operations o
@@ -2633,10 +2807,10 @@ def get_operations():
             '''
             if conditions:
                 count_query += " WHERE " + " AND ".join(conditions)
-            
+
             cursor.execute(count_query, params)
             total = cursor.fetchone()[0]
-            
+
             return jsonify({
                 'success': True,
                 'operations': [{
@@ -2655,7 +2829,7 @@ def get_operations():
                 'per_page': per_page,
                 'total_pages': (total + per_page - 1) // per_page
             })
-            
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2666,12 +2840,12 @@ def get_stats():
     try:
         days = request.args.get('days', 30, type=int)
         stats = analytics_manager.get_dashboard_data(days)
-        
+
         return jsonify({
             'success': True,
             'stats': stats
         })
-        
+
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
@@ -2688,7 +2862,7 @@ def initialize_app():
         logger.info("Admin user created successfully")
     except:
         logger.info("Admin user already exists")
-    
+
     # Khởi tạo bulk operations manager
     global bulk_manager
     bulk_manager = BulkOperationsManager(product_manager, db_manager)
@@ -2700,7 +2874,7 @@ if __name__ == '__main__':
     # Get port from environment variable (for Render.com)
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
-    
+
     print("🚀 Hệ thống PO Web nâng cấp đang khởi động...")
     print(f"📊 Dashboard analytics: http://0.0.0.0:{port}/dashboard")
     print(f"👥 User management: http://0.0.0.0:{port}/users")
@@ -2708,5 +2882,5 @@ if __name__ == '__main__':
     print(f"📈 Analytics: http://0.0.0.0:{port}/analytics")
     print(f"📱 Truy cập: http://0.0.0.0:{port}")
     print("🔄 Nhấn Ctrl+C để dừng")
-    
+
     app.run(debug=debug, host='0.0.0.0', port=port)

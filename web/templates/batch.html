@@ -443,16 +443,16 @@
             padding: 10px 0;
         }
         
-        .batch-summary .Based on Product Name Template {
+        .batch-summary .product-template-info {
             flex: 1;
         }
         
-        .batch-summary .Based on Product Name Template h6 {
+        .batch-summary .product-template-info h6 {
             margin: 0;
             color: var(--primary-color);
         }
         
-        .batch-summary .Based on Product Name Template .details {
+        .batch-summary .product-template-info .details {
             font-size: 0.9em;
             color: #666;
             margin-top: 5px;
@@ -1238,7 +1238,7 @@
                     sessionStorage.removeItem('selectedPOData');
                     sessionStorage.removeItem('productMapping');
                     
-                    showBatchNotification(`Đã tự động điền ${poData.length} PO từ Import page với Based Product mapping`, 'success');
+                    showBatchNotification(`Đã tự động điền ${poData.length} PO từ Import page với Based Product mapping (Template)`, 'success');
                 }
             } catch (error) {
                 console.error('Error loading selected POs:', error);
@@ -1247,10 +1247,12 @@
         
         
         // Auto-select products based on mapping and fill with PO data
+        // mapping: PO Number -> Based Product (Template ID)
+        // poData: Array of PO objects with product_name (actual product name)
         function autoSelectProductsFromMapping(mapping, poData) {
             const uniqueBasedProducts = [...new Set(Object.values(mapping))];
             
-            console.log('Auto-selecting products:', uniqueBasedProducts);
+            console.log('Auto-selecting Based Products (Templates):', uniqueBasedProducts);
             console.log('Available products:', Object.keys(products));
             console.log('Current batchData:', batchData);
             
@@ -1286,7 +1288,7 @@
             updateBatchStats();
             updateBatchSection();
             
-            console.log(`Auto-selected products: ${uniqueBasedProducts.join(', ')}`);
+            console.log(`Auto-selected Based Products (Templates): ${uniqueBasedProducts.join(', ')}`);
         }
         
         // Smart product mapping function
@@ -1708,7 +1710,7 @@
                     po_number: po.po_number,
                     date_code: getCurrentDate(),
                     serial_numbers: ['', '', '', '', ''],
-                    product_name: product.name,
+                    product_name: po.product_name || product.name, // Sử dụng tên sản phẩm từ PO data, fallback về product.name
                     is_collapsed: false
                 }));
                 
@@ -1804,8 +1806,8 @@
             if (item.is_collapsed) {
                 batchItem.innerHTML = `
                     <div class="batch-summary">
-                        <div class="Based on Product Name Template">
-                            <h6>Based on ${item.product_id} spec.</h6>
+                        <div class="product-template-info">
+                            <h6>Template: ${item.product_id} | Sản phẩm: ${item.files && item.files[0] ? item.files[0].product_name || 'Chưa nhập' : 'Chưa nhập'}</h6>
                             <div class="details">
                                 ${item.files && item.files[0] ? `${item.files[0].po_number || 'Chưa nhập PO'} - ${item.files[0].date_code || 'Chưa nhập ngày'}` : 'Chưa nhập thông tin'}
                             </div>
@@ -1826,8 +1828,8 @@
             } else {
                 batchItem.innerHTML = `
                     <div class="batch-summary">
-                        <div class="Based on Product Name Template">
-                            <h6>Based on ${item.product_id} spec.</h6>
+                        <div class="product-template-info">
+                            <h6>Template: ${item.product_id} | Sản phẩm: ${item.files && item.files[0] ? item.files[0].product_name || 'Chưa nhập' : 'Chưa nhập'}</h6>
                             <div class="details">
                                 ${quantity} file(s) - ${item.files && item.files[0] ? `${item.files[0].po_number || 'Chưa nhập PO'} - ${item.files[0].date_code || 'Chưa nhập ngày'}` : 'Chưa nhập thông tin'}
                             </div>
@@ -1861,7 +1863,7 @@
             
             hiddenItem.innerHTML = `
                 <div>
-                    <strong>${item.product_id} - ${item.product_name}</strong>
+                    <strong>Template: ${item.product_id} | Sản phẩm: ${item.files && item.files[0] ? item.files[0].product_name || 'Chưa nhập' : 'Chưa nhập'}</strong>
                     <small class="text-muted ms-2">${item.files && item.files[0] ? `${item.files[0].po_number} - ${item.files[0].date_code}` : 'Chưa nhập thông tin'}</small>
                 </div>
                 <div>
@@ -1943,11 +1945,13 @@
                                     case 'product_name':
                                         return `
                                             <div class="col-md-4">
-                                                <label class="form-label">Tên sản phẩm</label>
+                                                <label class="form-label">Tên sản phẩm (trong file Excel)</label>
                                                 <input type="text" class="form-control form-control-sm" 
+                                                       placeholder="Tên sản phẩm thực tế sẽ xuất hiện trong file Excel"
                                                        value="${fileData.product_name || batchData[itemIndex].product_name}"
                                                        onchange="updateFileData(${itemIndex}, ${fileIndex}, 'product_name', this.value)"
                                                        onblur="autoPredictPOFromProduct(${itemIndex}, ${fileIndex}, this.value)">
+                                                <small class="text-muted">Template: ${batchData[itemIndex].product_id}</small>
                                             </div>
                                         `;
                                     case 'po_number':

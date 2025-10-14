@@ -68,6 +68,218 @@
             border-radius: 15px;
             padding: 1.5rem;
         }
+        
+        /* Simple and clean table styling */
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dee2e6;
+        }
+        
+        .table {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            background-color: white;
+        }
+        
+        .table thead th {
+            background-color: #f8f9fa;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding: 12px 8px;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.85rem;
+        }
+        
+        .table tbody td {
+            padding: 10px 8px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f4;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .table tbody tr.table-active {
+            background-color: #e7f3ff;
+        }
+        
+        .po-checkbox {
+            cursor: pointer;
+        }
+        
+        .form-select-sm {
+            font-size: 0.8rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+        
+        .form-select-sm:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        
+        .btn-sm {
+            padding: 3px 6px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        
+        /* Status column styling */
+        .status-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .status-badge.bg-success {
+            background-color: #28a745 !important;
+            color: white;
+        }
+        
+        .status-badge.bg-warning {
+            background-color: #ffc107 !important;
+            color: #212529;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            border-radius: 6px;
+            border: 1px solid;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-complete {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        
+        .btn-complete:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+            color: white;
+        }
+        
+        .btn-pending {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-pending:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+            color: #212529;
+        }
+        
+        .file-info {
+            font-weight: 500;
+            color: #495057;
+            font-size: 0.8rem;
+        }
+        
+        .file-name {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
+        .product-name {
+            font-weight: 500;
+            color: #212529;
+        }
+        
+        .po-number {
+            font-weight: 600;
+            color: #007bff;
+        }
+        
+        .date-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .table {
+                font-size: 0.75rem;
+            }
+            
+            .table thead th {
+                padding: 8px 4px;
+                font-size: 0.75rem;
+            }
+            
+            .table tbody td {
+                padding: 6px 4px;
+                font-size: 0.75rem;
+            }
+            
+            .form-select-sm {
+                font-size: 0.7rem;
+                padding: 2px 4px;
+            }
+            
+            .badge {
+                font-size: 0.7rem;
+                padding: 2px 6px;
+            }
+            
+            .btn-sm {
+                padding: 2px 4px;
+                font-size: 0.7rem;
+            }
+            
+            .status-cell {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .status-badge {
+                font-size: 0.65rem;
+                padding: 2px 6px;
+            }
+            
+            .action-btn {
+                padding: 2px 6px;
+                font-size: 0.65rem;
+            }
+        }
+        
+        /* Empty state styling */
+        .table tbody tr td[colspan] {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -275,18 +487,17 @@
                                         <input type="checkbox" id="selectAllHeader" onchange="toggleSelectAll()">
                                     </th>
                                     <th width="10%">DDMMYYYY - File Import</th>
-                                    <th width="18%">Tên sản phẩm</th>
-                                    <th width="15%">Product Data</th>
-                                    <th width="15%">Based Product</th>
-                                    <th width="10%">PO Number</th>
+                                    <th width="25%">Tên sản phẩm</th>
+                                    <th width="20%">Based Product</th>
+                                    <th width="15%">PO Number</th>
                                     <th width="10%">Ngày nhập</th>
                                     <th width="10%">Ngày hoàn thành</th>
-                                    <th width="12%">Trạng thái</th>
+                                    <th width="10%">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody id="poListTableBody">
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
                                         <p>Đang tải dữ liệu...</p>
                                     </td>
@@ -688,50 +899,6 @@
             'VX100', 'WD161', 'ZD201', 'ZU660'
         ];
 
-        // Product data mapping from products folder
-        const productDataMap = {
-            'HD700': { po_number: '20183786', date_code: '20250807', template: 'HD700.xlsx' },
-            'HD600': { po_number: '20183785', date_code: '20250806', template: 'HD600.xlsx' },
-            'HD500': { po_number: '20183784', date_code: '20250805', template: 'HD500.xlsx' },
-            'HD400': { po_number: '20183783', date_code: '20250804', template: 'HD400.xlsx' },
-            'HD300': { po_number: '20183782', date_code: '20250803', template: 'HD300.xlsx' },
-            'LA800': { po_number: '20206330', date_code: '20201001', template: 'LA800-PO#20164015-20250320.xlsx' },
-            'LA700': { po_number: '20206329', date_code: '20201001', template: 'LA700.xlsx' },
-            'LA555': { po_number: '20206328', date_code: '20201001', template: 'LA555.xlsx' },
-            'LA480': { po_number: '20206327', date_code: '20201001', template: 'LA480.xlsx' },
-            'UV730': { po_number: '20206326', date_code: '20201001', template: 'UV730.xlsx' },
-            'UV440': { po_number: '20206325', date_code: '20201001', template: 'UV440.xlsx' },
-            'WD261': { po_number: '20206324', date_code: '20201001', template: 'WD261.xlsx' },
-            'WD161': { po_number: '20206323', date_code: '20201001', template: 'WD161.xlsx' },
-            'AZ3002': { po_number: '20206322', date_code: '20201001', template: 'AZ3002.xlsx' },
-            'FA225': { po_number: '20206321', date_code: '20201001', template: 'FA225.xlsx' },
-            'HP152': { po_number: '20206320', date_code: '20201001', template: 'HP152.xlsx' },
-            'HP301': { po_number: '20206319', date_code: '20201001', template: 'HP301.xlsx' },
-            'HX100': { po_number: '20206318', date_code: '20201001', template: 'HX100.xlsx' },
-            'IX141': { po_number: '20206317', date_code: '20201001', template: 'IX141.xlsx' },
-            'IZ381H': { po_number: '20206316', date_code: '20201001', template: 'IZ381H.xlsx' },
-            'NV360': { po_number: '20206315', date_code: '20201001', template: 'NV360.xlsx' },
-            'SV2000': { po_number: '20206314', date_code: '20201001', template: 'SV2000.xlsx' },
-            'UA1450': { po_number: '20206313', date_code: '20201001', template: 'UA1450.xlsx' },
-            'UH205': { po_number: '20206312', date_code: '20201001', template: 'UH205.xlsx' },
-            'VS100': { po_number: '20206311', date_code: '20201001', template: 'VS100.xlsx' },
-            'VX100': { po_number: '20206310', date_code: '20201001', template: 'VX100.xlsx' },
-            'ZU660': { po_number: '20206309', date_code: '20201001', template: 'ZU660.xlsx' },
-            'ZD201': { po_number: '20206308', date_code: '20201001', template: 'ZD201.xlsx' },
-            'AW261': { po_number: '20206307', date_code: '20201001', template: 'AW261.xlsx' }
-        };
-
-        function getProductSpecs(productName) {
-            // Extract product ID from product name (e.g., "Shark SpeedStyle Pro HD700" -> "HD700")
-            const productId = productName.match(/([A-Z]{2}\d+)/)?.[1];
-            if (!productId || !productDataMap[productId]) {
-                return 'Không có dữ liệu';
-            }
-            
-            const data = productDataMap[productId];
-            return `PO: ${data.po_number} | Date: ${data.date_code} | Template: ${data.template}`;
-        }
-
         function createBasedProductDropdown(poNumber, currentValue = '') {
             const options = availableProducts.map(product => 
                 `<option value="${product}" ${currentValue === product ? 'selected' : ''}>${product}</option>`
@@ -765,7 +932,7 @@
             if (poList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             <i class="fas fa-inbox fa-3x mb-3"></i>
                             <p>Chưa có dữ liệu import</p>
                         </td>
@@ -778,9 +945,6 @@
                 const isSelected = selectedPOs.has(po.po_number);
                 const statusClass = po.status === 'completed' ? 'success' : 'warning';
                 const statusText = po.status === 'completed' ? 'Đã hoàn thành' : 'Chưa làm';
-                
-                // Get product specs from productDetails
-                const productSpecs = getProductSpecs(po.product_name);
                 
                 // Get current based product mapping
                 const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
@@ -799,21 +963,22 @@
                             <small class="text-muted">${po.file_name || 'N/A'}</small>
                         </td>
                         <td>${po.product_name}</td>
-                        <td><small class="text-muted">${productSpecs}</small></td>
                         <td>${createBasedProductDropdown(po.po_number, currentBasedProduct)}</td>
                         <td><strong>${po.po_number}</strong></td>
                         <td>${formatDate(po.import_date)}</td>
                         <td>${po.completion_date ? formatDate(po.completion_date) : '-'}</td>
                         <td>
-                            <span class="badge bg-${statusClass}">${statusText}</span>
-                            ${po.status === 'pending' ? 
-                                `<button class="btn btn-sm btn-outline-success ms-1" onclick="markAsCompleted('${po.po_number}')" title="Đánh dấu hoàn thành">
-                                    <i class="fas fa-check"></i>
-                                </button>` : 
-                                `<button class="btn btn-sm btn-outline-warning ms-1" onclick="markAsPending('${po.po_number}')" title="Đánh dấu chưa làm">
-                                    <i class="fas fa-undo"></i>
-                                </button>`
-                            }
+                            <div class="status-cell">
+                                <span class="status-badge bg-${statusClass}">${statusText}</span>
+                                ${po.status === 'pending' ? 
+                                    `<button class="action-btn btn-complete" onclick="markAsCompleted('${po.po_number}')" title="Đánh dấu hoàn thành">
+                                        <i class="fas fa-check"></i>
+                                    </button>` : 
+                                    `<button class="action-btn btn-pending" onclick="markAsPending('${po.po_number}')" title="Đánh dấu chưa làm">
+                                        <i class="fas fa-undo"></i>
+                                    </button>`
+                                }
+                            </div>
                         </td>
                     </tr>
                 `;
