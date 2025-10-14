@@ -1930,14 +1930,34 @@ class ExcelProcessor:
                 return self._create_excel_with_xlwings(template_path, config, data, output_path)
             except ImportError:
                 print("xlwings not available, falling back to openpyxl")
-                # Fallback to openpyxl
-                wb = openpyxl.load_workbook(template_path)
+                # Fallback to openpyxl - use keep_vba to preserve images
+                wb = openpyxl.load_workbook(template_path, keep_vba=True)
                 ws = wb.active
+                
+                # Copy images from template
+                from openpyxl.drawing.image import Image as OpenpyxlImage
+                from copy import copy
+                
+                # Store images before processing
+                images_to_copy = []
+                if hasattr(ws, '_images'):
+                    for img in ws._images:
+                        images_to_copy.append({
+                            'image': copy(img),
+                            'anchor': str(img.anchor)
+                        })
 
                 if config['type'] in ['merge_cells', 'complex', 'unique_row']:
                     self.process_special_product_openpyxl(ws, config, data)
                 else:
                     self.process_standard_product_openpyxl(ws, config, data)
+                
+                # Re-add images after processing (they might have been lost)
+                for img_data in images_to_copy:
+                    try:
+                        ws.add_image(img_data['image'], img_data['anchor'])
+                    except:
+                        pass
 
                 wb.save(output_path)
                 return True
