@@ -1,1021 +1,648 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="h-full">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏭 Hệ thống PO Tích hợp</title>
+    <title>Hệ thống PO Tích hợp</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1a202c',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 5 (Keep for JS functionality, but be careful with CSS conflicts) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Phase 1 Enhancements -->
-    <link rel="stylesheet" href="/static/enhancements.css">
-    <script src="/static/enhancements.js" defer></script>
-    
-    <!-- Enhanced Product Selector -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/static/product-selector-enhanced.css">
+    <link rel="stylesheet" href="/static/notifications.css">
     <script src="/static/product-selector-enhanced.js" defer></script>
-    
+    <script src="/static/notifications.js" defer></script>
+
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --light-bg: #ecf0f1;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        /* Animated background particles */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
-            animation: backgroundFloat 20s ease-in-out infinite;
-            z-index: -1;
-        }
-        
-        @keyframes backgroundFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(1deg); }
-        }
-        
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            box-shadow: 
-                0 25px 50px rgba(0,0,0,0.15),
-                0 0 0 1px rgba(255,255,255,0.1);
-            margin: 20px auto;
-            padding: 40px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            animation: containerFloat 6s ease-in-out infinite;
-        }
-        
-        @keyframes containerFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid var(--primary-color);
-            position: relative;
-        }
-        
-        .quick-jump-container {
-            position: absolute;
-            top: 0;
-            right: 0;
-        }
-        
-        .quick-jump-btn {
-            border-radius: 25px;
-            padding: 8px 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        }
-        
-        .quick-jump-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-        
-        .header h1 {
-            color: var(--primary-color);
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 1.1em;
-        }
-        
-        .product-card {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 20px;
-            box-shadow: 
-                0 10px 30px rgba(0,0,0,0.1),
-                0 0 0 1px rgba(255,255,255,0.5);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 20px;
-            overflow: hidden;
-            height: 100%;
-            position: relative;
-            backdrop-filter: blur(5px);
-        }
-        
-        .product-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        
-        .product-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 
-                0 20px 40px rgba(0,0,0,0.15),
-                0 0 0 1px rgba(102, 126, 234, 0.3);
-        }
-        
-        .product-card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 15px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .product-card-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: headerShine 4s ease-in-out infinite;
-        }
-        
-        @keyframes headerShine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-        
-        .product-card-header h4 {
-            font-size: 1.1em;
-            margin-bottom: 5px;
-        }
-        
-        .product-card-header p {
-            font-size: 0.8em;
-            margin-bottom: 0;
-        }
-        
-        .product-card-body {
-            padding: 15px;
-        }
-        
-        .product-type {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.7em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .type-standard { background: #e8f5e8; color: #27ae60; }
-        .type-special { background: #fff3cd; color: #f39c12; }
-        .type-merge_cells { background: #d1ecf1; color: #17a2b8; }
-        .type-complex { background: #f8d7da; color: #dc3545; }
-        .type-unique_row { background: #e2e3e5; color: #6c757d; }
-        
-        .btn-custom {
-            border-radius: 20px;
-            padding: 8px 15px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-        }
-        
-        .btn-primary-custom {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-            border: none;
-            color: white;
-        }
-        
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .stats-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: var(--secondary-color);
-        }
-        
-        .stats-label {
-            color: #666;
-            font-size: 1.1em;
-        }
-        
-        .feature-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
-        
-        .alert-custom {
-            border-radius: 15px;
-            border: none;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        /* Search & Sort Card Styles */
-        .search-sort-card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 
-                0 15px 35px rgba(0,0,0,0.1),
-                0 0 0 1px rgba(255,255,255,0.1);
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .search-sort-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #667eea, #764ba2);
-            background-size: 300% 100%;
-            animation: cardShimmer 4s ease-in-out infinite;
-        }
-        
-        @keyframes cardShimmer {
-            0% { background-position: -300% 0; }
-            100% { background-position: 300% 0; }
-        }
-        
-        .search-section, .sort-section {
-            position: relative;
-        }
-        
-        .search-input-group {
-            box-shadow: 
-                0 8px 25px rgba(0,0,0,0.1),
-                0 0 0 1px rgba(102, 126, 234, 0.2);
-            border-radius: 15px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .search-input-group:focus-within {
-            box-shadow: 
-                0 12px 35px rgba(102, 126, 234, 0.2),
-                0 0 0 2px rgba(102, 126, 234, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .search-input-group .input-group-text {
-            border: none;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .search-input {
-            border: none;
-            font-size: 1rem;
-            padding: 15px 20px;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(5px);
-        }
-        
-        .search-input:focus {
-            box-shadow: none;
-            border-color: transparent;
-            background: rgba(255,255,255,1);
-        }
-        
-        .search-input-group .btn-outline-danger {
-            border-radius: 0 15px 15px 0;
-            border-left: none;
-            border-color: rgba(220, 53, 69, 0.3);
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
-        }
-        
-        .search-input-group .btn-outline-danger:hover {
-            background: rgba(220, 53, 69, 0.1);
-            border-color: rgba(220, 53, 69, 0.5);
-            transform: translateY(-1px);
-        }
-        
-        .sort-buttons {
-            box-shadow: 
-                0 8px 25px rgba(0,0,0,0.1),
-                0 0 0 1px rgba(255,255,255,0.2);
-            border-radius: 15px;
-            overflow: hidden;
-            backdrop-filter: blur(5px);
-        }
-        
-        .sort-btn {
-            border: none;
-            font-weight: 600;
-            padding: 15px 20px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .sort-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .sort-btn:hover::before {
-            left: 100%;
-        }
-        
-        .sort-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .sort-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 
-                0 8px 25px rgba(102, 126, 234, 0.3),
-                0 0 0 2px rgba(255,255,255,0.3);
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #eee;
-            color: #666;
-        }
-        
-        /* Loading Animation */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(102, 126, 234, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            backdrop-filter: blur(10px);
-        }
-        
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Page Load Animation */
-        .fade-in {
-            animation: fadeIn 0.8s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Stagger Animation for Cards */
-        .product-card {
-            animation: slideInUp 0.6s ease-out;
-            animation-fill-mode: both;
-        }
-        
-        .product-card:nth-child(1) { animation-delay: 0.1s; }
-        .product-card:nth-child(2) { animation-delay: 0.2s; }
-        .product-card:nth-child(3) { animation-delay: 0.3s; }
-        .product-card:nth-child(4) { animation-delay: 0.4s; }
-        .product-card:nth-child(5) { animation-delay: 0.5s; }
-        .product-card:nth-child(6) { animation-delay: 0.6s; }
-        
-        @keyframes slideInUp {
-            from { 
-                opacity: 0; 
-                transform: translateY(50px) scale(0.9); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            }
-        }
-        
-        .taskbar {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 10px 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .taskbar .time {
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        .taskbar .username {
-            color: var(--secondary-color);
-            font-weight: 600;
-        }
-        
-        .taskbar .logout-btn {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .taskbar .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        /* Logout Modal Styles */
-        .logout-modal {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            backdrop-filter: blur(10px);
-            background: rgba(255,255,255,0.95);
-        }
-        
-        .logout-modal-header {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-            border-radius: 20px 20px 0 0;
-            border: none;
-            padding: 20px 25px;
-        }
-        
-        .logout-modal-header .btn-close {
-            filter: invert(1);
-            opacity: 0.8;
-        }
-        
-        .logout-modal-header .btn-close:hover {
-            opacity: 1;
-        }
-        
-        .logout-modal-body {
-            padding: 30px 25px;
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-        }
-        
-        .logout-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto;
-            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
-        }
-        
-        .logout-icon i {
-            font-size: 2.5rem;
-            color: white;
-        }
-        
-        .logout-modal-footer {
-            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 0 0 20px 20px;
-            border: none;
-            padding: 20px 25px;
-            gap: 10px;
-        }
-        
-        .logout-modal-footer .btn {
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .logout-modal-footer .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-        }
-        
-        .logout-modal-footer .btn-danger {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            border: none;
-        }
-        
-        .logout-modal-footer .btn-danger:hover {
-            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
-        }
-        
-        @media (max-width: 768px) {
-            .taskbar {
-                top: 10px;
-                right: 10px;
-                padding: 8px 15px;
-                font-size: 0.8rem;
-                gap: 10px;
-            }
-            
-            .taskbar .logout-btn {
-                padding: 5px 10px;
-                font-size: 0.75rem;
-            }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        x ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Bootstrap Overrides for Dark Theme */
+        .modal-content {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #334155;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #334155;
+        }
+
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .form-control,
+        .form-select {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #0f172a;
+            border-color: #3b82f6;
+            color: #e2e8f0;
+            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+        }
+
+        /* Hide Bootstrap container padding to fit new layout */
+        .container {
+            max-width: none;
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
-<body>
-    <!-- Taskbar -->
-    <div class="taskbar">
-        <div class="time" id="currentTime"></div>
-        <div class="username">
-            <i class="fas fa-user me-1"></i>
-            {% if session.username %}{{ session.username }}{% else %}Guest{% endif %}
-        </div>
-        <button class="logout-btn" onclick="logout()">
-            <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
-        </button>
-    </div>
-    
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="main-container fade-in">
-                    <!-- Header -->
-                    <div class="header">
-                        <h1><i class="fas fa-industry"></i> Hệ thống PO Tích hợp</h1>
-                        <p>Quản lý và tạo file PO cho tất cả sản phẩm một cách dễ dàng</p>
+
+<body class="h-full bg-[#050509] text-slate-300 font-sans overflow-hidden">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="flex w-64 flex-col border-r border-slate-800 bg-[#050509] hidden md:flex transition-all duration-300">
+            <!-- Brand -->
+            <div id="sidebarHeader"
+                class="flex h-16 items-center px-4 border-b border-slate-800 transition-all duration-300">
+                <div class="flex items-center overflow-hidden whitespace-nowrap">
+                    <div
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-400">
+                        <div class="h-4 w-4 rounded-full bg-black"></div>
                     </div>
-                    
+                    <div class="ml-3 sidebar-text transition-opacity duration-300">
+                        <div class="text-[15px] font-semibold tracking-tight text-white">
+                            PO System
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primary nav -->
+            <nav class="flex-1 overflow-y-auto px-3 pt-4 pb-6">
+                <div class="space-y-1 text-[13px]">
+                    <button
+                        class="flex w-full items-center rounded-lg bg-slate-100/5 px-3 py-2 text-slate-50 sidebar-btn">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center">
+                            <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                        </span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Tổng quan</span>
+                    </button>
+
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="showBatchModal()">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center">
+                            <i data-lucide="layers" class="h-4 w-4"></i>
+                        </span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Xử lý hàng loạt</span>
+                    </button>
+
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/dashboard'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center">
+                            <i data-lucide="bar-chart-2" class="h-4 w-4"></i>
+                        </span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Dashboard</span>
+                    </button>
+
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/analytics'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="pie-chart"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Analytics</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/bulk'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="layers"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Bulk Operation</span>
+                    </button>
+                    {% if session.role == 'admin' %}
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/users'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="users"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Quản lý người dùng</span>
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Separator -->
+                <div class="mt-6 border-t border-slate-800 pt-4 space-y-1">
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-[13px] text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="showConfigModal()">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center">
+                            <i data-lucide="settings" class="h-4 w-4"></i>
+                        </span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Cấu hình</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-[13px] text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="showHelpModal()">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center">
+                            <i data-lucide="help-circle" class="h-4 w-4"></i>
+                        </span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Trợ giúp</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Toggle Button Area -->
+            <div id="sidebarToggleArea" class="px-3 py-2 border-t border-slate-800 transition-all duration-300">
+                <button onclick="toggleSidebar()"
+                    class="flex w-full items-center rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-900/60 hover:text-white transition-colors focus:outline-none sidebar-btn">
+                    <span class="mr-3 flex h-5 w-5 items-center justify-center shrink-0">
+                        <i data-lucide="chevron-left" id="sidebarToggleIcon"
+                            class="h-5 w-5 transition-transform duration-300"></i>
+                    </span>
+                    <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Thu gọn</span>
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div id="sidebarFooter" class="border-t border-slate-800 px-4 py-3 transition-all duration-300">
+                <div class="flex items-center gap-3 transition-all duration-300">
+                    <div
+                        class="h-8 w-8 shrink-0 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
+                        {% if session.username %}{{ session.username[:2].upper() }}{% else %}GU{% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0 sidebar-text transition-opacity duration-300">
+                        <div class="text-[13px] font-medium text-white truncate">
+                            {% if session.username %}{{ session.username }}{% else %}Guest{% endif %}
+                        </div>
+                        <div class="text-[11px] text-slate-500 truncate">Online</div>
+                    </div>
+                    <button onclick="logout()" class="shrink-0 text-slate-400 hover:text-red-400 transition-colors">
+                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 bg-[#050509] flex flex-col h-full overflow-hidden relative">
+            <!-- Top bar -->
+            <div class="flex h-16 items-center justify-between border-b border-slate-800 px-6 shrink-0">
+                <div class="flex flex-1 justify-center">
+                    <div
+                        class="flex w-full max-w-3xl items-center rounded-xl border border-slate-800 bg-[#050509] px-4 py-2 focus-within:border-slate-600 transition-colors">
+                        <i data-lucide="search" class="h-4 w-4 text-slate-500 mr-2"></i>
+                        <input
+                            class="flex-1 bg-transparent text-[13px] text-slate-300 placeholder:text-slate-500 focus:outline-none"
+                            id="searchInput" placeholder="Tìm kiếm sản phẩm, PO, hoặc template..."
+                            oninput="searchProductsDebounced()" autocomplete="off">
+                        <button class="text-slate-500 hover:text-slate-300" onclick="clearSearch()"
+                            title="Xóa tìm kiếm">
+                            <i data-lucide="x" class="h-3 w-3"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="ml-6 flex items-center space-x-5 text-[13px]">
+                    <button
+                        class="relative flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-900 transition-colors">
+                        <i data-lucide="bell" class="h-4 w-4 text-slate-300"></i>
+                        <span class="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                    </button>
+                    <div class="text-slate-400 text-xs" id="currentTime"></div>
+                </div>
+            </div>
+
+            <!-- Inner search + provider filter (Stats & Filters) -->
+            <div class="border-b border-slate-800 px-8 py-4 shrink-0">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center justify-between">
                     <!-- Stats -->
-                    <div class="row mb-4">
-                        <div class="col-md-3 col-sm-6">
-                            <div class="stats-card">
-                                <div class="stats-number" id="total-products">{{ products|length }}</div>
-                                <div class="stats-label">Sản phẩm</div>
-                            </div>
+                    <div class="flex gap-4 text-[13px]">
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <span class="font-medium text-slate-200" id="total-products">{{ products|length }}</span>
+                            Sản phẩm
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="stats-card">
-                                <div class="stats-number" id="active-products">0</div>
-                                <div class="stats-label">Hoạt động</div>
-                            </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <span class="font-medium text-emerald-400" id="active-products">0</span> Hoạt động
                         </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="stats-card">
-                                <div class="stats-number" id="files-generated">0</div>
-                                <div class="stats-label">File đã tạo</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="stats-card">
-                                <div class="stats-number" id="success-rate">100%</div>
-                                <div class="stats-label">Tỷ lệ thành công</div>
-                            </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <span class="font-medium text-indigo-400" id="success-rate">0%</span> Tỷ lệ
                         </div>
                     </div>
-                    
-                    <!-- Search Box -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="card search-sort-card">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <!-- Search Section -->
-                                        <div class="col-lg-6 mb-3 mb-lg-0">
-                                            <div class="search-section">
-                                                <label class="form-label fw-bold text-primary mb-2">
-                                                    <i class="fas fa-search me-2"></i>Tìm kiếm sản phẩm
-                                                </label>
-                                                <div class="input-group search-input-group">
-                                                    <span class="input-group-text bg-primary text-white">
-                                                        <i class="fas fa-search"></i>
-                                                    </span>
-                                                    <input type="text" class="form-control search-input" id="searchInput" 
-                                                           placeholder="Nhập tên sản phẩm..." onkeyup="searchProducts()" 
-                                                           autocomplete="off" value="">
-                                                    <button class="btn btn-outline-danger" type="button" onclick="clearSearch()" title="Xóa tìm kiếm">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Sort Section -->
-                                        <div class="col-lg-6">
-                                            <div class="sort-section">
-                                                <label class="form-label fw-bold text-primary mb-2">
-                                                    <i class="fas fa-sort me-2"></i>Sắp xếp
-                                                </label>
-                                                <div class="btn-group w-100 sort-buttons" role="group">
-                                                    <button class="btn btn-outline-primary sort-btn" onclick="sortProducts('name')" title="Sắp xếp A-Z">
-                                                        <i class="fas fa-sort-alpha-down me-1"></i>A-Z
-                                                    </button>
-                                                    <button class="btn btn-outline-success sort-btn" onclick="sortProducts('type')" title="Sắp xếp theo loại">
-                                                        <i class="fas fa-layer-group me-1"></i>Loại
-                                                    </button>
-                                                    <button class="btn btn-outline-info sort-btn" onclick="sortProducts('recent')" title="Sản phẩm gần đây">
-                                                        <i class="fas fa-clock me-1"></i>Gần đây
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Info Text -->
-                                    <div class="mt-3">
-                                        <small class="text-muted">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Tìm kiếm theo tên sản phẩm, loại, hoặc template. Kết quả hiển thị ngay lập tức.
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
+
+                    <!-- Filters -->
+                    <!-- Filters -->
+                    <div class="flex gap-2">
+                        <div class="flex gap-2" id="dynamicFilterContainer">
+                            <!-- Dynamic buttons will be inserted here -->
                         </div>
-                    </div>
-                    
-                    <!-- Quick Actions -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                    <div class="alert alert-info alert-custom">
-                        <h5><i class="fas fa-bolt"></i> Thao tác nhanh</h5>
-                        <div class="row">
-                            <div class="col-md-2 col-sm-6 mb-2">
-                                <button class="btn btn-primary-custom btn-custom w-100" onclick="showBatchModal()">
-                                    <i class="fas fa-layer-group"></i> Xử lý hàng loạt
-                                </button>
-                            </div>
-                            <div class="col-md-2 col-sm-6 mb-2">
-                                <button class="btn btn-success btn-custom w-100" onclick="window.location.href='/dashboard'">
-                                    <i class="fas fa-chart-line"></i> Dashboard
-                                </button>
-                            </div>
-                            <div class="col-md-2 col-sm-6 mb-2">
-                                <button class="btn btn-info btn-custom w-100" onclick="window.location.href='/analytics'">
-                                    <i class="fas fa-analytics"></i> Analytics
-                                </button>
-                            </div>
-                            <div class="col-md-2 col-sm-6 mb-2">
-                                <button class="btn btn-warning btn-custom w-100" onclick="showConfigModal()">
-                                    <i class="fas fa-cog"></i> Cấu hình
-                                </button>
-                            </div>
-                            <div class="col-md-2 col-sm-6 mb-2">
-                                <button class="btn btn-secondary btn-custom w-100" onclick="showHelpModal()">
-                                    <i class="fas fa-question-circle"></i> Trợ giúp
-                                </button>
-                            </div>
-                            <div class="col-md-2 col-sm-6 mb-2">
-                                <button class="btn btn-outline-primary btn-custom w-100" onclick="refreshProducts()">
-                                    <i class="fas fa-sync-alt"></i> Làm mới
-                                </button>
-                            </div>
+
+                        <div class="flex rounded-lg border border-slate-800 bg-black p-1">
+                            <button
+                                class="px-3 py-1 rounded-md text-[12px] font-medium bg-slate-800 text-white shadow-sm transition-all"
+                                onclick="sortProducts('name')">A-Z</button>
+                            <button
+                                class="px-3 py-1 rounded-md text-[12px] font-medium text-slate-400 hover:text-slate-200 transition-all"
+                                onclick="sortProducts('type')">Loại</button>
+                            <button
+                                class="px-3 py-1 rounded-md text-[12px] font-medium text-slate-400 hover:text-slate-200 transition-all"
+                                onclick="sortProducts('recent')">Gần đây</button>
                         </div>
-                        {% if session.role == 'admin' %}
-                        <div class="row mt-2">
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-danger btn-custom w-100" onclick="window.location.href='/users'">
-                                    <i class="fas fa-users"></i> Quản lý người dùng
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-info btn-custom w-100" onclick="showBulkUserModal()">
-                                    <i class="fas fa-user-plus"></i> Bulk User Management
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-success btn-custom w-100" onclick="window.location.href='/bulk'">
-                                    <i class="fas fa-layer-group"></i> Bulk Operations
-                                </button>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-warning btn-custom w-100" onclick="showExportModal()">
-                                    <i class="fas fa-download"></i> Export Data
-                                </button>
-                            </div>
-                        </div>
-                        {% endif %}
-                        <div class="row mt-2">
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-primary btn-custom w-100" onclick="filterProducts('all')">
-                                    <i class="fas fa-list"></i> Tất cả sản phẩm
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-success btn-custom w-100" onclick="window.location.href='/import'">
-                                    <i class="fas fa-upload"></i> Import
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Products Grid -->
-                    <div class="row" id="products-grid">
-                        {% for product_id in products %}
-                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
-                            <div class="product-card" data-product="{{ product_id }}">
-                                <div class="product-card-header">
-                                    <h4>{{ product_id }}</h4>
-                                    <p class="mb-0">Sản phẩm PO</p>
-                                </div>
-                                <div class="product-card-body">
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-primary-custom btn-custom" onclick="openProduct('{{ product_id }}')">
-                                            <i class="fas fa-edit"></i> Chỉnh sửa & Tạo file
-                                        </button>
-                                        <button class="btn btn-outline-secondary btn-custom" onclick="viewProductInfo('{{ product_id }}')">
-                                            <i class="fas fa-info-circle"></i> Thông tin chi tiết
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <!-- Loading -->
-                    <div class="loading" id="loading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                        <p class="mt-3">Đang xử lý...</p>
-                    </div>
-                    
-                    <!-- Footer -->
-                    <div class="footer">
-                        <p>&copy; 2024 Hệ thống PO Tích hợp. Được phát triển để quản lý và tạo file PO một cách hiệu quả.</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
+
+            <!-- Cards section -->
+            <div class="flex-1 overflow-y-auto px-6 pb-8 pt-6 lg:px-8" id="mainContent">
+                <!-- Original Content Container (Hidden/Replaced) -->
+                <div style="display:none;"></div>
+
+                <!-- Product Grid -->
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" id="products-grid">
+                    {% for product_id in products %}
+                    <!-- Card -->
+                    <div class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900 transition-all duration-300 product-card"
+                        data-product="{{ product_id }}">
+                        <!-- Card Header/Image Placeholder -->
+                        <div class="relative aspect-[2/1] overflow-hidden bg-slate-950">
+                            <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-4xl font-bold text-slate-800 select-none">{{ product_id[:2] }}</span>
+                            </div>
+
+                            <!-- Status Badge -->
+                            <div class="absolute top-3 left-3 z-10">
+                                <span
+                                    class="inline-flex items-center rounded-md bg-slate-950/90 px-2 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-800">
+                                    {{ product_id }}
+                                </span>
+                            </div>
+
+                            <!-- Type Badge -->
+                            <div class="absolute top-3 right-3 z-10">
+                                <span id="type-{{ product_id }}"
+                                    class="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-400 ring-1 ring-inset ring-indigo-500/20">
+                                    Loading...
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="flex flex-1 flex-col p-4">
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-slate-200">{{ product_id }}</h3>
+                                <p class="text-sm text-slate-500 product-desc" data-product="{{ product_id }}">Product
+                                    Template</p>
+                            </div>
+
+                            <div class="mt-auto flex gap-2">
+                                <button onclick="openProduct('{{ product_id }}')"
+                                    class="flex-1 rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-white transition-colors add-to-cart-btn">
+                                    <i data-lucide="file-edit" class="mr-2 h-4 w-4 inline-block"></i> Tạo File
+                                </button>
+                                <button onclick="viewProductInfo('{{ product_id }}')"
+                                    class="flex items-center justify-center rounded-lg border border-slate-700 bg-transparent px-3 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors">
+                                    <i data-lucide="info" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div> <!-- End Grid -->
+
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden flex-col items-center justify-center py-12 text-center">
+                    <div class="rounded-full bg-slate-900 p-4 mb-4">
+                        <i data-lucide="box" class="h-8 w-8 text-slate-600"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-slate-300">Không tìm thấy sản phẩm</h3>
+                    <p class="mt-1 text-sm text-slate-500">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                    <button onclick="clearSearch()"
+                        class="mt-4 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                        Xóa tìm kiếm
+                    </button>
+                </div>
+
+                <!-- Loading -->
+                <div id="loading" class="hidden py-12 text-center">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-indigo-500 motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                        role="status">
+                        <span
+                            class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                    </div>
+                </div>
+
+            </div> <!-- End Main Content -->
+        </main>
+    </div> <!-- End Flex Container -->
+
     <!-- Modals -->
-    <div class="modal fade" id="batchModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-layer-group"></i> Xử lý hàng loạt</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Modals -->
+    <div class="custom-modal-backdrop" id="batchModal">
+        <div class="custom-modal custom-modal-lg">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title"><i data-lucide="layers"></i> Xử lý hàng loạt</h5>
+                <button class="custom-modal-close" onclick="closeModal('batchModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <p class="mb-4 text-slate-300">Chức năng xử lý hàng loạt cho phép bạn tạo nhiều file PO cùng lúc.</p>
+                <div
+                    class="p-4 mb-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center gap-3">
+                    <i data-lucide="info" class="shrink-0"></i>
+                    <span>Tính năng này sẽ được tích hợp với Google Sheets để tự động lấy dữ liệu.</span>
                 </div>
-                <div class="modal-body">
-                    <p>Chức năng xử lý hàng loạt cho phép bạn tạo nhiều file PO cùng lúc.</p>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        Tính năng này sẽ được tích hợp với Google Sheets để tự động lấy dữ liệu.
-                    </div>
-                    <button class="btn btn-primary" onclick="window.location.href='/batch'">
-                        <i class="fas fa-external-link-alt"></i> Mở trang xử lý hàng loạt
-                    </button>
-                </div>
+                <button class="btn-modal btn-modal-primary" onclick="window.location.href='/batch'">
+                    <i data-lucide="external-link" class="inline-block w-4 h-4 mr-2"></i> Mở trang xử lý hàng loạt
+                </button>
             </div>
         </div>
     </div>
-    
-    <div class="modal fade" id="configModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-cog"></i> Cấu hình hệ thống</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Cấu hình và tùy chỉnh hệ thống PO.</p>
-                    <button class="btn btn-primary" onclick="window.location.href='/config'">
-                        <i class="fas fa-external-link-alt"></i> Mở trang cấu hình
-                    </button>
-                </div>
+
+    <div class="custom-modal-backdrop" id="configModal">
+        <div class="custom-modal custom-modal-lg">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title"><i data-lucide="settings"></i> Cấu hình hệ thống</h5>
+                <button class="custom-modal-close" onclick="closeModal('configModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <p class="mb-4 text-slate-300">Cấu hình và tùy chỉnh hệ thống PO.</p>
+                <button class="btn-modal btn-modal-primary" onclick="window.location.href='/config'">
+                    <i data-lucide="external-link" class="inline-block w-4 h-4 mr-2"></i> Mở trang cấu hình
+                </button>
             </div>
         </div>
     </div>
-    
-    <div class="modal fade" id="helpModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-question-circle"></i> Trợ giúp</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <h6><i class="fas fa-play-circle"></i> Cách sử dụng:</h6>
-                    <ol>
-                        <li>Chọn sản phẩm từ danh sách</li>
-                        <li>Nhập thông tin sản phẩm (tên, PO, ngày, serial)</li>
-                        <li>Nhấn "Tạo file" để xuất file Excel</li>
-                        <li>Download file về máy</li>
-                    </ol>
-                    
-                    <h6><i class="fas fa-lightbulb"></i> Mẹo:</h6>
-                    <ul>
-                        <li>Sử dụng "Xử lý hàng loạt" để tạo nhiều file cùng lúc</li>
-                        <li>Kiểm tra template trước khi tạo file</li>
-                        <li>Lưu cấu hình để sử dụng lại</li>
-                    </ul>
-                </div>
+
+    <div class="custom-modal-backdrop" id="helpModal">
+        <div class="custom-modal custom-modal-lg">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title"><i data-lucide="help-circle"></i> Trợ giúp</h5>
+                <button class="custom-modal-close" onclick="closeModal('helpModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <h6 class="text-lg font-semibold text-white mb-3 flex items-center gap-2"><i data-lucide="play-circle"
+                        class="w-5 h-5"></i> Cách sử dụng:</h6>
+                <ol class="list-decimal list-inside space-y-2 mb-6 text-slate-300 pl-4">
+                    <li>Chọn sản phẩm từ danh sách</li>
+                    <li>Nhập thông tin sản phẩm (tên, PO, ngày, serial)</li>
+                    <li>Nhấn "Tạo file" để xuất file Excel</li>
+                    <li>Download file về máy</li>
+                </ol>
+
+                <h6 class="text-lg font-semibold text-white mb-3 flex items-center gap-2"><i data-lucide="lightbulb"
+                        class="w-5 h-5"></i> Mẹo:</h6>
+                <ul class="list-disc list-inside space-y-2 text-slate-300 pl-4">
+                    <li>Sử dụng "Xử lý hàng loạt" để tạo nhiều file cùng lúc</li>
+                    <li>Kiểm tra template trước khi tạo file</li>
+                    <li>Lưu cấu hình để sử dụng lại</li>
+                </ul>
             </div>
         </div>
     </div>
-    
+
     <!-- Bulk User Management Modal -->
-    <div class="modal fade" id="bulkUserModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-user-plus"></i> Bulk User Management</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-upload me-2"></i>Import Users từ CSV</h6>
-                            <div class="mb-3">
-                                <label for="csvFile" class="form-label">Chọn file CSV</label>
-                                <input type="file" class="form-control" id="csvFile" accept=".csv" onchange="handleCSVUpload()">
-                            </div>
-                            <div class="alert alert-info">
-                                <small>
-                                    <strong>Format CSV:</strong><br>
-                                    username,password,email,role<br>
-                                    user1,pass123,user1@email.com,user<br>
-                                    admin1,admin123,admin1@email.com,admin
-                                </small>
-                            </div>
-                            <button class="btn btn-primary" onclick="importUsers()" id="importBtn" disabled>
-                                <i class="fas fa-upload me-2"></i>Import Users
-                            </button>
+    <div class="custom-modal-backdrop" id="bulkUserModal">
+        <div class="custom-modal custom-modal-xl">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title"><i data-lucide="user-plus"></i> Bulk User Management</h5>
+                <button class="custom-modal-close" onclick="closeModal('bulkUserModal')"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h6 class="text-white font-semibold mb-3 flex items-center gap-2"><i data-lucide="upload"
+                                class="w-4 h-4"></i> Import Users từ CSV</h6>
+                        <div class="mb-3">
+                            <label for="csvFile" class="block text-sm font-medium text-slate-400 mb-1">Chọn file
+                                CSV</label>
+                            <input type="file"
+                                class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                id="csvFile" accept=".csv" onchange="handleCSVUpload()">
                         </div>
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-plus me-2"></i>Thêm User nhanh</h6>
-                            <div class="mb-3">
-                                <label for="quickUsername" class="form-label">Username</label>
-                                <input type="text" class="form-control" id="quickUsername" placeholder="Nhập username...">
+                        <div class="p-3 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs mb-3">
+                            <strong>Format CSV:</strong><br>
+                            username,password,email,role<br>
+                            user1,pass123,user1@email.com,user<br>
+                            admin1,admin123,admin1@email.com,admin
+                        </div>
+                        <button class="btn-modal btn-modal-primary w-full" onclick="importUsers()" id="importBtn"
+                            disabled>
+                            <i data-lucide="upload" class="inline-block w-4 h-4 mr-2"></i> Import Users
+                        </button>
+                    </div>
+                    <div>
+                        <h6 class="text-white font-semibold mb-3 flex items-center gap-2"><i data-lucide="plus"
+                                class="w-4 h-4"></i> Thêm User nhanh</h6>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="quickUsername"
+                                    class="block text-sm font-medium text-slate-400 mb-1">Username</label>
+                                <input type="text"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                    id="quickUsername" placeholder="Nhập username...">
                             </div>
-                            <div class="mb-3">
-                                <label for="quickPassword" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="quickPassword" placeholder="Nhập password...">
+                            <div>
+                                <label for="quickPassword"
+                                    class="block text-sm font-medium text-slate-400 mb-1">Password</label>
+                                <input type="password"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                    id="quickPassword" placeholder="Nhập password...">
                             </div>
-                            <div class="mb-3">
-                                <label for="quickEmail" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="quickEmail" placeholder="Nhập email...">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="quickEmail"
+                                        class="block text-sm font-medium text-slate-400 mb-1">Email</label>
+                                    <input type="email"
+                                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                        id="quickEmail" placeholder="Nhập email...">
+                                </div>
+                                <div>
+                                    <label for="quickRole"
+                                        class="block text-sm font-medium text-slate-400 mb-1">Role</label>
+                                    <select
+                                        class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                        id="quickRole">
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="quickRole" class="form-label">Role</label>
-                                <select class="form-control" id="quickRole">
-                                    <option value="user">User</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-success" onclick="addQuickUser()">
-                                <i class="fas fa-plus me-2"></i>Thêm User
+                            <button class="btn-modal btn-modal-success w-full" onclick="addQuickUser()">
+                                <i data-lucide="plus" class="inline-block w-4 h-4 mr-2"></i> Thêm User
                             </button>
                         </div>
                     </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-12">
-                            <h6><i class="fas fa-list me-2"></i>Danh sách Users</h6>
-                            <div class="table-responsive">
-                                <table class="table table-hover" id="usersTable">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Username</th>
-                                            <th>Email</th>
-                                            <th>Role</th>
-                                            <th>Created</th>
-                                            <th>Last Login</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="usersTableBody">
-                                        <tr>
-                                            <td colspan="7" class="text-center">
-                                                <i class="fas fa-spinner fa-spin me-2"></i>
-                                                Đang tải...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                </div>
+                <hr class="border-slate-700 my-6">
+                <div>
+                    <h6 class="text-white font-semibold mb-3 flex items-center gap-2"><i data-lucide="list"
+                            class="w-4 h-4"></i> Danh sách Users</h6>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-400" id="usersTable">
+                            <thead class="bg-slate-800 text-slate-200 uppercase">
+                                <tr>
+                                    <th class="px-4 py-2">ID</th>
+                                    <th class="px-4 py-2">Username</th>
+                                    <th class="px-4 py-2">Email</th>
+                                    <th class="px-4 py-2">Role</th>
+                                    <th class="px-4 py-2">Created</th>
+                                    <th class="px-4 py-2">Last Login</th>
+                                    <th class="px-4 py-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-800">
+                                <tr>
+                                    <td colspan="7" class="px-4 py-4 text-center">
+                                        <i data-lucide="loader" class="animate-spin inline-block w-4 h-4 mr-2"></i> Đang
+                                        tải...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Export Data Modal -->
-    <div class="modal fade" id="exportModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-download"></i> Export Data</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+    <!-- Edit User Modal -->
+    <div class="custom-modal-backdrop" id="editUserModal">
+        <div class="custom-modal custom-modal-md">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title"><i data-lucide="edit"></i> Chỉnh sửa người dùng</h5>
+                <button class="custom-modal-close" onclick="closeModal('editUserModal')"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <input type="hidden" id="editUserId">
+                <div class="space-y-3">
+                    <div>
+                        <label for="editUsername" class="block text-sm font-medium text-slate-400 mb-1">Username</label>
+                        <input type="text"
+                            class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                            id="editUsername" disabled>
+                        <p class="text-xs text-slate-500 mt-1">Username không thể thay đổi.</p>
+                    </div>
+                    <div>
+                        <label for="editEmail" class="block text-sm font-medium text-slate-400 mb-1">Email</label>
+                        <input type="email"
+                            class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                            id="editEmail" placeholder="Nhập email...">
+                    </div>
+                    <div>
+                        <label for="editRole" class="block text-sm font-medium text-slate-400 mb-1">Role</label>
+                        <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                            id="editRole">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="editPassword" class="block text-sm font-medium text-slate-400 mb-1">Mật khẩu
+                            mới</label>
+                        <input type="password"
+                            class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                            id="editPassword" placeholder="Để trống nếu không đổi...">
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-filter me-2"></i>Bộ lọc dữ liệu</h6>
-                            <div class="mb-3">
-                                <label for="exportStartDate" class="form-label">Từ ngày</label>
-                                <input type="date" class="form-control" id="exportStartDate">
+            </div>
+            <div class="custom-modal-footer">
+                <button class="btn-modal btn-modal-secondary" onclick="closeModal('editUserModal')">Hủy</button>
+                <button class="btn-modal btn-modal-primary" onclick="saveUser()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Data Modal -->
+    <div class="custom-modal-backdrop" id="exportModal">
+        <div class="custom-modal custom-modal-lg">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title"><i data-lucide="download"></i> Export Data</h5>
+                <button class="custom-modal-close" onclick="closeModal('exportModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h6 class="text-white font-semibold mb-3 flex items-center gap-2"><i data-lucide="filter"
+                                class="w-4 h-4"></i> Bộ lọc dữ liệu</h6>
+                        <div class="space-y-3">
+                            <div>
+                                <label for="exportStartDate" class="block text-sm font-medium text-slate-400 mb-1">Từ
+                                    ngày</label>
+                                <input type="date"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                    id="exportStartDate">
                             </div>
-                            <div class="mb-3">
-                                <label for="exportEndDate" class="form-label">Đến ngày</label>
-                                <input type="date" class="form-control" id="exportEndDate">
+                            <div>
+                                <label for="exportEndDate" class="block text-sm font-medium text-slate-400 mb-1">Đến
+                                    ngày</label>
+                                <input type="date"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                    id="exportEndDate">
                             </div>
-                            <div class="mb-3">
-                                <label for="exportProduct" class="form-label">Sản phẩm</label>
-                                <select class="form-control" id="exportProduct">
+                            <div>
+                                <label for="exportProduct" class="block text-sm font-medium text-slate-400 mb-1">Sản
+                                    phẩm</label>
+                                <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                    id="exportProduct">
                                     <option value="">Tất cả sản phẩm</option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label for="exportStatus" class="form-label">Trạng thái</label>
-                                <select class="form-control" id="exportStatus">
+                            <div>
+                                <label for="exportStatus" class="block text-sm font-medium text-slate-400 mb-1">Trạng
+                                    thái</label>
+                                <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                    id="exportStatus">
                                     <option value="">Tất cả trạng thái</option>
                                     <option value="completed">Thành công</option>
                                     <option value="failed">Thất bại</option>
@@ -1023,93 +650,80 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-cog me-2"></i>Tùy chọn export</h6>
-                            <div class="mb-3">
-                                <label for="exportFormat" class="form-label">Định dạng</label>
-                                <select class="form-control" id="exportFormat">
-                                    <option value="csv">CSV</option>
-                                    <option value="excel">Excel</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="exportFields" class="form-label">Các trường dữ liệu</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportId" checked>
-                                    <label class="form-check-label" for="exportId">ID</label>
+                    </div>
+                    <div>
+                        <h6 class="text-white font-semibold mb-3 flex items-center gap-2"><i data-lucide="settings-2"
+                                class="w-4 h-4"></i> Tùy chọn export</h6>
+                        <div class="mb-3">
+                            <label for="exportFormat" class="block text-sm font-medium text-slate-400 mb-1">Định
+                                dạng</label>
+                            <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-300"
+                                id="exportFormat">
+                                <option value="csv">CSV</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Các trường dữ liệu</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportId" checked class="mr-2">
+                                    <label for="exportId" class="text-sm text-slate-300">ID</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportOperation" checked>
-                                    <label class="form-check-label" for="exportOperation">Loại hoạt động</label>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportOperation" checked class="mr-2">
+                                    <label for="exportOperation" class="text-sm text-slate-300">Loại hoạt động</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportProductName" checked>
-                                    <label class="form-check-label" for="exportProductName">Tên sản phẩm</label>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportProductName" checked class="mr-2">
+                                    <label for="exportProductName" class="text-sm text-slate-300">Tên sản phẩm</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportPONumber" checked>
-                                    <label class="form-check-label" for="exportPONumber">Số PO</label>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportPONumber" checked class="mr-2">
+                                    <label for="exportPONumber" class="text-sm text-slate-300">Số PO</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportStatus" checked>
-                                    <label class="form-check-label" for="exportStatus">Trạng thái</label>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportStatus" checked class="mr-2">
+                                    <label for="exportStatus" class="text-sm text-slate-300">Trạng thái</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportUser" checked>
-                                    <label class="form-check-label" for="exportUser">Người thực hiện</label>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportUser" checked class="mr-2">
+                                    <label for="exportUser" class="text-sm text-slate-300">Người thực hiện</label>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="exportDate" checked>
-                                    <label class="form-check-label" for="exportDate">Ngày tạo</label>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="exportDate" checked class="mr-2">
+                                    <label for="exportDate" class="text-sm text-slate-300">Ngày tạo</label>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <hr>
-                    <div class="text-center">
-                        <button class="btn btn-primary btn-lg" onclick="exportData()">
-                            <i class="fas fa-download me-2"></i>Export Data
-                        </button>
-                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content logout-modal">
-                <div class="modal-header logout-modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">
-                        <i class="fas fa-sign-out-alt me-2"></i>
-                        Xác nhận đăng xuất
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body logout-modal-body">
-                    <div class="text-center">
-                        <div class="logout-icon mb-3">
-                            <i class="fas fa-question-circle"></i>
-                        </div>
-                        <h6 class="mb-3">Bạn có chắc chắn muốn đăng xuất?</h6>
-                        <p class="text-muted mb-0">Bạn sẽ được chuyển về trang đăng nhập sau khi đăng xuất.</p>
-                    </div>
-                </div>
-                <div class="modal-footer logout-modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>
-                        Hủy
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="confirmLogout()">
-                        <i class="fas fa-sign-out-alt me-1"></i>
-                        Đăng xuất
+                <div class="mt-6 flex justify-center">
+                    <button class="btn-modal btn-modal-primary px-8 py-2" onclick="exportData()">
+                        <i data-lucide="download" class="inline-block w-4 h-4 mr-2"></i> Export Data
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- Product Info Modal -->
+    <div class="custom-modal-backdrop" id="productInfoModal">
+        <div class="custom-modal custom-modal-lg">
+            <div class="custom-modal-header">
+                <h5 class="custom-modal-title" id="productInfoModalTitle"><i data-lucide="info"></i> Product Info</h5>
+                <button class="custom-modal-close" onclick="closeModal('productInfoModal')"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div class="custom-modal-body" id="productInfoModalBody">
+                <!-- Content will be injected via JS -->
+            </div>
+            <div class="custom-modal-footer">
+                <button class="btn-modal btn-modal-secondary" onclick="closeModal('productInfoModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1117,18 +731,155 @@
         let products = {};
         let filteredProducts = {};
         let currentSort = 'default';
-        
+
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Clear search input on page load
-            document.getElementById('searchInput').value = '';
-            
-            loadProducts();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Clear search input on page load and disable autocomplete
+            const searchEl = document.getElementById('searchInput');
+            if (searchEl) {
+                searchEl.value = '';
+                searchEl.setAttribute('autocomplete', 'off');
+            }
+
+            // Show skeleton while loading initial data
+            setSkeleton(true);
+            Promise.resolve(loadProducts(true)) // Pass true to indicate initial load
+                .catch(() => { })
+                .finally(() => setSkeleton(false));
+
             updateStats();
+            updateFilesCount(); // Load file count
+            updateTime();
             updateTime();
             setInterval(updateTime, 1000); // Update time every second
+
+            // Initialize sidebar state
+            initSidebar();
         });
-        
+
+        // Sidebar Toggle Function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const texts = document.querySelectorAll('.sidebar-text');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
+            const sidebarBtns = document.querySelectorAll('.sidebar-btn');
+            const header = document.getElementById('sidebarHeader');
+            const footer = document.getElementById('sidebarFooter');
+            const footerContent = footer.querySelector('div');
+            const toggleArea = document.getElementById('sidebarToggleArea');
+
+            // Check current width to determine action
+            const isExpanded = sidebar.classList.contains('w-64');
+
+            if (isExpanded) {
+                // Collapse
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+
+                texts.forEach(el => el.classList.add('hidden'));
+
+                // Rotate icon
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+
+                // Center icons in buttons
+                sidebarBtns.forEach(btn => {
+                    btn.classList.add('justify-center');
+                    const iconSpan = btn.querySelector('span:first-child');
+                    if (iconSpan) iconSpan.classList.remove('mr-3');
+                });
+
+                // Header adjustments
+                header.classList.remove('px-4');
+                header.classList.add('px-2', 'justify-center');
+
+                // Toggle Area adjustments
+                toggleArea.classList.remove('px-3');
+                toggleArea.classList.add('px-2');
+
+                // Footer adjustments
+                footer.classList.remove('px-4');
+                footer.classList.add('px-2');
+                footerContent.classList.remove('gap-3');
+                footerContent.classList.add('gap-2', 'justify-center');
+
+                localStorage.setItem('sidebarState', 'collapsed');
+            } else {
+                // Expand
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+
+                texts.forEach(el => el.classList.remove('hidden'));
+
+                // Reset icon rotation
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+
+                // Reset button alignment
+                sidebarBtns.forEach(btn => {
+                    btn.classList.remove('justify-center');
+                    const iconSpan = btn.querySelector('span:first-child');
+                    if (iconSpan) iconSpan.classList.add('mr-3');
+                });
+
+                // Header adjustments
+                header.classList.add('px-4');
+                header.classList.remove('px-2', 'justify-center');
+
+                // Toggle Area adjustments
+                toggleArea.classList.add('px-3');
+                toggleArea.classList.remove('px-2');
+
+                // Footer adjustments
+                footer.classList.add('px-4');
+                footer.classList.remove('px-2');
+                footerContent.classList.add('gap-3');
+                footerContent.classList.remove('gap-2', 'justify-center');
+
+                localStorage.setItem('sidebarState', 'expanded');
+            }
+        }
+
+        function initSidebar() {
+            const state = localStorage.getItem('sidebarState');
+            if (state === 'collapsed') {
+                const sidebar = document.getElementById('sidebar');
+                const texts = document.querySelectorAll('.sidebar-text');
+                const toggleIcon = document.getElementById('sidebarToggleIcon');
+                const sidebarBtns = document.querySelectorAll('.sidebar-btn');
+                const header = document.getElementById('sidebarHeader');
+                const footer = document.getElementById('sidebarFooter');
+                const footerContent = footer ? footer.querySelector('div') : null;
+                const toggleArea = document.getElementById('sidebarToggleArea');
+
+                if (sidebar) {
+                    sidebar.classList.remove('w-64');
+                    sidebar.classList.add('w-20');
+                    texts.forEach(el => el.classList.add('hidden'));
+                    if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+
+                    sidebarBtns.forEach(btn => {
+                        btn.classList.add('justify-center');
+                        const iconSpan = btn.querySelector('span:first-child');
+                        if (iconSpan) iconSpan.classList.remove('mr-3');
+                    });
+
+                    if (header) {
+                        header.classList.remove('px-4');
+                        header.classList.add('px-2', 'justify-center');
+                    }
+                    if (toggleArea) {
+                        toggleArea.classList.remove('px-3');
+                        toggleArea.classList.add('px-2');
+                    }
+                    if (footer && footerContent) {
+                        footer.classList.remove('px-4');
+                        footer.classList.add('px-2');
+                        footerContent.classList.remove('gap-3');
+                        footerContent.classList.add('gap-2', 'justify-center');
+                    }
+                }
+            }
+        }
+
         // Update current time
         function updateTime() {
             const now = new Date();
@@ -1143,269 +894,391 @@
             });
             document.getElementById('currentTime').textContent = timeString;
         }
-        
+
         // Logout function
         function logout() {
-            const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
-            logoutModal.show();
+            confirmAction({
+                title: 'Xác nhận đăng xuất',
+                message: 'Bạn có chắc chắn muốn đăng xuất? Bạn sẽ được chuyển về trang đăng nhập.',
+                type: 'warning',
+                confirmText: 'Đăng xuất',
+                cancelText: 'Hủy',
+                onConfirm: () => {
+                    window.location.href = '/logout';
+                }
+            });
         }
-        
+
         // Confirm logout function
         function confirmLogout() {
             window.location.href = '/logout';
         }
-        
+
         // Load products data
-        async function loadProducts() {
+        async function loadProducts(isInitialLoad = false) {
             try {
                 const response = await fetch('/api/products');
                 products = await response.json();
-                
+
+                // Generate filter buttons
+                generateFilterButtons();
+
                 // Sort products alphabetically by default
                 const sortedProducts = {};
                 const productIds = Object.keys(products).sort();
-                
+
                 productIds.forEach(id => {
                     sortedProducts[id] = products[id];
                 });
-                
+
                 products = sortedProducts;
-                filteredProducts = {...products};
+                filteredProducts = { ...products };
                 currentSort = 'name'; // Set default sort to alphabetical
                 updateProductCards();
+
+                // Hide error state if visible
+                const err = document.getElementById('error-state');
+                if (err) err.style.display = 'none';
+
+                // Only show toast if NOT initial load (user triggered refresh)
+                if (!isInitialLoad && typeof showToast === 'function') {
+                    showToast('Đã tải danh sách sản phẩm', 'success');
+                }
             } catch (error) {
                 console.error('Error loading products:', error);
+                if (typeof showErrorState === 'function') {
+                    showErrorState('Không thể tải danh sách sản phẩm. Vui lòng thử lại.');
+                }
+                if (typeof showToast === 'function') {
+                    showToast('Lỗi khi tải sản phẩm', 'error');
+                }
             }
         }
-        
+
+        // Generate dynamic filter buttons
+        function generateFilterButtons() {
+            const container = document.getElementById('dynamicFilterContainer');
+            if (!container) return;
+
+            // Extract unique categories
+            const categories = new Set();
+            Object.keys(products).forEach(id => {
+                const details = productDetails[id];
+                if (details && details.category) {
+                    categories.add(details.category);
+                }
+            });
+
+            const sortedCategories = Array.from(categories).sort();
+
+            // Create filter buttons group
+            const filterGroup = document.createElement('div');
+            filterGroup.className = 'flex rounded-lg border border-slate-800 bg-black p-1 mr-2';
+
+            let html = `
+                <button class="px-3 py-1 rounded-md text-[12px] font-medium bg-slate-800 text-white shadow-sm transition-all filter-btn active"
+                    onclick="filterProducts('all', this)">All</button>
+            `;
+
+            sortedCategories.forEach(category => {
+                html += `
+                    <button class="px-3 py-1 rounded-md text-[12px] font-medium text-slate-400 hover:text-slate-200 transition-all filter-btn"
+                        onclick="filterProducts('${category}', this)">${category}</button>
+                `;
+            });
+
+            filterGroup.innerHTML = html;
+
+            // Clear container and append new group
+            container.innerHTML = '';
+            container.appendChild(filterGroup);
+        }
+
+        // Filter products
+        function filterProducts(category, btnElement) {
+            // Update active state of buttons
+            if (btnElement) {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-slate-800', 'text-white', 'shadow-sm', 'active');
+                    btn.classList.add('text-slate-400');
+                });
+                btnElement.classList.remove('text-slate-400');
+                btnElement.classList.add('bg-slate-800', 'text-white', 'shadow-sm', 'active');
+            }
+
+            // Filter logic
+            if (category === 'all') {
+                filteredProducts = { ...products };
+            } else {
+                filteredProducts = {};
+                Object.keys(products).forEach(productId => {
+                    const details = productDetails[productId];
+                    if (details && details.category === category) {
+                        filteredProducts[productId] = products[productId];
+                    }
+                });
+            }
+
+            // Re-apply current sort
+            sortProducts(currentSort, false);
+
+            updateProductCards();
+            updateProductVisibility();
+            updateStats();
+        }
+
         // Update product cards
         function updateProductCards() {
             Object.keys(filteredProducts).forEach(productId => {
                 const product = filteredProducts[productId];
                 const typeElement = document.getElementById(`type-${productId}`);
-                
+
                 if (typeElement) {
-                    typeElement.textContent = product.type;
-                    typeElement.className = `product-type type-${product.type}`;
+                    if (productDetails[productId]) {
+                        typeElement.textContent = productDetails[productId].category;
+                    } else {
+                        typeElement.textContent = product.type;
+                    }
+                }
+
+                // Update Image
+                const card = document.querySelector(`.product-card[data-product="${productId}"]`);
+                if (card) {
+                    const imgContainer = card.querySelector('.relative.aspect-\\[2\\/1\\]');
+                    if (imgContainer && productImages[productId]) {
+                        // Check if img already exists
+                        let img = imgContainer.querySelector('img');
+                        if (!img) {
+                            img = document.createElement('img');
+                            img.className = 'absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110';
+                            img.alt = productId;
+                            imgContainer.prepend(img);
+
+                            // Hide placeholder text if image loads
+                            const placeholderText = imgContainer.querySelector('.text-4xl');
+                            if (placeholderText) placeholderText.style.display = 'none';
+                        }
+                        img.src = `/static/images/${productImages[productId]}`;
+                    }
+
+                    // Update Description
+                    const descElement = card.querySelector('.product-desc');
+                    if (descElement && productDetails[productId]) {
+                        descElement.textContent = productDetails[productId].specs;
+                    }
                 }
             });
-            
+
             updateStats();
         }
-        
+
         // Update statistics
         function updateStats() {
             const totalProducts = Object.keys(products).length;
             const activeProducts = Object.values(products).filter(p => p.template_exists).length;
             const filteredTotal = Object.keys(filteredProducts).length;
             const filteredActive = Object.values(filteredProducts).filter(p => p.template_exists).length;
-            
+
             document.getElementById('total-products').textContent = filteredTotal;
             document.getElementById('active-products').textContent = filteredActive;
-            
+
             if (totalProducts > 0) {
                 const successRate = Math.round((activeProducts / totalProducts) * 100);
                 document.getElementById('success-rate').textContent = successRate + '%';
             }
         }
-        
+
+        // Update files count from API
+        async function updateFilesCount() {
+            try {
+                const response = await fetch('/api/files-count');
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('files-generated').textContent = data.count;
+                } else {
+                    console.error('Error fetching files count:', data.message);
+                }
+            } catch (error) {
+                console.error('Error updating files count:', error);
+            }
+        }
+
         // Open product page
         function openProduct(productId) {
             window.location.href = `/product/${productId}`;
         }
-        
+
         // Product detailed information
+        const productImages = {
+            'AZ3002': 'AZ3002_01.avif',
+            'IX141': 'IX141H_01.avif',
+            'IZ381H': 'IZ382H_mobileLarge_02.avif',
+            'LA480': 'la486.avif',
+            'LA555': 'la555.jpg',
+            'LA700': 'la700.jpg',
+            'LA800': 'LA802_mobileLarge_01.avif',
+            'NV360': 'NV360_01.avif',
+            'SV2000': 'SV2000.avif',
+            'UV440': 'uv440.jpeg',
+            'UV730': 'uv730.jpg',
+            'ZD201': 'zd201.jpg',
+            'ZU660': 'zd660.webp',
+            'AW261': 'wd261.jpg',
+            'WD161': 'WD161_01.avif',
+            'VX100': 'VX100_Hero_Gallery_Desktop_01.avif',
+            'VS100': 'vs100.jpeg',
+            'HX100': 'hx100.webp',
+            'HP152': 'HP152_01.avif',
+            'HP301': 'HP301_01.avif',
+            'UA1450': 'UA1450_01.avif',
+            'FA225': 'FA202_02.avif',
+            'TF200': 'TF200-ATF-01B.webp',
+            'UH205': 'uh205.webp',
+            'HD300': 'hd300.jpg',
+            'HD400': 'HD400BKSN_02.avif',
+            'HD500': 'HD500_02.avif',
+            'HD600': 'hd600.jpg',
+            'HD700': 'HD700_02.avif'
+        };
+
         const productDetails = {
-            'WD261': {
-                category: 'Máy hút bụi 3 trong 1',
-                specs: 'Không dây, Pin 21.6V, Thời gian sử dụng 23 phút, Trọng lượng 8.5 lbs',
-                description: 'Shark HydroVac MessMaster Cordless 3-in-1 Cleaner - Máy hút bụi không dây 3 trong 1, hút bụi, lau sàn và tự làm sạch'
-            },
-            'WD161': {
-                category: 'Máy hút bụi 3 trong 1',
-                specs: 'Có dây, Công suất cao, Tự làm sạch brushroll',
-                description: 'Shark HydroVac MessMaster Corded 3-in-1 Vacuum Mop - Máy hút bụi có dây 3 trong 1, hút bụi và lau sàn'
-            },
-            'AZ3002': {
-                category: 'Máy hút bụi đứng',
-                specs: 'DuoClean, PowerFins, HairPro, Công nghệ chống tắc',
-                description: 'Shark Stratos DuoClean PowerFins HairPro Upright Vacuum - Máy hút bụi đứng với công nghệ PowerFins và HairPro'
-            },
-            'FA222': {
-                category: 'Quạt làm mát',
-                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
-                description: 'Shark FlexBreeze Fan with InstaCool Mist Attachment - Quạt làm mát với phụ kiện phun sương'
-            },
-            'HD700': {
-                category: 'Máy sấy tóc',
-                specs: 'SpeedStyle Pro, 3 tốc độ, 2 chế độ nhiệt, Ion technology',
-                description: 'Shark SpeedStyle Pro Hair Dryer - Máy sấy tóc chuyên nghiệp cho tóc thẳng và xoăn'
-            },
-            'HD600': {
-                category: 'Máy sấy tóc',
-                specs: 'Glam Ceramic, 3 tốc độ, 2 chế độ nhiệt, Ceramic technology',
-                description: 'Shark Glam Ceramic Powerful Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng gốm'
-            },
-            'HD500': {
-                category: 'Máy sấy tóc',
-                specs: 'SpeedStyle Pro Flex, Tùy chỉnh, 3 tốc độ, Ion technology',
-                description: 'Shark SpeedStyle Pro Flex - Máy sấy tóc linh hoạt có thể tùy chỉnh'
-            },
-            'HD400': {
-                category: 'Máy sấy tóc',
-                specs: 'FlexStyle, Air styling, 3 tốc độ, 2 chế độ nhiệt',
-                description: 'Shark FlexStyle Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng không khí'
-            },
-            'HD300': {
-                category: 'Máy sấy tóc',
-                specs: 'SpeedStyle 3-in-1, Tóc thẳng và xoăn, 3 tốc độ',
-                description: 'Shark SpeedStyle 3-in-1 Hair Dryer - Máy sấy tóc 3 trong 1 cho tóc thẳng và xoăn'
-            },
-            'HP152': {
-                category: 'Máy lọc không khí',
-                specs: 'NeverChange, HEPA filter, CADR 200, 3 tốc độ',
-                description: 'Shark NeverChange Air Purifier - Máy lọc không khí không cần thay bộ lọc'
-            },
-            'HP301': {
-                category: 'Máy lọc không khí',
-                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
-                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
-            },
-            'HX100': {
-                category: 'Máy làm sạch vết bẩn',
-                specs: 'StainForce, Không dây, Pin lithium, Áp suất cao',
-                description: 'Shark StainForce Cordless Spot Cleaner - Máy làm sạch vết bẩn không dây'
-            },
-            'IX141': {
-                category: 'Máy hút bụi không dây',
-                specs: 'Pet cordless, DuoClean, PowerFins, Pin lithium',
-                description: 'Shark Pet Cordless Stick Vacuum - Máy hút bụi không dây chuyên dụng cho thú cưng'
-            },
-            'IZ381H': {
-                category: 'Máy hút bụi không dây',
-                specs: 'PowerPro Flex, Reveal Plus, DuoClean, Pin lithium',
-                description: 'Shark PowerPro Flex Reveal Plus Cordless Vacuum - Máy hút bụi không dây linh hoạt cao cấp'
-            },
-            'LA480': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Lift Away, PowerFins, HairPro, Odor neutralizer',
-                description: 'Shark Lift Away with PowerFins HairPro - Máy hút bụi có thể tháo rời với công nghệ PowerFins'
-            },
-            'LA555': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Lift Away Deluxe, DuoClean, PowerFins',
-                description: 'Shark Lift Away Deluxe - Máy hút bụi cao cấp có thể tháo rời'
-            },
-            'LA700': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Rotator Pet, Lift Away Advanced, DuoClean, PowerFins',
-                description: 'Shark Rotator Pet Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp cho thú cưng'
-            },
-            'LA800': {
-                category: 'Máy hút bụi đứng',
-                specs: 'DetectPro, Lift Away Advanced, DuoClean, PowerFins',
-                description: 'Shark DetectPro Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp với công nghệ DetectPro'
-            },
-            'NV360': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
-                description: 'Shark Navigator Lift Away Deluxe Upright Vacuum - Máy hút bụi đứng cao cấp Navigator'
-            },
-            'SV2000': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Freestyle Pro, Không dây, DuoClean, Pin lithium',
-                description: 'Shark Freestyle Pro Cordless Upright Vacuum - Máy hút bụi đứng không dây Freestyle Pro'
-            },
-            'UA1450': {
-                category: 'Máy lọc không khí',
-                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
-                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
-            },
-            'UH205': {
-                category: 'Quạt làm mát',
-                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
-                description: 'Shark FlexBreeze Fan with InstaCool Mist - Quạt làm mát với phụ kiện phun sương'
-            },
-            'UV440': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
-                description: 'Shark Navigator Lift Away Deluxe - Máy hút bụi đứng cao cấp Navigator'
-            },
-            'UV730': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
-                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
-            },
-            'VS100': {
-                category: 'Máy hút bụi cầm tay',
-                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
-                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
-            },
-            'VX100': {
-                category: 'Máy hút bụi cầm tay',
-                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
-                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
-            },
-            'ZU660': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Navigator, Lift Away, Self-Cleaning, Anti-Allergen',
-                description: 'Shark Navigator Lift Away Self-Cleaning Anti-Allergen - Máy hút bụi Navigator tự làm sạch'
-            },
-            'ZD201': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
-                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
-            }
+            // Vacuum Cleaner
+            'AZ3002': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark AZ3002 Stratos Upright Vacuum' },
+            'IX141': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark IX141 Pet Cordless Stick Vacuum' },
+            'IZ381H': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark IZ381H Vertex Cordless Stick Vacuum' },
+            'LA480': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA480 Rotator Lift-Away Upright Vacuum' },
+            'LA555': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA555 Rotator Lift-Away Upright Vacuum' },
+            'LA700': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA700 Rotator Lift-Away Upright Vacuum' },
+            'LA800': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA800 Rotator Lift-Away Upright Vacuum' },
+            'NV360': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark NV360 Navigator Lift-Away Deluxe Upright Vacuum' },
+            'SV2000': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark SV2000 Freestyle Pro Cordless Upright Vacuum' },
+            'UV440': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark UV440 Navigator Lift-Away Deluxe Upright Vacuum' },
+            'UV730': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark UV730 Rotator Lift-Away Upright Vacuum' },
+            'ZD201': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark ZD201 Lift-Away Upright Vacuum' },
+            'ZU660': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark ZU660 Navigator Lift-Away Upright Vacuum' },
+
+            // Wet Cleaner
+            'AW261': { category: 'Wet Cleaner', specs: 'Performance, water flow, speed', description: 'Shark AW261 HydroVac Cordless Pro XL' },
+            'WD161': { category: 'Wet Cleaner', specs: 'Performance, water flow, speed', description: 'Shark WD161 HydroVac Corded Pro' },
+
+            // Wet & Dry
+            'VX100': { category: 'Wet & Dry', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark VX100 Wet/Dry Vacuum' },
+            'VS100': { category: 'Wet & Dry', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark VS100 MessMaster Portable Wet/Dry Vacuum' },
+            'HX100': { category: 'Wet & Dry', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark HX100 Wet/Dry Vacuum' },
+
+            // Air Purifier
+            'HP152': { category: 'Air Purifier', specs: 'Speed, Power draw, Sensor filter', description: 'Shark HP152 Air Purifier' },
+            'HP301': { category: 'Air Purifier', specs: 'Speed, Power draw, Sensor filter', description: 'Shark HP301 Air Purifier' },
+            'UA1450': { category: 'Air Purifier', specs: 'Speed, Power draw, Sensor filter', description: 'Shark UA1450 Air Purifier' },
+
+            // Fan
+            'FA225': { category: 'Fan', specs: 'Air flow, Speed, Power', description: 'Shark FA225 FlexBreeze Fan' },
+            'TF200': { category: 'Fan', specs: 'Air flow, Speed, Power', description: 'Shark TF200 Tower Fan' },
+            'UH205': { category: 'Fan', specs: 'Air flow, Speed, Power', description: 'Shark UH205 FlexBreeze Fan' },
+
+            // Hair Dryer
+            'HD300': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD300 HyperAIR Hair Dryer' },
+            'HD400': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD400 SpeedStyle Hair Dryer' },
+            'HD500': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD500 FlexStyle Air Styling & Drying System' },
+            'HD600': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD600 Hair Dryer' },
+            'HD700': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD700 Hair Dryer' }
         };
 
         // View product info
         function viewProductInfo(productId) {
             const product = products[productId];
             const details = productDetails[productId];
-            if (product && details) {
-                alert(`Sản phẩm: ${productId}\nTên: ${product.name}\nLoại: ${product.type}\n\n📋 Thông tin chi tiết:\nLoại sản phẩm: ${details.category}\nThông số: ${details.specs}\n\n📝 Mô tả:\n${details.description}\n\nTemplate: ${product.template_exists ? 'Có sẵn' : 'Thiếu'}`);
-            } else if (product) {
-                alert(`Sản phẩm: ${productId}\nTên: ${product.name}\nLoại: ${product.type}\nTemplate: ${product.template_exists ? 'Có sẵn' : 'Thiếu'}`);
+
+            if (product) {
+                const modalTitle = document.getElementById('productInfoModalTitle');
+                const modalBody = document.getElementById('productInfoModalBody');
+
+                if (modalTitle) modalTitle.innerHTML = `<i data-lucide="info" class="w-5 h-5 mr-2"></i> ${product.name}`;
+
+                if (modalBody) {
+                    let content = `
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <span class="text-slate-400">Mã sản phẩm:</span>
+                                <span class="font-mono font-bold text-white">${productId}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <span class="text-slate-400">Loại:</span>
+                                <span class="text-white">${product.type}</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <span class="text-slate-400">Template:</span>
+                                <span class="${product.template_exists ? 'text-emerald-400' : 'text-rose-400'} font-medium">
+                                    ${product.template_exists ? '<i class="fas fa-check-circle mr-1"></i> Có sẵn' : '<i class="fas fa-times-circle mr-1"></i> Thiếu'}
+                                </span>
+                            </div>
+                    `;
+
+                    if (details) {
+                        content += `
+                            <div class="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                                <h6 class="text-white font-semibold mb-2">Thông tin chi tiết</h6>
+                                <div class="space-y-2 text-sm">
+                                    <p><span class="text-slate-400">Category:</span> <span class="text-slate-200">${details.category}</span></p>
+                                    <p><span class="text-slate-400">Specs:</span> <span class="text-slate-200">${details.specs}</span></p>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
+                                <h6 class="text-white font-semibold mb-2">Mô tả</h6>
+                                <p class="text-slate-300 text-sm leading-relaxed">${details.description}</p>
+                            </div>
+                        `;
+                    }
+
+                    content += `</div>`;
+                    modalBody.innerHTML = content;
+
+                    // Re-initialize icons if needed
+                    if (window.lucide) lucide.createIcons();
+                }
+
+                showModal('productInfoModal');
             }
         }
-        
+
         // Show modals
         function showBatchModal() {
-            new bootstrap.Modal(document.getElementById('batchModal')).show();
+            showModal('batchModal');
         }
-        
+
         function showConfigModal() {
-            new bootstrap.Modal(document.getElementById('configModal')).show();
+            showModal('configModal');
         }
-        
+
         function showHelpModal() {
-            new bootstrap.Modal(document.getElementById('helpModal')).show();
+            showModal('helpModal');
         }
-        
+
         function showBulkUserModal() {
-            new bootstrap.Modal(document.getElementById('bulkUserModal')).show();
+            showModal('bulkUserModal');
             loadUsers();
             loadProductsForExport();
         }
-        
+
         function showExportModal() {
-            new bootstrap.Modal(document.getElementById('exportModal')).show();
+            showModal('exportModal');
             loadProductsForExport();
         }
-        
+
         // Bulk User Management Functions
         let csvData = [];
-        
+
         function handleCSVUpload() {
             const file = document.getElementById('csvFile').files[0];
             if (!file) return;
-            
+
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const text = e.target.result;
                 const lines = text.split('\n');
                 csvData = [];
-                
+
                 for (let i = 1; i < lines.length; i++) { // Skip header
                     const line = lines[i].trim();
                     if (line) {
@@ -1420,83 +1293,86 @@
                         }
                     }
                 }
-                
+
                 document.getElementById('importBtn').disabled = csvData.length === 0;
                 if (csvData.length > 0) {
-                    alert(`Đã đọc ${csvData.length} users từ file CSV`);
+                    showToast(`Đã đọc ${csvData.length} users từ file CSV`, 'info');
                 }
             };
             reader.readAsText(file);
         }
-        
+
         function importUsers() {
             if (csvData.length === 0) {
-                alert('Không có dữ liệu để import!');
+                showToast('Không có dữ liệu để import!', 'warning');
                 return;
             }
-            
+
             const importBtn = document.getElementById('importBtn');
             importBtn.disabled = true;
             importBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang import...';
-            
+
             let successCount = 0;
             let errorCount = 0;
-            
-            Promise.all(csvData.map(user => 
+
+            Promise.all(csvData.map(user =>
                 fetch('/api/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(user)
                 }).then(response => response.json())
-                .then(data => {
-                    if (data.success) successCount++;
-                    else errorCount++;
-                })
-                .catch(() => errorCount++)
+                    .then(data => {
+                        if (data.success) successCount++;
+                        else errorCount++;
+                    })
+                    .catch(() => errorCount++)
             )).then(() => {
-                alert(`Import hoàn thành: ${successCount} thành công, ${errorCount} thất bại`);
+                showToast(`Import hoàn thành: ${successCount} thành công, ${errorCount} thất bại`, successCount > 0 ? 'success' : 'error');
                 loadUsers();
                 importBtn.disabled = false;
                 importBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Import Users';
             });
         }
-        
+
         function addQuickUser() {
             const username = document.getElementById('quickUsername').value;
             const password = document.getElementById('quickPassword').value;
             const email = document.getElementById('quickEmail').value;
             const role = document.getElementById('quickRole').value;
-            
+
             if (!username || !password) {
-                alert('Vui lòng nhập username và password!');
+                showToast('Vui lòng nhập username và password!', 'warning');
                 return;
             }
-            
+
             fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password, email, role })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Thêm user thành công!');
-                    document.getElementById('quickUsername').value = '';
-                    document.getElementById('quickPassword').value = '';
-                    document.getElementById('quickEmail').value = '';
-                    loadUsers();
-                } else {
-                    alert('Lỗi: ' + data.message);
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Thêm user thành công!', 'success');
+                        document.getElementById('quickUsername').value = '';
+                        document.getElementById('quickPassword').value = '';
+                        document.getElementById('quickEmail').value = '';
+                        loadUsers();
+                    } else {
+                        showToast('Lỗi: ' + data.message, 'error');
+                    }
+                });
         }
-        
+
+        let currentUsers = [];
+
         function loadUsers() {
             fetch('/api/users')
                 .then(response => response.json())
                 .then(data => {
                     const tbody = document.getElementById('usersTableBody');
                     if (data.users && data.users.length > 0) {
+                        currentUsers = data.users;
                         tbody.innerHTML = data.users.map(user => `
                             <tr>
                                 <td>${user.id}</td>
@@ -1528,19 +1404,89 @@
                     document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu</td></tr>';
                 });
         }
-        
+
         function editUser(userId) {
-            // Implement edit user functionality
-            alert('Chức năng edit user sẽ được implement sau');
-        }
-        
-        function deleteUser(userId) {
-            if (confirm('Bạn có chắc muốn xóa user này?')) {
-                // Implement delete user functionality
-                alert('Chức năng delete user sẽ được implement sau');
+            const user = currentUsers.find(u => u.id === userId);
+            if (!user) {
+                showToast('Không tìm thấy thông tin người dùng', 'error');
+                return;
             }
+
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUsername').value = user.username;
+            document.getElementById('editEmail').value = user.email || '';
+            document.getElementById('editRole').value = user.role;
+            document.getElementById('editPassword').value = ''; // Reset password field
+
+            showModal('editUserModal');
         }
-        
+
+        function saveUser() {
+            const userId = document.getElementById('editUserId').value;
+            const email = document.getElementById('editEmail').value;
+            const role = document.getElementById('editRole').value;
+            const password = document.getElementById('editPassword').value;
+
+            const data = {
+                email: email,
+                role: role
+            };
+
+            if (password) {
+                data.password = password;
+            }
+
+            fetch(`/api/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showToast('Cập nhật người dùng thành công', 'success');
+                        closeModal('editUserModal');
+                        loadUsers(); // Refresh list
+                    } else {
+                        showToast(result.message || 'Lỗi khi cập nhật', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating user:', error);
+                    showToast('Lỗi kết nối', 'error');
+                });
+        }
+
+        function deleteUser(userId) {
+            confirmAction({
+                title: 'Xóa người dùng',
+                message: 'Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.',
+                type: 'danger',
+                confirmText: 'Xóa',
+                cancelText: 'Hủy',
+                onConfirm: () => {
+                    fetch(`/api/users/${userId}`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast('Đã xóa người dùng thành công', 'success');
+                                loadUsers();
+                            } else {
+                                showToast(data.message || 'Lỗi khi xóa người dùng', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error deleting user:', error);
+                            showToast('Có lỗi xảy ra khi xóa người dùng', 'error');
+                        });
+                }
+            });
+        }
+
         // Export Data Functions
         function loadProductsForExport() {
             fetch('/api/products')
@@ -1559,175 +1505,215 @@
                     console.error('Error loading products for export:', error);
                 });
         }
-        
+
         function exportData() {
             const startDate = document.getElementById('exportStartDate').value;
             const endDate = document.getElementById('exportEndDate').value;
             const productName = document.getElementById('exportProduct').value;
             const status = document.getElementById('exportStatus').value;
-            
+
             const filters = {};
             if (startDate) filters.start_date = startDate;
             if (endDate) filters.end_date = endDate;
             if (productName) filters.product_name = productName;
             if (status) filters.status = status;
-            
+
             const exportBtn = document.querySelector('#exportModal .btn-primary');
             exportBtn.disabled = true;
             exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang export...';
-            
+
             fetch('/api/export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ filters })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.open(data.download_url, '_blank');
-                    bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
-                } else {
-                    alert('Lỗi: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Export error:', error);
-                alert('Có lỗi xảy ra khi export!');
-            })
-            .finally(() => {
-                exportBtn.disabled = false;
-                exportBtn.innerHTML = '<i class="fas fa-download me-2"></i>Export Data';
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.open(data.download_url, '_blank');
+                        closeModal('exportModal');
+                        showToast('Export dữ liệu thành công', 'success');
+                    } else {
+                        showToast('Lỗi: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Export error:', error);
+                    showToast('Có lỗi xảy ra khi export!', 'error');
+                })
+                .finally(() => {
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = '<i class="fas fa-download me-2"></i>Export Data';
+                });
         }
-        
+
         // Refresh products
         function refreshProducts() {
             document.getElementById('loading').style.display = 'block';
             loadProducts().then(() => {
                 document.getElementById('loading').style.display = 'none';
+                updateFilesCount(); // Refresh file count when refreshing products
             });
         }
-        
+
         // Show loading
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
         }
-        
+
         // Hide loading
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
         }
-        
+
+        // Toggle skeleton/loading state for cards and stats
+        function setSkeleton(active) {
+            const grid = document.getElementById('products-grid');
+            if (grid) {
+                grid.setAttribute('aria-busy', active ? 'true' : 'false');
+            }
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.classList.toggle('loading', active);
+            });
+            document.querySelectorAll('.stats-card').forEach(card => {
+                card.classList.toggle('loading', active);
+            });
+            const empty = document.getElementById('empty-state');
+            if (empty && active) {
+                // Ẩn empty state trong lúc đang tải lại dữ liệu
+                empty.style.display = 'none';
+            }
+        }
+
         // Search products
         function searchProducts() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            
+
             if (searchTerm === '') {
-                filteredProducts = {...products};
+                filteredProducts = { ...products };
             } else {
                 filteredProducts = {};
                 Object.keys(products).forEach(productId => {
                     const product = products[productId];
                     const searchableText = `${productId} ${product.name} ${product.type} ${product.template}`.toLowerCase();
-                    
+
                     if (searchableText.includes(searchTerm)) {
                         filteredProducts[productId] = product;
                     }
                 });
             }
-            
+
             // Apply alphabetical sort by default
             if (currentSort !== 'name') {
                 sortProducts('name', false);
             }
-            
+
             updateProductCards();
             updateProductVisibility();
         }
-        
+
         // Clear search
         function clearSearch() {
             document.getElementById('searchInput').value = '';
-            filteredProducts = {...products};
+            filteredProducts = { ...products };
             currentSort = 'name'; // Reset to alphabetical sort
             updateProductCards();
             updateProductVisibility();
         }
-        
+
         // Sort products
         function sortProducts(sortType, updateSort = true) {
             if (updateSort) {
                 currentSort = sortType;
+
+                // Update visual state of sort buttons
+                // Target the static sort container buttons directly
+                // The sort container is the second child of the parent flex container, or we can just look for the buttons with specific onclicks
+                const sortButtons = document.querySelectorAll('button[onclick^="sortProducts"]');
+                sortButtons.forEach(btn => {
+                    const onclick = btn.getAttribute('onclick');
+                    if (onclick && onclick.includes(`'${sortType}'`)) {
+                        btn.classList.remove('text-slate-400');
+                        btn.classList.add('bg-slate-800', 'text-white', 'shadow-sm');
+                    } else {
+                        btn.classList.add('text-slate-400');
+                        btn.classList.remove('bg-slate-800', 'text-white', 'shadow-sm');
+                    }
+                });
             }
-            
+
             const productIds = Object.keys(filteredProducts);
-            
+
             if (sortType === 'name') {
                 productIds.sort((a, b) => a.localeCompare(b));
             } else if (sortType === 'type') {
                 productIds.sort((a, b) => {
-                    const typeA = filteredProducts[a].type;
-                    const typeB = filteredProducts[b].type;
+                    const typeA = filteredProducts[a].type || '';
+                    const typeB = filteredProducts[b].type || '';
                     if (typeA === typeB) {
                         return a.localeCompare(b);
                     }
                     return typeA.localeCompare(typeB);
                 });
+            } else if (sortType === 'recent') {
+                // Sort by ID as a proxy for recent if no date available, or reverse alphabetical
+                // Assuming newer products might have higher numbers or just reverse alpha for now
+                // Ideally we'd use a created_at field if available
+                productIds.sort((a, b) => {
+                    // Try to extract numbers to sort by
+                    const numA = parseInt(a.match(/\d+/)?.[0] || 0);
+                    const numB = parseInt(b.match(/\d+/)?.[0] || 0);
+                    if (numA !== numB) return numB - numA; // Descending number
+                    return b.localeCompare(a); // Reverse alphabetical
+                });
             }
-            
+
             // Reorder filteredProducts
             const sortedProducts = {};
             productIds.forEach(id => {
                 sortedProducts[id] = filteredProducts[id];
             });
             filteredProducts = sortedProducts;
-            
+
             updateProductCards();
             updateProductVisibility();
         }
-        
+
         // Update product visibility
         function updateProductVisibility() {
             const productCards = document.querySelectorAll('.product-card');
-            
+            let visibleCount = 0;
+
             productCards.forEach(card => {
                 const productId = card.dataset.product;
                 if (filteredProducts[productId]) {
-                    card.style.display = 'block';
+                    card.style.display = ''; // Reset to default (flex)
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+
+            // Toggle empty state visibility
+            const empty = document.getElementById('empty-state');
+            if (empty) {
+                empty.style.display = visibleCount === 0 ? 'flex' : 'none';
+            }
         }
-        
-        // Filter products (legacy function for compatibility)
-        function filterProducts(filter) {
-            const productCards = document.querySelectorAll('.product-card');
-            
-            productCards.forEach(card => {
-                const productId = card.dataset.product;
-                const product = products[productId];
-                
-                if (filter === 'all') {
-                    card.style.display = 'block';
-                } else if (filter === 'active') {
-                    if (product && product.template_exists) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                }
-            });
-            
-            // Update stats
+
+        // Legacy filterProducts removed to prevent conflict with new dynamic filter system
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadProducts();
+            updateTime();
+            updateFilesCount();
+
+            // Initial stats update
             updateStats();
-        }
+        });
     </script>
-    
-    <!-- Auto-save Indicator -->
-    <div id="saveIndicator" style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-check-circle"></i>
-        <span>Draft saved</span>
-    </div>
+
 </body>
+
 </html>

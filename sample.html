@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gói Cursor Pro - Cursor Pro Shop</title>
+    <style>
+        /* --- Biến CSS (Variables) --- */
+        :root {
+            --background-color: #000000;
+            --card-background: #111111;
+            --border-color: #222222;
+            --text-color: #ffffff;
+            --text-color-secondary: #aaaaaa;
+            --primary-color: #ffffff;
+            --primary-text-color: #000000;
+            --sale-color: #ff4d4d;
+            --rating-color: #fdd835;
+        }
+
+        /* --- Reset và Kiểu dáng Chung --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* --- Header --- */
+        .header {
+            background-color: var(--background-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .header-nav a {
+            color: var(--text-color-secondary);
+            text-decoration: none;
+            margin: 0 1rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .header-nav a:hover {
+            color: var(--text-color);
+        }
+
+        .header-actions .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .header-actions .btn-secondary {
+            background-color: var(--card-background);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            margin-right: 0.5rem;
+        }
+
+        .header-actions .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--primary-text-color);
+        }
+
+        /* --- Phần Sản phẩm Chính --- */
+        .product-section {
+            padding: 3rem 0;
+        }
+
+        .product-section h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* --- Bộ lọc Sản phẩm --- */
+        .product-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-tag {
+            background-color: var(--card-background);
+            color: var(--text-color-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tag:hover, .filter-tag.active {
+            background-color: #222;
+            color: var(--text-color);
+        }
+
+        /* --- Lưới Sản phẩm --- */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* --- Thẻ Sản phẩm --- */
+        .product-card {
+            position: relative;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .sale-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: var(--sale-color);
+            color: var(--text-color);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .product-icon-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .product-icon {
+            width: 60%;
+            height: 60%;
+            object-fit: contain;
+        }
+
+        .product-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0.5rem 0;
+            min-height: 40px; /* Đảm bảo chiều cao đồng nhất */
+        }
+
+        .product-rating {
+            color: var(--rating-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            margin-bottom: 1rem;
+        }
+
+        .current-price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .old-price {
+            font-size: 0.9rem;
+            color: var(--text-color-secondary);
+            text-decoration: line-through;
+            margin-left: 0.5rem;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: var(--primary-text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .add-to-cart-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* --- Phân trang --- */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 2.5rem;
+        }
+
+        .page-num {
+            background-color: var(--card-background);
+            color: var(--text-color-secondary);
+            border: 1px solid var(--border-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin: 0 0.25rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .page-num.active,
+        .page-num:hover {
+            background-color: var(--primary-color);
+            color: var(--primary-text-color);
+            border-color: var(--primary-color);
+        }
+
+        /* --- Footer --- */
+        .footer {
+            background-color: #050505;
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 0 2rem;
+            margin-top: 3rem;
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .footer-col h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-col p {
+            color: var(--text-color-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .footer-col.links ul {
+            list-style-type: none;
+        }
+
+        .footer-col.links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-col.links a {
+            color: var(--text-color-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .footer-col.links a:hover {
+            color: var(--text-color);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            color: var(--text-color-secondary);
+            font-size: 0.8rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
+        }
+        
+        /* --- Social Icons (Placeholder) --- */
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .social-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--border-color);
+            border-radius: 50%;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 992px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .footer-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-nav {
+                display: none; /* Ẩn nav trên mobile cho đơn giản */
+            }
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container header-container">
+            <div class="header-logo">Cursor Pro Shop</div>
+            <nav class="header-nav">
+                <a href="#">Sản phẩm</a>
+                <a href="#">Giới thiệu</a>
+                <a href="#">Liên hệ</a>
+            </nav>
+            <div class="header-actions">
+                <button class="btn btn-secondary">Đăng nhập</button>
+                <button class="btn btn-primary">Đăng ký</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="product-section container">
+            <h2>Gói Cursor Pro</h2>
+            <div class="product-filters">
+                <button class="filter-tag active">IntelliJ IDEA</button>
+                <button class="filter-tag">Tài khoản Github Copilot Pro 3 năm</button>
+                <button class="filter-tag">Tài khoản JetBrains</button>
+                <button class="filter-tag">Tài khoản Cursor Pro license 1 năm</button>
+                <button class="filter-tag">Tài khoản Figma Pro 1 năm</button>
+                <button class="filter-tag">Cursor Pro</button>
+                <button class="filter-tag">PyCharm</button>
+                <button class="filter-tag">WebStorm</button>
+                <button class="filter-tag">DataGrip</button>
+            </div>
+
+            <div class="product-grid">
+                <div class="product-card">
+                    <span class="sale-badge">-30%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/s60yik8.png" alt="PyCharm Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">PyCharm - 1 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">49.000₫</span>
+                        <span class="old-price">70.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <span class="sale-badge">-30%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/yU4bFqP.png" alt="Figma Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">Tài khoản Figma Pro 1 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">49.000₫</span>
+                        <span class="old-price">70.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/b2q0aBS.png" alt="DataGrip Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">DataGrip - 1 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">49.000₫</span>
+                        <span class="old-price">70.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/qE4P9Wk.png" alt="IntelliJ Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">IntelliJ IDEA - 1 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">49.000₫</span>
+                        <span class="old-price">70.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <span class="sale-badge">-20%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/Xq3xYjD.png" alt="Cursor Pro Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">Tài khoản Cursor Pro AI Chính Hãng - 1 Tháng</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">79.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/QjZ9M5s.png" alt="Copilot Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">Tài khoản Github Copilot Pro 3 năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">149.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/xT7G5g4.png" alt="JetBrains Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">Tài khoản JetBrains Pro license 1 năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">49.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <span class="sale-badge">-17%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/dK3yvJb.png" alt="WebStorm Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">WebStorm - 1 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">49.000₫</span>
+                        <span class="old-price">59.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+                
+                <div class="product-card">
+                    <span class="sale-badge">-15%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/dK3yvJb.png" alt="WebStorm Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">WebStorm - 2 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">89.000₫</span>
+                        <span class="old-price">105.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <span class="sale-badge">-15%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/qE4P9Wk.png" alt="IntelliJ Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">IntelliJ IDEA - 2 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">89.000₫</span>
+                        <span class="old-price">105.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <span class="sale-badge">-15%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/b2q0aBS.png" alt="DataGrip Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">DataGrip - 2 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">89.000₫</span>
+                        <span class="old-price">105.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+                <div class="product-card">
+                    <span class="sale-badge">-15%</span>
+                    <div class="product-icon-container">
+                        <img src="https://i.imgur.com/s60yik8.png" alt="PyCharm Icon" class="product-icon">
+                    </div>
+                    <h3 class="product-name">PyCharm - 2 Năm</h3>
+                    <div class="product-rating">★★★★★</div>
+                    <div class="product-price">
+                        <span class="current-price">89.000₫</span>
+                        <span class="old-price">105.000₫</span>
+                    </div>
+                    <button class="add-to-cart-btn">Thêm vào giỏ hàng</button>
+                </div>
+
+            </div>
+
+            <div class="pagination">
+                <button class="page-num active">1</button>
+                <button class="page-num">2</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-col">
+                <h4>Cursor Pro Shop</h4>
+                <p>Nâng cao trải nghiệm lập trình của bạn với các công cụ AI và IDE hàng đầu.</p>
+                <div class="social-icons">
+                    <div class="social-icon"></div>
+                    <div class="social-icon"></div>
+                    <div class="social-icon"></div>
+                </div>
+            </div>
+            <div class="footer-col links">
+                <h4>Tin Tức</h4>
+                <ul>
+                    <li><a href="#">Sản Phẩm</a></li>
+                    <li><a href="#">Giới Thiệu</a></li>
+                    <li><a href="#">Liên Hệ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col links">
+                <h4>Công Ty</h4>
+                <ul>
+                    <li><a href="#">Về Chúng Tôi</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Chính Sách</a></li>
+                    <li><a href="#">Điều Khoản Dịch Vụ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col links">
+                <h4>Hỗ Trợ</h4>
+                <ul>
+                    <li><a href="#">Câu Hỏi Thường Gặp</a></li>
+                    <li><a href="#">Hỗ Trợ Kỹ Thuật</a></li>
+                    <li><a href="#">Tài Khoản</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <p>&copy; 2025 Cursor Pro Shop. All rights reserved. Design inspired by tkcursor.pro.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

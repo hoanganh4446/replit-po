@@ -1,244 +1,216 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tìm kiếm nâng cao - PO System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='enhancements.css') }}" rel="stylesheet">
-    {% include 'enhancements_head.html' %}
-</head>
-<body>
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="row">
-            <div class="col-12">
-                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-                    <div class="container-fluid">
-                        <a class="navbar-brand" href="{{ url_for('index') }}">
-                            <i class="fas fa-search me-2"></i>Advanced Search
-                        </a>
-                        <div class="navbar-nav ms-auto">
-                            <a class="nav-link" href="{{ url_for('index') }}">
-                                <i class="fas fa-home"></i> Trang chủ
-                            </a>
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">
-                                <i class="fas fa-chart-line"></i> Dashboard
-                            </a>
-                            <a class="nav-link" href="{{ url_for('batch_page') }}">
-                                <i class="fas fa-layer-group"></i> Batch
-                            </a>
+{% extends "base.html" %}
+
+{% block title %}Tìm kiếm nâng cao - PO System{% endblock %}
+
+{% block page_heading %}Advanced Search{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full overflow-y-auto pb-6">
+    <!-- Search Panel (Left Column) -->
+    <div class="space-y-6">
+        <!-- Main Search Card -->
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm">
+            <h3 class="text-lg font-medium text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="search" class="w-5 h-5 text-indigo-400"></i>
+                Tìm kiếm
+            </h3>
+
+            <form id="searchForm" class="space-y-4">
+                <!-- Search Input -->
+                <div class="space-y-2 relative">
+                    <label for="searchQuery" class="text-xs text-slate-400 font-medium">Từ khóa tìm kiếm</label>
+                    <div class="relative">
+                        <input type="text" id="searchQuery"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-10 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                            placeholder="Nhập từ khóa..." autocomplete="off">
+                        <button type="submit"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-400 transition-colors">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div id="searchSuggestions"
+                        class="absolute z-10 w-full bg-slate-800 border border-slate-700 rounded-lg shadow-xl mt-1 hidden max-h-40 overflow-y-auto">
+                    </div>
+                </div>
+
+                <!-- Search Type -->
+                <div class="space-y-2">
+                    <label for="searchType" class="text-xs text-slate-400 font-medium">Loại tìm kiếm</label>
+                    <select id="searchType"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors">
+                        <option value="all">Tất cả</option>
+                        <option value="product">Sản phẩm</option>
+                        <option value="po">PO Number</option>
+                        <option value="serial">Serial Number</option>
+                        <option value="date">Ngày tạo</option>
+                        <option value="file">Tên file</option>
+                    </select>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-400 font-medium">Bộ lọc nhanh</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="applyQuickFilter('today')"
+                            class="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600 transition-colors">Hôm
+                            nay</button>
+                        <button type="button" onclick="applyQuickFilter('yesterday')"
+                            class="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600 transition-colors">Hôm
+                            qua</button>
+                        <button type="button" onclick="applyQuickFilter('this_week')"
+                            class="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600 transition-colors">Tuần
+                            này</button>
+                        <button type="button" onclick="applyQuickFilter('this_month')"
+                            class="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-600 transition-colors">Tháng
+                            này</button>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters Toggle -->
+                <div>
+                    <button type="button" onclick="toggleAdvancedFilters()"
+                        class="w-full flex items-center justify-between px-3 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-slate-300 text-xs font-medium rounded-lg border border-slate-600/50 transition-colors">
+                        <span class="flex items-center gap-2"><i data-lucide="sliders" class="w-3.5 h-3.5"></i> Bộ lọc
+                            nâng cao</span>
+                        <i data-lucide="chevron-down" id="advancedIcon" class="w-3.5 h-3.5 transition-transform"></i>
+                    </button>
+
+                    <div id="advancedFilters"
+                        class="hidden mt-3 space-y-3 p-3 bg-slate-900/30 rounded-lg border border-slate-700/50">
+                        <!-- Date Range -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Khoảng thời gian</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="date" id="startDate"
+                                    class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                                <input type="date" id="endDate"
+                                    class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Product Type -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Loại sản phẩm</label>
+                            <select id="productType" multiple
+                                class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 h-20">
+                                <option value="LA800">LA800</option>
+                                <option value="SV2000">SV2000</option>
+                                <option value="LA555">LA555</option>
+                                <option value="UV730">UV730</option>
+                                <option value="HX100">HX100</option>
+                            </select>
+                        </div>
+
+                        <!-- File Size -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Kích thước file (KB)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="minFileSize" placeholder="Min"
+                                    class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                                <input type="number" id="maxFileSize" placeholder="Max"
+                                    class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] text-slate-500 uppercase font-bold">Trạng thái</label>
+                            <select id="status"
+                                class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                                <option value="">Tất cả</option>
+                                <option value="recent">Gần đây (7 ngày)</option>
+                                <option value="old">Cũ (>30 ngày)</option>
+                                <option value="today">Hôm nay</option>
+                            </select>
                         </div>
                     </div>
-                </nav>
-            </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    Tìm kiếm
+                </button>
+            </form>
         </div>
 
-        <!-- Search Content -->
-        <div class="row mt-4">
-            <!-- Search Panel -->
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-search me-2"></i>Tìm kiếm
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="searchForm">
-                            <!-- Search Input -->
-                            <div class="mb-3">
-                                <label for="searchQuery" class="form-label">Từ khóa tìm kiếm</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="searchQuery" 
-                                           placeholder="Nhập từ khóa..." autocomplete="off">
-                                    <button class="btn btn-primary" type="submit">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                                <div id="searchSuggestions" class="suggestions-dropdown"></div>
-                            </div>
-
-                            <!-- Search Type -->
-                            <div class="mb-3">
-                                <label for="searchType" class="form-label">Loại tìm kiếm</label>
-                                <select class="form-select" id="searchType">
-                                    <option value="all">Tất cả</option>
-                                    <option value="product">Sản phẩm</option>
-                                    <option value="po">PO Number</option>
-                                    <option value="serial">Serial Number</option>
-                                    <option value="date">Ngày tạo</option>
-                                    <option value="file">Tên file</option>
-                                </select>
-                            </div>
-
-                            <!-- Quick Filters -->
-                            <div class="mb-3">
-                                <label class="form-label">Bộ lọc nhanh</label>
-                                <div class="btn-group-vertical w-100" role="group">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="applyQuickFilter('today')">Hôm nay</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="applyQuickFilter('yesterday')">Hôm qua</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="applyQuickFilter('this_week')">Tuần này</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="applyQuickFilter('this_month')">Tháng này</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                            onclick="applyQuickFilter('last_30_days')">30 ngày qua</button>
-                                </div>
-                            </div>
-
-                            <!-- Advanced Filters -->
-                            <div class="mb-3">
-                                <button class="btn btn-outline-primary btn-sm w-100" type="button" 
-                                        data-bs-toggle="collapse" data-bs-target="#advancedFilters">
-                                    <i class="fas fa-cog me-2"></i>Bộ lọc nâng cao
-                                </button>
-                                <div class="collapse mt-2" id="advancedFilters">
-                                    <div class="card card-body">
-                                        <!-- Date Range -->
-                                        <div class="mb-3">
-                                            <label class="form-label">Khoảng thời gian</label>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <input type="date" class="form-control form-control-sm" 
-                                                           id="startDate">
-                                                </div>
-                                                <div class="col-6">
-                                                    <input type="date" class="form-control form-control-sm" 
-                                                           id="endDate">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Product Type -->
-                                        <div class="mb-3">
-                                            <label class="form-label">Loại sản phẩm</label>
-                                            <select class="form-select form-select-sm" id="productType" multiple>
-                                                <option value="LA800">LA800</option>
-                                                <option value="SV2000">SV2000</option>
-                                                <option value="LA555">LA555</option>
-                                                <option value="UV730">UV730</option>
-                                                <option value="HX100">HX100</option>
-                                            </select>
-                                        </div>
-
-                                        <!-- File Size -->
-                                        <div class="mb-3">
-                                            <label class="form-label">Kích thước file</label>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <input type="number" class="form-control form-control-sm" 
-                                                           id="minFileSize" placeholder="Min (KB)">
-                                                </div>
-                                                <div class="col-6">
-                                                    <input type="number" class="form-control form-control-sm" 
-                                                           id="maxFileSize" placeholder="Max (KB)">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status -->
-                                        <div class="mb-3">
-                                            <label class="form-label">Trạng thái</label>
-                                            <select class="form-select form-select-sm" id="status">
-                                                <option value="">Tất cả</option>
-                                                <option value="recent">Gần đây (7 ngày)</option>
-                                                <option value="old">Cũ (>30 ngày)</option>
-                                                <option value="today">Hôm nay</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Search Button -->
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-search me-2"></i>Tìm kiếm
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Recent Searches -->
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <i class="fas fa-history me-2"></i>Tìm kiếm gần đây
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div id="recentSearches">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Results Panel -->
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list me-2"></i>Kết quả tìm kiếm
-                        </h5>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                    onclick="exportResults()">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                    onclick="saveSearch()">
-                                <i class="fas fa-bookmark"></i> Lưu
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- Search Info -->
-                        <div id="searchInfo" class="alert alert-info" style="display: none;">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
-
-                        <!-- Results -->
-                        <div id="searchResults">
-                            <div class="text-center text-muted py-5">
-                                <i class="fas fa-search fa-3x mb-3"></i>
-                                <p>Nhập từ khóa để bắt đầu tìm kiếm</p>
-                            </div>
-                        </div>
-
-                        <!-- Pagination -->
-                        <nav id="pagination" style="display: none;">
-                            <ul class="pagination justify-content-center">
-                                <!-- Will be populated by JavaScript -->
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
+        <!-- Recent Searches -->
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm">
+            <h6 class="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4"></i>
+                Tìm kiếm gần đây
+            </h6>
+            <div id="recentSearches" class="space-y-2">
+                <!-- Populated by JS -->
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='enhancements.js') }}"></script>
-    <script>
-        let currentSearchResults = [];
-        let currentPage = 1;
-        const resultsPerPage = 10;
+    <!-- Results Panel (Right Column) -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 flex flex-col backdrop-blur-sm min-h-[600px]">
+            <!-- Header -->
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-slate-200 flex items-center gap-2">
+                    <i data-lucide="list" class="w-5 h-5 text-slate-400"></i>
+                    Kết quả tìm kiếm
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="exportResults()"
+                        class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/30 transition-colors flex items-center gap-2">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export
+                    </button>
+                    <button onclick="saveSearch()"
+                        class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 text-xs font-medium rounded-lg border border-indigo-600/30 transition-colors flex items-center gap-2">
+                        <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Lưu
+                    </button>
+                </div>
+            </div>
 
-        // Search form submission
-        document.getElementById('searchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            performSearch();
-        });
+            <!-- Search Info Alert -->
+            <div id="searchInfo"
+                class="hidden mx-4 mt-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-sm text-indigo-300">
+                <!-- Populated by JS -->
+            </div>
 
-        // Search input with suggestions
+            <!-- Results List -->
+            <div id="searchResults" class="flex-1 p-4 space-y-3 overflow-y-auto">
+                <div class="text-center text-slate-500 py-12">
+                    <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="search" class="w-8 h-8 text-slate-600"></i>
+                    </div>
+                    <p>Nhập từ khóa để bắt đầu tìm kiếm</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="p-4 border-t border-slate-700 hidden">
+                <nav class="flex justify-center">
+                    <ul class="flex gap-1" id="paginationList">
+                        <!-- Populated by JS -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentSearchResults = [];
+    let currentPage = 1;
+    const resultsPerPage = 10;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadRecentSearches();
+
+        // Search input suggestions
         const searchInput = document.getElementById('searchQuery');
         const suggestionsDiv = document.getElementById('searchSuggestions');
 
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             const query = this.value;
             if (query.length > 2) {
                 showSuggestions(query);
@@ -247,313 +219,285 @@
             }
         });
 
-        function showSuggestions(query) {
-            // This would typically make an API call to get suggestions
-            const suggestions = [
-                'LA800', 'SV2000', 'LA555', 'UV730', 'HX100'
-            ].filter(item => item.toLowerCase().includes(query.toLowerCase()));
-
-            if (suggestions.length > 0) {
-                suggestionsDiv.innerHTML = suggestions.map(suggestion => 
-                    `<div class="suggestion-item" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`
-                ).join('');
-                suggestionsDiv.style.display = 'block';
-            } else {
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
                 hideSuggestions();
             }
-        }
+        });
+    });
 
-        function hideSuggestions() {
-            suggestionsDiv.style.display = 'none';
-        }
+    document.getElementById('searchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        performSearch();
+    });
 
-        function selectSuggestion(suggestion) {
-            searchInput.value = suggestion;
+    function toggleAdvancedFilters() {
+        const filters = document.getElementById('advancedFilters');
+        const icon = document.getElementById('advancedIcon');
+        filters.classList.toggle('hidden');
+        icon.style.transform = filters.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+
+    function showSuggestions(query) {
+        const suggestions = [
+            'LA800', 'SV2000', 'LA555', 'UV730', 'HX100'
+        ].filter(item => item.toLowerCase().includes(query.toLowerCase()));
+
+        const suggestionsDiv = document.getElementById('searchSuggestions');
+        if (suggestions.length > 0) {
+            suggestionsDiv.innerHTML = suggestions.map(s =>
+                `<div class="px-3 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-300 transition-colors" onclick="selectSuggestion('${s}')">${s}</div>`
+            ).join('');
+            suggestionsDiv.classList.remove('hidden');
+        } else {
             hideSuggestions();
         }
+    }
 
-        function performSearch() {
-            const query = document.getElementById('searchQuery').value;
-            const searchType = document.getElementById('searchType').value;
-            const filters = getFilters();
+    function hideSuggestions() {
+        document.getElementById('searchSuggestions').classList.add('hidden');
+    }
 
-            if (!query.trim()) {
-                showToast('Vui lòng nhập từ khóa tìm kiếm', 'warning');
-                return;
-            }
+    function selectSuggestion(val) {
+        document.getElementById('searchQuery').value = val;
+        hideSuggestions();
+    }
 
-            // Show loading
-            showSearchLoading();
+    function performSearch() {
+        const query = document.getElementById('searchQuery').value;
+        const searchType = document.getElementById('searchType').value;
+        const filters = getFilters();
 
-            // Make API call
-            fetch('/api/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    query: query,
-                    search_type: searchType,
-                    filters: filters,
-                    limit: 1000
-                })
+        if (!query.trim()) {
+            showNotification('Vui lòng nhập từ khóa tìm kiếm', 'warning');
+            return;
+        }
+
+        showSearchLoading();
+
+        fetch('/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: query,
+                search_type: searchType,
+                filters: filters,
+                limit: 1000
             })
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    showToast('Lỗi tìm kiếm: ' + data.error, 'error');
+                    showNotification('Lỗi tìm kiếm: ' + data.error, 'error');
                     return;
                 }
-
                 currentSearchResults = data.results;
                 currentPage = 1;
                 displayResults(data);
                 updateSearchInfo(data);
             })
             .catch(error => {
-                showToast('Lỗi kết nối: ' + error.message, 'error');
-            })
-            .finally(() => {
-                hideSearchLoading();
+                showNotification('Lỗi kết nối: ' + error.message, 'error');
+                document.getElementById('searchResults').innerHTML = `
+                <div class="text-center text-red-400 py-8">
+                    <i data-lucide="alert-circle" class="w-8 h-8 mx-auto mb-2"></i>
+                    <p>Đã xảy ra lỗi khi tìm kiếm</p>
+                </div>
+            `;
+                lucide.createIcons();
             });
+    }
+
+    function getFilters() {
+        const filters = {};
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        if (startDate || endDate) filters.date_range = { start_date: startDate, end_date: endDate };
+
+        const productType = Array.from(document.getElementById('productType').selectedOptions).map(o => o.value);
+        if (productType.length > 0) filters.product_type = productType;
+
+        const minSize = document.getElementById('minFileSize').value;
+        const maxSize = document.getElementById('maxFileSize').value;
+        if (minSize || maxSize) {
+            filters.file_size = {};
+            if (minSize) filters.file_size.min_size = parseInt(minSize) * 1024;
+            if (maxSize) filters.file_size.max_size = parseInt(maxSize) * 1024;
         }
 
-        function getFilters() {
-            const filters = {};
+        const status = document.getElementById('status').value;
+        if (status) filters.status = status;
 
-            // Date range
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            if (startDate || endDate) {
-                filters.date_range = {
-                    start_date: startDate,
-                    end_date: endDate
-                };
-            }
+        return filters;
+    }
 
-            // Product type
-            const productType = Array.from(document.getElementById('productType').selectedOptions)
-                .map(option => option.value);
-            if (productType.length > 0) {
-                filters.product_type = productType;
-            }
+    function applyQuickFilter(filter) {
+        showNotification(`Đã áp dụng bộ lọc: ${filter}`, 'info');
+        // Logic to set date inputs based on filter would go here
+    }
 
-            // File size
-            const minFileSize = document.getElementById('minFileSize').value;
-            const maxFileSize = document.getElementById('maxFileSize').value;
-            if (minFileSize || maxFileSize) {
-                filters.file_size = {};
-                if (minFileSize) filters.file_size.min_size = parseInt(minFileSize) * 1024;
-                if (maxFileSize) filters.file_size.max_size = parseInt(maxFileSize) * 1024;
-            }
+    function displayResults(data) {
+        const resultsDiv = document.getElementById('searchResults');
 
-            // Status
-            const status = document.getElementById('status').value;
-            if (status) {
-                filters.status = status;
-            }
-
-            return filters;
-        }
-
-        function applyQuickFilter(filterName) {
-            // This would apply quick filters
-            showToast(`Đã áp dụng bộ lọc: ${filterName}`, 'info');
-        }
-
-        function displayResults(data) {
-            const resultsDiv = document.getElementById('searchResults');
-            
-            if (data.results.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-search fa-3x mb-3"></i>
-                        <p>Không tìm thấy kết quả nào</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const startIndex = (currentPage - 1) * resultsPerPage;
-            const endIndex = startIndex + resultsPerPage;
-            const pageResults = data.results.slice(startIndex, endIndex);
-
-            resultsDiv.innerHTML = pageResults.map(result => `
-                <div class="search-result-item">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">
-                                <i class="fas fa-file-excel text-success me-2"></i>
-                                ${result.product_name} - ${result.po_number}
-                            </h6>
-                            <p class="mb-1 text-muted">
-                                <i class="fas fa-calendar me-1"></i>
-                                ${new Date(result.created_at).toLocaleDateString('vi-VN')}
-                            </p>
-                            <p class="mb-1">
-                                <i class="fas fa-barcode me-1"></i>
-                                ${result.serial_numbers.join(', ')}
-                            </p>
-                        </div>
-                        <div class="text-end">
-                            <small class="text-muted">${result.created_at}</small>
-                            <div class="mt-2">
-                                <button class="btn btn-sm btn-outline-primary" 
-                                        onclick="viewDetails('${result.id}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-success" 
-                                        onclick="downloadFile('${result.file_path}')">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            // Update pagination
-            updatePagination(data.results.length);
-        }
-
-        function updatePagination(totalResults) {
-            const totalPages = Math.ceil(totalResults / resultsPerPage);
-            const paginationDiv = document.getElementById('pagination');
-            
-            if (totalPages <= 1) {
-                paginationDiv.style.display = 'none';
-                return;
-            }
-
-            paginationDiv.style.display = 'block';
-            
-            let paginationHTML = '';
-            
-            // Previous button
-            if (currentPage > 1) {
-                paginationHTML += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>
-                </li>`;
-            }
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === currentPage) {
-                    paginationHTML += `<li class="page-item active">
-                        <span class="page-link">${i}</span>
-                    </li>`;
-                } else {
-                    paginationHTML += `<li class="page-item">
-                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-                    </li>`;
-                }
-            }
-
-            // Next button
-            if (currentPage < totalPages) {
-                paginationHTML += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>
-                </li>`;
-            }
-
-            paginationDiv.querySelector('.pagination').innerHTML = paginationHTML;
-        }
-
-        function changePage(page) {
-            currentPage = page;
-            displayResults({ results: currentSearchResults });
-        }
-
-        function updateSearchInfo(data) {
-            const searchInfoDiv = document.getElementById('searchInfo');
-            searchInfoDiv.innerHTML = `
-                <strong>Tìm thấy ${data.total_count} kết quả</strong> 
-                cho từ khóa "${data.query}" 
-                (Loại: ${data.search_type})
-                ${Object.keys(data.filters_applied).length > 0 ? 
-                    '<br><small>Đã áp dụng bộ lọc</small>' : ''}
-            `;
-            searchInfoDiv.style.display = 'block';
-        }
-
-        function showSearchLoading() {
-            const resultsDiv = document.getElementById('searchResults');
+        if (data.results.length === 0) {
             resultsDiv.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Đang tìm kiếm...</span>
+                <div class="text-center text-slate-500 py-12">
+                    <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 text-slate-600"></i>
+                    <p>Không tìm thấy kết quả nào</p>
+                </div>
+            `;
+            lucide.createIcons();
+            document.getElementById('pagination').classList.add('hidden');
+            return;
+        }
+
+        const start = (currentPage - 1) * resultsPerPage;
+        const end = start + resultsPerPage;
+        const pageResults = data.results.slice(start, end);
+
+        resultsDiv.innerHTML = pageResults.map(result => `
+            <div class="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 hover:bg-slate-800/50 transition-colors group">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <h6 class="text-sm font-medium text-slate-200 flex items-center gap-2">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+                            ${result.product_name} <span class="text-slate-500">-</span> <span class="font-mono text-indigo-300">${result.po_number}</span>
+                        </h6>
+                        <div class="flex items-center gap-4 text-xs text-slate-500">
+                            <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${new Date(result.created_at).toLocaleDateString('vi-VN')}</span>
+                            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${new Date(result.created_at).toLocaleTimeString('vi-VN')}</span>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                            <i data-lucide="barcode" class="w-3 h-3"></i>
+                            ${result.serial_numbers.join(', ')}
+                        </div>
                     </div>
-                    <p class="mt-3">Đang tìm kiếm...</p>
+                    <div class="flex flex-col items-end gap-2">
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="viewDetails('${result.id}')" class="p-1.5 bg-slate-700 hover:bg-indigo-600 text-slate-300 hover:text-white rounded transition-colors" title="Xem chi tiết">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="downloadFile('${result.file_path}')" class="p-1.5 bg-slate-700 hover:bg-emerald-600 text-slate-300 hover:text-white rounded transition-colors" title="Tải xuống">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            `;
+            </div>
+        `).join('');
+
+        lucide.createIcons();
+        updatePagination(data.results.length);
+    }
+
+    function updatePagination(totalResults) {
+        const totalPages = Math.ceil(totalResults / resultsPerPage);
+        const paginationDiv = document.getElementById('pagination');
+        const list = document.getElementById('paginationList');
+
+        if (totalPages <= 1) {
+            paginationDiv.classList.add('hidden');
+            return;
         }
 
-        function hideSearchLoading() {
-            // Loading will be replaced by results
+        paginationDiv.classList.remove('hidden');
+        let html = '';
+
+        if (currentPage > 1) {
+            html += `<li><button onclick="changePage(${currentPage - 1})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button></li>`;
         }
 
-        function exportResults() {
-            if (currentSearchResults.length === 0) {
-                showToast('Không có kết quả để export', 'warning');
-                return;
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === currentPage) {
+                html += `<li><button class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-medium shadow-lg shadow-indigo-500/20">${i}</button></li>`;
+            } else {
+                html += `<li><button onclick="changePage(${i})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">${i}</button></li>`;
             }
-
-            // Export functionality would be implemented here
-            showToast('Đang export kết quả...', 'info');
         }
 
-        function saveSearch() {
-            const query = document.getElementById('searchQuery').value;
-            const searchType = document.getElementById('searchType').value;
-            const filters = getFilters();
-
-            if (!query.trim()) {
-                showToast('Vui lòng nhập từ khóa để lưu', 'warning');
-                return;
-            }
-
-            // Save search functionality would be implemented here
-            showToast('Đã lưu tìm kiếm', 'success');
+        if (currentPage < totalPages) {
+            html += `<li><button onclick="changePage(${currentPage + 1})" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button></li>`;
         }
 
-        function viewDetails(recordId) {
-            // View details functionality would be implemented here
-            showToast('Xem chi tiết record: ' + recordId, 'info');
+        list.innerHTML = html;
+        lucide.createIcons();
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        displayResults({ results: currentSearchResults });
+    }
+
+    function updateSearchInfo(data) {
+        const infoDiv = document.getElementById('searchInfo');
+        infoDiv.innerHTML = `
+            <div class="flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                <span>Tìm thấy <strong>${data.total_count}</strong> kết quả cho "${data.query}"</span>
+            </div>
+        `;
+        infoDiv.classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function showSearchLoading() {
+        document.getElementById('searchResults').innerHTML = `
+            <div class="text-center py-12">
+                <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-indigo-500 mx-auto mb-3"></i>
+                <p class="text-slate-400">Đang tìm kiếm...</p>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function loadRecentSearches() {
+        const container = document.getElementById('recentSearches');
+        container.innerHTML = `
+            <button onclick="quickSearch('LA800')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-700/50 text-sm text-slate-300 transition-colors flex items-center justify-between group">
+                <span>LA800</span>
+                <i data-lucide="arrow-up-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500"></i>
+            </button>
+            <button onclick="quickSearch('SV2000')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-700/50 text-sm text-slate-300 transition-colors flex items-center justify-between group">
+                <span>SV2000</span>
+                <i data-lucide="arrow-up-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500"></i>
+            </button>
+            <button onclick="quickSearch('PO001')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-700/50 text-sm text-slate-300 transition-colors flex items-center justify-between group">
+                <span>PO001</span>
+                <i data-lucide="arrow-up-right" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500"></i>
+            </button>
+        `;
+        lucide.createIcons();
+    }
+
+    function quickSearch(query) {
+        document.getElementById('searchQuery').value = query;
+        performSearch();
+    }
+
+    function exportResults() {
+        if (currentSearchResults.length === 0) {
+            showNotification('Không có kết quả để export', 'warning');
+            return;
         }
+        showNotification('Đang export kết quả...', 'info');
+    }
 
-        function downloadFile(filePath) {
-            // Download file functionality would be implemented here
-            showToast('Tải file: ' + filePath, 'info');
+    function saveSearch() {
+        const query = document.getElementById('searchQuery').value;
+        if (!query.trim()) {
+            showNotification('Vui lòng nhập từ khóa để lưu', 'warning');
+            return;
         }
+        showNotification('Đã lưu tìm kiếm', 'success');
+    }
 
-        // Load recent searches on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadRecentSearches();
-        });
+    function viewDetails(id) {
+        showNotification('Xem chi tiết record: ' + id, 'info');
+    }
 
-        function loadRecentSearches() {
-            // This would load recent searches from API
-            const recentSearchesDiv = document.getElementById('recentSearches');
-            recentSearchesDiv.innerHTML = `
-                <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action" onclick="quickSearch('LA800')">
-                        <small>LA800</small>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" onclick="quickSearch('SV2000')">
-                        <small>SV2000</small>
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action" onclick="quickSearch('PO001')">
-                        <small>PO001</small>
-                    </a>
-                </div>
-            `;
-        }
-
-        function quickSearch(query) {
-            document.getElementById('searchQuery').value = query;
-            performSearch();
-        }
-    </script>
-</body>
-</html>
-
+    function downloadFile(path) {
+        showNotification('Tải file: ' + path, 'info');
+    }
+</script>
+{% endblock %}

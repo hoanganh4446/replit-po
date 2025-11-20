@@ -1,1220 +1,997 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import Excel - Hệ thống PO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .dashboard-card {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-        .navbar-brand {
-            font-weight: bold;
-            color: #667eea !important;
-        }
-        .nav-link {
-            color: #6c757d !important;
-            transition: color 0.3s ease;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #667eea !important;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        .btn-success {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-        }
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        .progress {
-            height: 25px;
-            border-radius: 15px;
-        }
-        .progress-bar {
-            border-radius: 15px;
-        }
-        .import-stats {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-        }
-        
-        /* Simple and clean table styling */
-        .table-responsive {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border: 1px solid #dee2e6;
-        }
-        
-        .table {
-            margin-bottom: 0;
-            font-size: 0.9rem;
-            background-color: white;
-        }
-        
-        .table thead th {
-            background-color: #f8f9fa;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            padding: 12px 8px;
-            font-weight: 600;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 0.85rem;
-        }
-        
-        .table tbody td {
-            padding: 10px 8px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f3f4;
-            text-align: center;
-            font-size: 0.85rem;
-        }
-        
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .table tbody tr.table-active {
-            background-color: #e7f3ff;
-        }
-        
-        .po-checkbox {
-            cursor: pointer;
-        }
-        
-        .form-select-sm {
-            font-size: 0.8rem;
-            padding: 4px 6px;
-            border-radius: 4px;
-            border: 1px solid #ced4da;
-        }
-        
-        .form-select-sm:focus {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-        
-        .badge {
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
-        
-        .btn-sm {
-            padding: 3px 6px;
-            font-size: 0.75rem;
-            border-radius: 4px;
-        }
-        
-        /* Status column styling */
-        .status-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .status-badge {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 500;
-        }
-        
-        .status-badge.bg-success {
-            background-color: #28a745 !important;
-            color: white;
-        }
-        
-        .status-badge.bg-warning {
-            background-color: #ffc107 !important;
-            color: #212529;
-        }
-        
-        .action-btn {
-            padding: 4px 8px;
-            font-size: 0.7rem;
-            border-radius: 6px;
-            border: 1px solid;
-            transition: all 0.2s ease;
-        }
-        
-        .action-btn:hover {
-            transform: scale(1.05);
-        }
-        
-        .btn-complete {
-            background-color: #28a745;
-            border-color: #28a745;
-            color: white;
-        }
-        
-        .btn-complete:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-            color: white;
-        }
-        
-        .btn-pending {
-            background-color: #ffc107;
-            border-color: #ffc107;
-            color: #212529;
-        }
-        
-        .btn-pending:hover {
-            background-color: #e0a800;
-            border-color: #d39e00;
-            color: #212529;
-        }
-        
-        .file-info {
-            font-weight: 500;
-            color: #495057;
-            font-size: 0.8rem;
-        }
-        
-        .file-name {
-            font-size: 0.75rem;
-            color: #6c757d;
-            margin-top: 2px;
-        }
-        
-        .product-name {
-            font-weight: 500;
-            color: #212529;
-        }
-        
-        .po-number {
-            font-weight: 600;
-            color: #007bff;
-        }
-        
-        .date-info {
-            font-size: 0.8rem;
-            color: #6c757d;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .table {
-                font-size: 0.75rem;
-            }
-            
-            .table thead th {
-                padding: 8px 4px;
-                font-size: 0.75rem;
-            }
-            
-            .table tbody td {
-                padding: 6px 4px;
-                font-size: 0.75rem;
-            }
-            
-            .form-select-sm {
-                font-size: 0.7rem;
-                padding: 2px 4px;
-            }
-            
-            .badge {
-                font-size: 0.7rem;
-                padding: 2px 6px;
-            }
-            
-            .btn-sm {
-                padding: 2px 4px;
-                font-size: 0.7rem;
-            }
-            
-            .status-cell {
-                flex-direction: column;
-                gap: 4px;
-            }
-            
-            .status-badge {
-                font-size: 0.65rem;
-                padding: 2px 6px;
-            }
-            
-            .action-btn {
-                padding: 2px 6px;
-                font-size: 0.65rem;
-            }
-        }
-        
-        /* Empty state styling */
-        .table tbody tr td[colspan] {
-            background-color: #f8f9fa;
-            color: #6c757d;
-            font-style: italic;
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="fas fa-industry me-2"></i>
-                Hệ thống PO
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="{{ url_for('index') }}">
-                    <i class="fas fa-home me-1"></i>Trang chủ
-                </a>
-                <a class="nav-link" href="{{ url_for('dashboard') }}">
-                    <i class="fas fa-chart-line me-1"></i>Dashboard
-                </a>
-                <a class="nav-link" href="{{ url_for('bulk_page') }}">
-                    <i class="fas fa-layer-group me-1"></i>Bulk Operations
-                </a>
-                <a class="nav-link active" href="{{ url_for('import_page') }}">
-                    <i class="fas fa-file-excel me-1"></i>Import Excel
-                </a>
-                <a class="nav-link" href="{{ url_for('analytics_page') }}">
-                    <i class="fas fa-analytics me-1"></i>Analytics
-                </a>
-                {% if session.role == 'admin' %}
-                <a class="nav-link" href="{{ url_for('users_page') }}">
-                    <i class="fas fa-users me-1"></i>Quản lý người dùng
-                </a>
-                {% endif %}
-                <a class="nav-link" href="{{ url_for('logout') }}">
-                    <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
-                </a>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4">
-                    <i class="fas fa-file-excel me-2"></i>
-                    Import Excel Data
-                </h2>
+{% block title %}Import Excel - PO Management{% endblock %}
+
+{% block page_heading %}Import Excel Data{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full overflow-y-auto pb-6">
+    <!-- Import Section (Left Column) -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Upload Card -->
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm">
+            <h3 class="text-lg font-medium text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="upload-cloud" class="w-5 h-5 text-indigo-400"></i>
+                Upload và Import dữ liệu từ Excel
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <!-- File Input -->
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-400 font-medium">Chọn file Excel</label>
+                        <input type="file" id="excelFile" accept=".xlsx,.xls"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 transition-colors">
+                        <p class="text-[10px] text-slate-500">Chỉ import các hàng có màu vàng trong cột B và C</p>
+                    </div>
+
+                    <!-- Max Rows -->
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-400 font-medium">Số hàng kiểm tra (từ cuối file)</label>
+                        <select id="maxRows"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors">
+                            <option value="50" selected>50 hàng cuối</option>
+                            <option value="100">100 hàng cuối</option>
+                            <option value="500">500 hàng cuối</option>
+                            <option value="1000">1000 hàng cuối</option>
+                        </select>
+                        <p class="text-[10px] text-slate-500">Càng ít hàng càng nhanh (mặc định: 50)</p>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="skipColorCheck"
+                            class="rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                        <label for="skipColorCheck" class="text-xs text-slate-300">Bỏ qua kiểm tra màu vàng (import tất
+                            cả)</label>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="importExcelFile()"
+                            class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            Import Excel
+                        </button>
+                        <button onclick="clearImportData()"
+                            class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            Xóa dữ liệu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div
+                    class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20 p-4 flex flex-col justify-center">
+                    <h6 class="text-sm font-medium text-indigo-300 mb-3 text-center">Trạng thái Import</h6>
+                    <div id="importStatus" class="space-y-4">
+                        <div class="text-center text-slate-500 text-sm">Chưa có dữ liệu import</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Import Excel Section -->
-        <div class="row">
-            <div class="col-md-8">
-                <div class="dashboard-card">
-                    <h5 class="mb-3">
-                        <i class="fas fa-upload me-2"></i>
-                        Upload và Import dữ liệu từ Excel
-                    </h5>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="excelFile" class="form-label">Chọn file Excel</label>
-                                <input type="file" class="form-control" id="excelFile" accept=".xlsx,.xls">
-                                <small class="text-muted">Chỉ import các hàng có màu vàng trong cột B và C</small>
-                            </div>
-                            <div class="mb-3">
-                                <label for="maxRows" class="form-label">Số hàng kiểm tra (từ cuối file)</label>
-                                <select class="form-control" id="maxRows">
-                                    <option value="50" selected>50 hàng cuối</option>
-                                    <option value="100">100 hàng cuối</option>
-                                    <option value="500">500 hàng cuối</option>
-                                    <option value="1000">1000 hàng cuối</option>
-                                </select>
-                                <small class="text-muted">Càng ít hàng càng nhanh (mặc định: 50)</small>
-                            </div>
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="skipColorCheck">
-                                    <label class="form-check-label" for="skipColorCheck">
-                                        Bỏ qua kiểm tra màu vàng (import tất cả)
-                                    </label>
+        <!-- PO List Card -->
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 flex flex-col backdrop-blur-sm min-h-[500px]">
+            <!-- Header & Toolbar -->
+            <div class="p-4 border-b border-slate-700 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 class="text-lg font-medium text-slate-200 flex items-center gap-2">
+                        <i data-lucide="list" class="w-5 h-5 text-slate-400"></i>
+                        Danh sách PO đã import
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="loadImportedPOList()"
+                            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            Làm mới
+                        </button>
+                        <button onclick="selectAllPending()"
+                            class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/30 transition-colors flex items-center gap-2">
+                            <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+                            Chọn chưa làm
+                        </button>
+                        <button onclick="goToBatch()"
+                            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20">
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            Chuyển sang Batch
+                        </button>
+                        <button onclick="showLastImportDetails()" id="showDetailsBtn"
+                            class="hidden px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-xs font-medium rounded-lg border border-amber-600/30 transition-colors flex items-center gap-2">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                            Chi tiết import cuối
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div class="md:col-span-2 relative">
+                        <i data-lucide="search"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                        <input type="text" id="poSearchInput" onkeyup="filterPOList()"
+                            placeholder="Tìm kiếm PO hoặc sản phẩm..."
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <select id="statusFilter" onchange="filterPOList()"
+                        class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="pending">Chưa làm</option>
+                        <option value="completed">Đã hoàn thành</option>
+                    </select>
+                    <select id="dateFilter" onchange="filterPOList()"
+                        class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors">
+                        <option value="">Tất cả ngày</option>
+                        <option value="today">Hôm nay</option>
+                        <option value="week">Tuần này</option>
+                        <option value="month">Tháng này</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="flex-1 overflow-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 font-medium sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3 border-b border-slate-700 w-10">
+                                <input type="checkbox" id="selectAllHeader" onchange="toggleSelectAll()"
+                                    class="rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                            </th>
+                            <th class="px-4 py-3 border-b border-slate-700">File Import</th>
+                            <th class="px-4 py-3 border-b border-slate-700">Sản phẩm</th>
+                            <th class="px-4 py-3 border-b border-slate-700">Based Product</th>
+                            <th class="px-4 py-3 border-b border-slate-700">PO Number</th>
+                            <th class="px-4 py-3 border-b border-slate-700">Ngày nhập</th>
+                            <th class="px-4 py-3 border-b border-slate-700">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="poListTableBody" class="divide-y divide-slate-700 text-sm text-slate-300">
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>
+                                    <p>Đang tải dữ liệu...</p>
                                 </div>
-                                <small class="text-muted">Chỉ dùng để test khi color detection không hoạt động</small>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-success" onclick="importExcelFile()">
-                                    <i class="fas fa-upload me-2"></i>
-                                    Import Excel
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="clearImportData()">
-                                    <i class="fas fa-trash me-2"></i>
-                                    Xóa dữ liệu
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="import-stats">
-                                <h6 class="mb-3">Trạng thái Import</h6>
-                                <div id="importStatus">
-                                    <div class="text-white-50">Chưa có dữ liệu import</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            
-            <div class="col-md-4">
-                <div class="dashboard-card">
-                    <h5 class="mb-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Hướng dẫn Import
-                    </h5>
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-lightbulb me-2"></i>Lưu ý quan trọng:</h6>
-                        <ul class="mb-0">
-                            <li>File Excel phải có cột B (PO Number) và cột C (Product Name)</li>
-                            <li>Chỉ import các hàng có màu vàng trong cột B</li>
-                            <li>Hệ thống sẽ kiểm tra từ cuối file lên</li>
-                            <li>Có thể điều chỉnh số hàng kiểm tra</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="alert alert-warning">
-                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Tips:</h6>
-                        <ul class="mb-0">
-                            <li>Dùng "Bỏ qua kiểm tra màu vàng" để test</li>
-                            <li>Giảm số hàng để tăng tốc độ</li>
-                            <li>Xóa dữ liệu cũ trước khi import mới</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <h6><i class="fas fa-history me-2"></i>Lịch sử Import</h6>
-                        <div id="importHistory">
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-history fa-3x mb-3"></i>
-                                <p>Lịch sử import sẽ được implement sau</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Import History -->
-        <div class="row">
-            <div class="col-12">
-                <div class="dashboard-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5>
-                            <i class="fas fa-history me-2"></i>
-                            Lịch sử Import - Danh sách PO đã import
-                        </h5>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-primary" onclick="loadImportedPOList()">
-                                <i class="fas fa-sync me-2"></i>
-                                Làm mới
-                            </button>
-                            <button type="button" class="btn btn-success" onclick="selectAllPending()">
-                                <i class="fas fa-check-square me-2"></i>
-                                Chọn tất cả chưa làm
-                            </button>
-                            <button type="button" class="btn btn-info" onclick="goToBatch()">
-                                <i class="fas fa-arrow-right me-2"></i>
-                                Chuyển sang Batch
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Filter và Search -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="poSearchInput" placeholder="Tìm kiếm PO hoặc sản phẩm..." onkeyup="filterPOList()">
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-control" id="statusFilter" onchange="filterPOList()">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="pending">Chưa làm</option>
-                                <option value="completed">Đã hoàn thành</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-control" id="dateFilter" onchange="filterPOList()">
-                                <option value="">Tất cả ngày</option>
-                                <option value="today">Hôm nay</option>
-                                <option value="week">Tuần này</option>
-                                <option value="month">Tháng này</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
-                                <label class="form-check-label" for="selectAllCheckbox">
-                                    Chọn tất cả
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- PO List Table -->
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th width="5%">
-                                        <input type="checkbox" id="selectAllHeader" onchange="toggleSelectAll()">
-                                    </th>
-                                    <th width="10%">DDMMYYYY - File Import</th>
-                                    <th width="25%">Tên sản phẩm</th>
-                                    <th width="20%">Based Product</th>
-                                    <th width="15%">PO Number</th>
-                                    <th width="10%">Ngày nhập</th>
-                                    <th width="10%">Ngày hoàn thành</th>
-                                    <th width="10%">Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody id="poListTableBody">
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                                        <p>Đang tải dữ liệu...</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Pagination -->
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div>
-                            <span class="text-muted">Tổng: <span id="totalPOs">0</span> PO</span>
-                        </div>
-                        <div>
-                            <span class="text-muted">Đã chọn: <span id="selectedCount">0</span> PO</span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Footer -->
+            <div class="p-4 border-t border-slate-700 flex justify-between items-center bg-slate-900/30 rounded-b-xl">
+                <div class="text-xs text-slate-500">Tổng: <span id="totalPOs"
+                        class="font-medium text-slate-300">0</span> PO</div>
+                <div class="text-xs text-slate-500">Đã chọn: <span id="selectedCount"
+                        class="font-medium text-indigo-400">0</span> PO</div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
-            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            notification.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 3000);
+    <!-- Right Column (Instructions) -->
+    <div class="space-y-6">
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm">
+            <h3 class="text-lg font-medium text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="info" class="w-5 h-5 text-sky-400"></i>
+                Hướng dẫn Import
+            </h3>
+
+            <div class="space-y-4">
+                <div class="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4">
+                    <h6 class="text-sm font-medium text-sky-400 mb-2 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                        Lưu ý quan trọng
+                    </h6>
+                    <ul class="text-xs text-sky-300/80 space-y-1.5 list-disc list-inside">
+                        <li>File Excel phải có cột B (PO Number) và cột C (Product Name)</li>
+                        <li>Chỉ import các hàng có màu vàng trong cột B</li>
+                        <li>Hệ thống sẽ kiểm tra từ cuối file lên</li>
+                        <li>Có thể điều chỉnh số hàng kiểm tra</li>
+                    </ul>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                    <h6 class="text-sm font-medium text-amber-400 mb-2 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        Tips
+                    </h6>
+                    <ul class="text-xs text-amber-300/80 space-y-1.5 list-disc list-inside">
+                        <li>Dùng "Bỏ qua kiểm tra màu vàng" để test</li>
+                        <li>Giảm số hàng để tăng tốc độ</li>
+                        <li>Xóa dữ liệu cũ trước khi import mới</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholder for History (Future Implementation) -->
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm opacity-50">
+            <h3 class="text-lg font-medium text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5 text-slate-400"></i>
+                Lịch sử Import
+            </h3>
+            <div class="text-center py-8">
+                <i data-lucide="clock" class="w-8 h-8 text-slate-600 mx-auto mb-2"></i>
+                <p class="text-sm text-slate-500">Tính năng đang được phát triển</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="importLoadingOverlay"
+    class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div
+        class="bg-slate-800 rounded-2xl p-8 max-w-sm w-full border border-slate-700 shadow-2xl transform transition-all scale-100">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="file-spreadsheet" class="w-8 h-8 text-indigo-400 animate-pulse"></i>
+            </div>
+            <h4 class="text-xl font-semibold text-white mb-2">Đang xử lý file Excel</h4>
+            <p id="loadingMessage" class="text-sm text-slate-400">Đang đọc và phân tích dữ liệu...</p>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Progress Bar -->
+            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div id="loadingProgressBar"
+                    class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Steps -->
+            <div class="grid grid-cols-4 gap-2 text-[10px] text-slate-500">
+                <div id="step-upload" class="flex flex-col items-center gap-1 transition-colors">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span>Upload</span>
+                </div>
+                <div id="step-read" class="flex flex-col items-center gap-1 transition-colors">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>Đọc file</span>
+                </div>
+                <div id="step-process" class="flex flex-col items-center gap-1 transition-colors">
+                    <i data-lucide="cog" class="w-4 h-4"></i>
+                    <span>Xử lý</span>
+                </div>
+                <div id="step-save" class="flex flex-col items-center gap-1 transition-colors">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Lưu</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Details Modal -->
+<div class="modal fade" id="importDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-slate-800 text-slate-200 border border-slate-700 shadow-2xl">
+            <div class="modal-header border-b border-slate-700 p-4">
+                <h5 class="modal-title text-lg font-semibold flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5 text-indigo-400"></i>
+                    Chi tiết Import
+                </h5>
+                <button type="button"
+                    class="btn-close filter invert grayscale opacity-50 hover:opacity-100 transition-opacity"
+                    data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-6" id="importDetailsBody">
+                <!-- Populated by JS -->
+            </div>
+            <div class="modal-footer border-t border-slate-700 p-4">
+                <button type="button"
+                    class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors"
+                    data-bs-dismiss="modal">Đóng</button>
+                <button type="button" onclick="saveImportChanges()"
+                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors flex items-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-slate-800 text-slate-200 border border-slate-700 shadow-2xl">
+            <div class="modal-header border-b border-slate-700 p-4">
+                <h5 class="modal-title text-lg font-semibold flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-400"></i>
+                    Thêm sản phẩm mới
+                </h5>
+                <button type="button"
+                    class="btn-close filter invert grayscale opacity-50 hover:opacity-100 transition-opacity"
+                    data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-6 space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 font-medium mb-1 block">PO Number <span
+                            class="text-red-400">*</span></label>
+                    <input type="text" id="newPoNumber"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                        placeholder="Nhập PO Number">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 font-medium mb-1 block">Tên sản phẩm <span
+                            class="text-red-400">*</span></label>
+                    <input type="text" id="newProductName"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                        placeholder="Nhập tên sản phẩm">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 font-medium mb-1 block">Số hàng (tùy chọn)</label>
+                    <input type="text" id="newRowNumber"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                        placeholder="Nhập số hàng">
+                </div>
+            </div>
+            <div class="modal-footer border-t border-slate-700 p-4">
+                <button type="button"
+                    class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors"
+                    data-bs-dismiss="modal">Hủy</button>
+                <button type="button" onclick="submitAddProduct()"
+                    class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Thêm sản phẩm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Global variables
+    let importedPOList = [];
+    let selectedPOs = new Set();
+    let selectedProducts = new Set(); // For import details modal
+    let lastImportDetails = null;
+
+    const availableProducts = [
+        'AW261', 'AZ3002', 'FA225', 'HD300', 'HD400', 'HD500', 'HD600', 'HD700',
+        'HP152', 'HP301', 'HX100', 'IX141', 'IZ381H', 'LA480', 'LA555', 'LA700',
+        'LA800', 'NV360', 'SV2000', 'UA1450', 'UH205', 'UV440', 'UV730', 'VS100',
+        'VX100', 'WD161', 'ZD201', 'ZU660'
+    ];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        updateImportStatus();
+        loadImportedPOList();
+    });
+
+    // --- Import Functions ---
+
+    function importExcelFile() {
+        const fileInput = document.getElementById('excelFile');
+        const maxRows = document.getElementById('maxRows').value;
+        const skipColorCheck = document.getElementById('skipColorCheck').checked;
+
+        if (!fileInput.files[0]) {
+            showNotification('Vui lòng chọn file Excel', 'warning');
+            return;
         }
 
-        // Clear import data
-        function clearImportData() {
-            if (!confirm('Bạn có chắc chắn muốn xóa TẤT CẢ dữ liệu đã import?\n\nHành động này không thể hoàn tác!')) {
-                return;
-            }
-            
-            showNotification('Đang xóa dữ liệu import...', 'info');
-            
-            fetch('/api/import/clear', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
+        const file = fileInput.files[0];
+        showImportLoading(file.name);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('max_rows', maxRows);
+        formData.append('skip_color_check', skipColorCheck);
+
+        fetch('/api/import/excel', {
+            method: 'POST',
+            body: formData
+        })
             .then(response => {
-                console.log('Clear response status:', response.status);
-                console.log('Clear response headers:', response.headers);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+                updateLoadingStep('step-process', 'completed');
+                updateLoadingStep('step-save', 'active');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                console.log('Clear response data:', data);
-                if (data && data.success) {
-                    showNotification(data.message, 'success');
-                    updateImportStatus();
-                    loadImportHistory();
-                } else {
-                    showNotification(data ? data.message : 'Lỗi không xác định', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Clear data error:', error);
-                showNotification('Lỗi khi xóa dữ liệu: ' + error.message, 'error');
-            });
-        }
-
-        // Import Excel functions
-        function importExcelFile() {
-            const fileInput = document.getElementById('excelFile');
-            const maxRowsElement = document.getElementById('maxRows');
-            const skipColorCheckElement = document.getElementById('skipColorCheck');
-            
-            if (!fileInput || !maxRowsElement || !skipColorCheckElement) {
-                console.warn('Import form elements not found');
-                showNotification('Lỗi: Không tìm thấy form elements', 'error');
-                return;
-            }
-            
-            const file = fileInput.files[0];
-            const maxRows = maxRowsElement.value;
-            const skipColorCheck = skipColorCheckElement.checked;
-            
-            if (!file) {
-                showNotification('Vui lòng chọn file Excel', 'warning');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('max_rows', maxRows);
-            formData.append('skip_color_check', skipColorCheck);
-            
-            const message = skipColorCheck ? 
-                `Đang import file Excel (bỏ qua color check, ${maxRows} hàng cuối)...` :
-                `Đang import file Excel (kiểm tra ${maxRows} hàng cuối)...`;
-            showNotification(message, 'info');
-            
-            fetch('/api/import/excel', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                console.log('Import response status:', response.status);
-                console.log('Import response headers:', response.headers);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                return response.json();
-            })
-            .then(data => {
-                console.log('Import response data:', data);
-                if (data && data.success) {
-                    showNotification(data.message, 'success');
-                    updateImportStatus();
-                    loadImportHistory();
-                    console.log('Calling showImportDetails with:', data.details);
-                    if (data.details) {
-                        showImportDetails(data.details);
+                updateLoadingStep('step-save', 'completed');
+                setTimeout(() => {
+                    hideImportLoading();
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        updateImportStatus();
+                        loadImportedPOList();
+                        if (data.details) {
+                            showImportDetails(data.details);
+                        }
+                    } else {
+                        showNotification(data.message || 'Lỗi không xác định', 'error');
                     }
-                } else {
-                    showNotification(data ? data.message : 'Lỗi không xác định', 'error');
-                }
+                }, 500);
             })
             .catch(error => {
-                console.error('Import error:', error);
+                hideImportLoading();
                 showNotification('Lỗi khi import file: ' + error.message, 'error');
             });
-        }
+    }
 
-        // Update import status
-        function updateImportStatus() {
-            fetch('/api/import/status')
-                .then(response => {
-                    console.log('Import status response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Import status response data:', data);
-                    if (data && data.success) {
-                        const statusDiv = document.getElementById('importStatus');
-                        if (statusDiv) {
-                            statusDiv.innerHTML = `
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <div class="h5">${data.total_imported}</div>
-                                        <small>Tổng import</small>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="h5">${data.processed_pos}</div>
-                                        <small>Đã xử lý</small>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="h5">${data.pending_pos}</div>
-                                        <small>Chờ xử lý</small>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <div class="progress bg-white bg-opacity-25">
-                                        <div class="progress-bar bg-white" style="width: ${data.completion_rate}%"></div>
-                                    </div>
-                                    <small>Hoàn thành: ${data.completion_rate}%</small>
-                                </div>
-                            `;
-                        } else {
-                            console.warn('Element importStatus not found');
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading import status:', error);
-                });
-        }
+    function showImportLoading(fileName) {
+        const overlay = document.getElementById('importLoadingOverlay');
+        const message = document.getElementById('loadingMessage');
+        const progressBar = document.getElementById('loadingProgressBar');
 
-        // Load import history
-        function loadImportHistory() {
-            // TODO: Implement import history API
-            const historyDiv = document.getElementById('importHistory');
-            if (historyDiv) {
-                historyDiv.innerHTML = `
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-history fa-3x mb-3"></i>
-                        <p>Lịch sử import sẽ được implement sau</p>
-                    </div>
-                `;
-            } else {
-                console.warn('Element importHistory not found');
-            }
-        }
+        message.innerHTML = `Đang xử lý file: <strong>${fileName}</strong>`;
+        progressBar.style.width = '0%';
 
-        // Show import details modal
-        function showImportDetails(details) {
-            console.log('showImportDetails called with:', details);
-            
-            // Kiểm tra dữ liệu
-            if (!details) {
-                console.error('No details provided to showImportDetails');
-                return;
-            }
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal fade';
-            modal.innerHTML = `
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Chi tiết Import</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <div class="card bg-success text-white">
-                                        <div class="card-body text-center">
-                                            <h4>${details.imported_count}</h4>
-                                            <small>Đã import</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card bg-warning text-white">
-                                        <div class="card-body text-center">
-                                            <h4>${details.skipped_count}</h4>
-                                            <small>Đã bỏ qua</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card bg-danger text-white">
-                                        <div class="card-body text-center">
-                                            <h4>${details.error_count}</h4>
-                                            <small>Lỗi</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card bg-info text-white">
-                                        <div class="card-body text-center">
-                                            <h4>${details.rows_processed || 0}</h4>
-                                            <small>Hàng đã xử lý</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            ${details.processing_efficiency ? `
-                                <div class="alert alert-info">
-                                    <strong>Hiệu suất:</strong> ${details.processing_efficiency} 
-                                    ${details.total_rows_in_file ? `(tổng ${details.total_rows_in_file} hàng)` : ''}
-                                </div>
-                            ` : ''}
-                            
-                            ${details.imported_data && details.imported_data.length > 0 ? `
-                                <h6>Dữ liệu đã import:</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>PO Number</th>
-                                                <th>Product Name</th>
-                                                <th>Row</th>
-                                                <th>File Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${details.imported_data.map(item => `
-                                                <tr>
-                                                    <td>${item.po_number || 'N/A'}</td>
-                                                    <td>${item.product_name || 'N/A'}</td>
-                                                    <td>${item.row_number || 'N/A'}</td>
-                                                    <td>${item.file_import_date || 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ` : '<p class="text-muted">Không có dữ liệu được import</p>'}
-                            
-                            ${details.skipped_rows && details.skipped_rows.length > 0 ? `
-                                <h6>Hàng đã bỏ qua:</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>PO Number</th>
-                                                <th>Product Name</th>
-                                                <th>Row</th>
-                                                <th>Lý do</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${details.skipped_rows.map(item => `
-                                                <tr>
-                                                    <td>${item.po_number || 'N/A'}</td>
-                                                    <td>${item.product_name || 'N/A'}</td>
-                                                    <td>${item.row_number || 'N/A'}</td>
-                                                    <td>${item.reason || 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ` : ''}
-                            
-                            ${details.errors && details.errors.length > 0 ? `
-                                <h6>Lỗi:</h6>
-                                <div class="alert alert-danger">
-                                    ${details.errors.map(error => `
-                                        <div>• ${error.error || error}</div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            try {
-                const bsModal = new bootstrap.Modal(modal);
-                bsModal.show();
-                console.log('Modal shown successfully');
-            } catch (error) {
-                console.error('Error showing modal:', error);
-                // Fallback: show alert instead
-                alert(`Import thành công!\nĐã import: ${details.imported_count}\nĐã bỏ qua: ${details.skipped_count}\nLỗi: ${details.error_count}`);
-            }
-            
-            modal.addEventListener('hidden.bs.modal', () => {
-                document.body.removeChild(modal);
-            });
-        }
-
-        // Load data when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            updateImportStatus();
-            loadImportedPOList();
+        // Reset steps
+        ['step-upload', 'step-read', 'step-process', 'step-save'].forEach(id => {
+            const el = document.getElementById(id);
+            el.className = 'flex flex-col items-center gap-1 text-slate-500';
         });
 
-        // PO List Management
-        let importedPOList = [];
-        let selectedPOs = new Set();
+        overlay.classList.remove('hidden');
 
-        function loadImportedPOList() {
-            fetch('/api/import/po-list')
-                .then(response => {
-                    console.log('PO list response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('PO list response data:', data);
-                    if (data && data.success) {
-                        importedPOList = data.data;
-                        displayPOList(importedPOList);
-                        updateTotalCount();
-                    } else {
-                        showNotification(data ? data.message : 'Lỗi không xác định', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading PO list:', error);
-                    showNotification('Lỗi khi tải danh sách PO: ' + error.message, 'error');
-                });
+        // Simulate progress
+        setTimeout(() => updateLoadingStep('step-upload', 'active'), 100);
+        setTimeout(() => {
+            updateLoadingStep('step-upload', 'completed');
+            updateLoadingStep('step-read', 'active');
+            progressBar.style.width = '30%';
+        }, 500);
+        setTimeout(() => {
+            updateLoadingStep('step-read', 'completed');
+            updateLoadingStep('step-process', 'active');
+            progressBar.style.width = '60%';
+        }, 1500);
+    }
+
+    function updateLoadingStep(stepId, status) {
+        const el = document.getElementById(stepId);
+        if (!el) return;
+
+        if (status === 'active') {
+            el.className = 'flex flex-col items-center gap-1 text-indigo-400 font-medium scale-110 transition-all';
+        } else if (status === 'completed') {
+            el.className = 'flex flex-col items-center gap-1 text-emerald-400 transition-colors';
+        }
+    }
+
+    function hideImportLoading() {
+        document.getElementById('importLoadingOverlay').classList.add('hidden');
+    }
+
+    function clearImportData() {
+        if (!confirm('Bạn có chắc chắn muốn xóa TẤT CẢ dữ liệu đã import?\\nHành động này không thể hoàn tác!')) {
+            return;
         }
 
-        // Available products for based product selection
-        const availableProducts = [
-            'AW261', 'AZ3002', 'FA225', 'HD300', 'HD400', 'HD500', 'HD600', 'HD700',
-            'HP152', 'HP301', 'HX100', 'IX141', 'IZ381H', 'LA480', 'LA555', 'LA700',
-            'LA800', 'NV360', 'SV2000', 'UA1450', 'UH205', 'UV440', 'UV730', 'VS100',
-            'VX100', 'WD161', 'ZD201', 'ZU660'
-        ];
+        showNotification('Đang xóa dữ liệu import...', 'info');
 
-        function createBasedProductDropdown(poNumber, currentValue = '') {
-            const options = availableProducts.map(product => 
-                `<option value="${product}" ${currentValue === product ? 'selected' : ''}>${product}</option>`
-            ).join('');
-            
-            return `
-                <select class="form-select form-select-sm" onchange="updateBasedProduct('${poNumber}', this.value)">
-                    <option value="">Chọn Based Product</option>
-                    ${options}
-                </select>
-            `;
-        }
-
-        function updateBasedProduct(poNumber, basedProduct) {
-            // Store the mapping in sessionStorage for batch page
-            const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
-            mapping[poNumber] = basedProduct;
-            sessionStorage.setItem('productMapping', JSON.stringify(mapping));
-            
-            showNotification(`Đã chọn Based Product: ${basedProduct} cho PO: ${poNumber}`, 'success');
-        }
-
-        function displayPOList(poList) {
-            const tbody = document.getElementById('poListTableBody');
-            
-            if (!tbody) {
-                console.warn('Element poListTableBody not found');
-                return;
-            }
-            
-            if (poList.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <p>Chưa có dữ liệu import</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = poList.map(po => {
-                const isSelected = selectedPOs.has(po.po_number);
-                const statusClass = po.status === 'completed' ? 'success' : 'warning';
-                const statusText = po.status === 'completed' ? 'Đã hoàn thành' : 'Chưa làm';
-                
-                // Get current based product mapping
-                const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
-                const currentBasedProduct = mapping[po.po_number] || '';
-                
-                return `
-                    <tr class="${isSelected ? 'table-active' : ''}">
-                        <td>
-                            <input type="checkbox" class="po-checkbox" 
-                                   value="${po.po_number}" 
-                                   ${isSelected ? 'checked' : ''}
-                                   onchange="togglePOSelection('${po.po_number}')">
-                        </td>
-                        <td>
-                            <strong>${formatFileDate(po.file_import_date)}</strong><br>
-                            <small class="text-muted">${po.file_name || 'N/A'}</small>
-                        </td>
-                        <td>${po.product_name}</td>
-                        <td>${createBasedProductDropdown(po.po_number, currentBasedProduct)}</td>
-                        <td><strong>${po.po_number}</strong></td>
-                        <td>${formatDate(po.import_date)}</td>
-                        <td>${po.completion_date ? formatDate(po.completion_date) : '-'}</td>
-                        <td>
-                            <div class="status-cell">
-                                <span class="status-badge bg-${statusClass}">${statusText}</span>
-                                ${po.status === 'pending' ? 
-                                    `<button class="action-btn btn-complete" onclick="markAsCompleted('${po.po_number}')" title="Đánh dấu hoàn thành">
-                                        <i class="fas fa-check"></i>
-                                    </button>` : 
-                                    `<button class="action-btn btn-pending" onclick="markAsPending('${po.po_number}')" title="Đánh dấu chưa làm">
-                                        <i class="fas fa-undo"></i>
-                                    </button>`
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-            
-            // Update select all checkbox state after rendering
-            updateSelectAllCheckboxState();
-        }
-
-        function togglePOSelection(poNumber) {
-            if (selectedPOs.has(poNumber)) {
-                selectedPOs.delete(poNumber);
-            } else {
-                selectedPOs.add(poNumber);
-            }
-            
-            // Update select all checkbox state
-            updateSelectAllCheckboxState();
-            
-            updateSelectedCount();
-            displayPOList(importedPOList);
-        }
-
-        function updateSelectAllCheckboxState() {
-            const selectAllHeader = document.getElementById('selectAllHeader');
-            if (!selectAllHeader) return;
-            
-            const pendingPOs = importedPOList.filter(po => po.status === 'pending');
-            const selectedPendingPOs = pendingPOs.filter(po => selectedPOs.has(po.po_number));
-            
-            if (pendingPOs.length === 0) {
-                selectAllHeader.checked = false;
-                selectAllHeader.indeterminate = false;
-            } else if (selectedPendingPOs.length === pendingPOs.length) {
-                selectAllHeader.checked = true;
-                selectAllHeader.indeterminate = false;
-            } else if (selectedPendingPOs.length > 0) {
-                selectAllHeader.checked = false;
-                selectAllHeader.indeterminate = true;
-            } else {
-                selectAllHeader.checked = false;
-                selectAllHeader.indeterminate = false;
-            }
-        }
-
-        function toggleSelectAll() {
-            const selectAllHeader = document.getElementById('selectAllHeader');
-            
-            if (!selectAllHeader) {
-                console.warn('Select all header not found');
-                return;
-            }
-            
-            const isChecked = selectAllHeader.checked;
-            
-            if (isChecked) {
-                // Select all pending POs
-                importedPOList.forEach(po => {
-                    if (po.status === 'pending') {
-                        selectedPOs.add(po.po_number);
-                    }
-                });
-            } else {
-                // Deselect all
-                selectedPOs.clear();
-            }
-            
-            updateSelectedCount();
-            displayPOList(importedPOList);
-        }
-
-        function selectAllPending() {
-            selectedPOs.clear();
-            importedPOList.forEach(po => {
-                if (po.status === 'pending') {
-                    selectedPOs.add(po.po_number);
-                }
-            });
-            updateSelectedCount();
-            displayPOList(importedPOList);
-            showNotification(`Đã chọn ${selectedPOs.size} PO chưa làm`, 'success');
-        }
-
-        function updateSelectedCount() {
-            const selectedCountElement = document.getElementById('selectedCount');
-            if (selectedCountElement) {
-                selectedCountElement.textContent = selectedPOs.size;
-            } else {
-                console.warn('Element selectedCount not found');
-            }
-        }
-
-        function updateTotalCount() {
-            const totalPOsElement = document.getElementById('totalPOs');
-            if (totalPOsElement) {
-                totalPOsElement.textContent = importedPOList.length;
-            } else {
-                console.warn('Element totalPOs not found');
-            }
-        }
-
-        function filterPOList() {
-            const searchInput = document.getElementById('poSearchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            const dateFilter = document.getElementById('dateFilter');
-            
-            if (!searchInput || !statusFilter || !dateFilter) {
-                console.warn('Filter elements not found');
-                return;
-            }
-            
-            const searchTerm = searchInput.value.toLowerCase();
-            const statusFilterValue = statusFilter.value;
-            const dateFilterValue = dateFilter.value;
-            
-            let filteredList = importedPOList.filter(po => {
-                // Search filter
-                const matchesSearch = !searchTerm || 
-                    po.po_number.toLowerCase().includes(searchTerm) ||
-                    po.product_name.toLowerCase().includes(searchTerm);
-                
-                // Status filter
-                const matchesStatus = !statusFilterValue || po.status === statusFilterValue;
-                
-                // Date filter
-                let matchesDate = true;
-                if (dateFilter) {
-                    const poDate = new Date(po.import_date);
-                    const now = new Date();
-                    
-                    switch (dateFilter) {
-                        case 'today':
-                            matchesDate = poDate.toDateString() === now.toDateString();
-                            break;
-                        case 'week':
-                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                            matchesDate = poDate >= weekAgo;
-                            break;
-                        case 'month':
-                            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                            matchesDate = poDate >= monthAgo;
-                            break;
-                    }
-                }
-                
-                return matchesSearch && matchesStatus && matchesDate;
-            });
-            
-            displayPOList(filteredList);
-        }
-
-        function markAsCompleted(poNumber) {
-            updatePOStatus(poNumber, 'completed');
-        }
-
-        function markAsPending(poNumber) {
-            updatePOStatus(poNumber, 'pending');
-        }
-
-        function updatePOStatus(poNumber, status) {
-            fetch('/api/import/update-status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    po_number: poNumber,
-                    status: status
-                })
-            })
-            .then(response => {
-                console.log('Update PO status response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
+        fetch('/api/import/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(response => response.json())
             .then(data => {
-                console.log('Update PO status response data:', data);
-                if (data && data.success) {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    updateImportStatus();
+                    loadImportedPOList();
+                } else {
+                    showNotification(data.message || 'Lỗi không xác định', 'error');
+                }
+            })
+            .catch(error => showNotification('Lỗi: ' + error.message, 'error'));
+    }
+
+    function updateImportStatus() {
+        fetch('/api/import/status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const statusDiv = document.getElementById('importStatus');
+                    statusDiv.innerHTML = `
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-slate-900/50 rounded-lg p-2 border border-slate-700">
+                                <div class="text-lg font-bold text-indigo-400">${data.total_imported}</div>
+                                <div class="text-[10px] uppercase text-slate-500">Tổng</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2 border border-slate-700">
+                                <div class="text-lg font-bold text-emerald-400">${data.processed_pos}</div>
+                                <div class="text-[10px] uppercase text-slate-500">Xử lý</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-2 border border-slate-700">
+                                <div class="text-lg font-bold text-amber-400">${data.pending_pos}</div>
+                                <div class="text-[10px] uppercase text-slate-500">Chờ</div>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs text-slate-400">
+                                <span>Tiến độ</span>
+                                <span>${data.completion_rate}%</span>
+                            </div>
+                            <div class="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-indigo-500 rounded-full" style="width: ${data.completion_rate}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(console.error);
+    }
+
+    // --- PO List Management ---
+
+    function loadImportedPOList() {
+        fetch('/api/import/po-list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    importedPOList = data.data;
+                    displayPOList(importedPOList);
+                    document.getElementById('totalPOs').textContent = importedPOList.length;
+                }
+            })
+            .catch(error => showNotification('Lỗi tải danh sách: ' + error.message, 'error'));
+    }
+
+    function displayPOList(poList) {
+        const tbody = document.getElementById('poListTableBody');
+
+        if (poList.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                        <div class="flex flex-col items-center gap-2">
+                            <i data-lucide="inbox" class="w-8 h-8 text-slate-600"></i>
+                            <p>Chưa có dữ liệu import</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = poList.map(po => {
+            const isSelected = selectedPOs.has(po.po_number);
+            const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
+            const currentBasedProduct = mapping[po.po_number] || '';
+
+            // Status badge
+            let statusBadge = '';
+            if (po.status === 'completed') {
+                statusBadge = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">Đã hoàn thành</span>`;
+            } else {
+                statusBadge = `<span class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-medium">Chưa làm</span>`;
+            }
+
+            return `
+                <tr class="hover:bg-slate-700/30 transition-colors group ${isSelected ? 'bg-indigo-500/5' : ''}">
+                    <td class="px-4 py-3">
+                        <input type="checkbox" class="po-checkbox rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500 w-4 h-4" 
+                               value="${po.po_number}" 
+                               ${isSelected ? 'checked' : ''}
+                               onchange="togglePOSelection('${po.po_number}')">
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="text-slate-200 font-medium">${formatFileDate(po.file_import_date)}</div>
+                        <div class="text-xs text-slate-500 truncate max-w-[150px]" title="${po.file_name}">${po.file_name || 'N/A'}</div>
+                    </td>
+                    <td class="px-4 py-3 text-slate-300">${po.product_name}</td>
+                    <td class="px-4 py-3">
+                        <select class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 w-full max-w-[140px]"
+                                onchange="updateBasedProduct('${po.po_number}', this.value)">
+                            <option value="">Chọn Based Product</option>
+                            ${availableProducts.map(p => `<option value="${p}" ${currentBasedProduct === p ? 'selected' : ''}>${p}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="px-4 py-3">
+                        <code class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-xs font-mono text-indigo-300">${po.po_number}</code>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-slate-400">${formatDate(po.import_date)}</td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            ${statusBadge}
+                            <button onclick="${po.status === 'pending' ? `markAsCompleted('${po.po_number}')` : `markAsPending('${po.po_number}')`}" 
+                                    class="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                                    title="${po.status === 'pending' ? 'Đánh dấu hoàn thành' : 'Đánh dấu chưa làm'}">
+                                <i data-lucide="${po.status === 'pending' ? 'check' : 'undo'}" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        lucide.createIcons();
+        updateSelectAllCheckboxState();
+    }
+
+    function updateBasedProduct(poNumber, basedProduct) {
+        const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
+        mapping[poNumber] = basedProduct;
+        sessionStorage.setItem('productMapping', JSON.stringify(mapping));
+        showNotification(`Đã lưu Based Product cho ${poNumber}`, 'success');
+    }
+
+    function togglePOSelection(poNumber) {
+        if (selectedPOs.has(poNumber)) {
+            selectedPOs.delete(poNumber);
+        } else {
+            selectedPOs.add(poNumber);
+        }
+        updateSelectedCount();
+        updateSelectAllCheckboxState();
+    }
+
+    function updateSelectedCount() {
+        document.getElementById('selectedCount').textContent = selectedPOs.size;
+    }
+
+    function updateSelectAllCheckboxState() {
+        const checkbox = document.getElementById('selectAllHeader');
+        const pendingPOs = importedPOList.filter(po => po.status === 'pending');
+        const selectedPending = pendingPOs.filter(po => selectedPOs.has(po.po_number));
+
+        if (pendingPOs.length > 0 && selectedPending.length === pendingPOs.length) {
+            checkbox.checked = true;
+            checkbox.indeterminate = false;
+        } else if (selectedPending.length > 0) {
+            checkbox.checked = false;
+            checkbox.indeterminate = true;
+        } else {
+            checkbox.checked = false;
+            checkbox.indeterminate = false;
+        }
+    }
+
+    function toggleSelectAll() {
+        const checkbox = document.getElementById('selectAllHeader');
+        if (checkbox.checked) {
+            importedPOList.forEach(po => {
+                if (po.status === 'pending') selectedPOs.add(po.po_number);
+            });
+        } else {
+            selectedPOs.clear();
+        }
+        updateSelectedCount();
+        displayPOList(importedPOList);
+    }
+
+    function selectAllPending() {
+        selectedPOs.clear();
+        importedPOList.forEach(po => {
+            if (po.status === 'pending') selectedPOs.add(po.po_number);
+        });
+        updateSelectedCount();
+        displayPOList(importedPOList);
+        showNotification(`Đã chọn ${selectedPOs.size} PO chưa làm`, 'success');
+    }
+
+    function filterPOList() {
+        const search = document.getElementById('poSearchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const date = document.getElementById('dateFilter').value;
+
+        const filtered = importedPOList.filter(po => {
+            const matchSearch = !search || po.po_number.toLowerCase().includes(search) || po.product_name.toLowerCase().includes(search);
+            const matchStatus = !status || po.status === status;
+
+            let matchDate = true;
+            if (date) {
+                const poDate = new Date(po.import_date);
+                const now = new Date();
+                if (date === 'today') matchDate = poDate.toDateString() === now.toDateString();
+                else if (date === 'week') matchDate = poDate >= new Date(now - 7 * 86400000);
+                else if (date === 'month') matchDate = poDate >= new Date(now - 30 * 86400000);
+            }
+
+            return matchSearch && matchStatus && matchDate;
+        });
+
+        displayPOList(filtered);
+    }
+
+    function markAsCompleted(poNumber) {
+        updatePOStatus(poNumber, 'completed');
+    }
+
+    function markAsPending(poNumber) {
+        updatePOStatus(poNumber, 'pending');
+    }
+
+    function updatePOStatus(poNumber, status) {
+        fetch('/api/import/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ po_number: poNumber, status: status })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     showNotification(data.message, 'success');
                     loadImportedPOList();
                 } else {
-                    showNotification(data ? data.message : 'Lỗi không xác định', 'error');
+                    showNotification(data.message || 'Lỗi', 'error');
                 }
             })
-            .catch(error => {
-                console.error('Error updating PO status:', error);
-                showNotification('Lỗi khi cập nhật trạng thái: ' + error.message, 'error');
+            .catch(error => showNotification('Lỗi: ' + error.message, 'error'));
+    }
+
+    function goToBatch() {
+        if (selectedPOs.size === 0) {
+            showNotification('Vui lòng chọn ít nhất một PO', 'warning');
+            return;
+        }
+
+        const selectedData = importedPOList.filter(po => selectedPOs.has(po.po_number));
+        const mapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
+
+        sessionStorage.setItem('selectedPOs', JSON.stringify(Array.from(selectedPOs)));
+        sessionStorage.setItem('selectedPOData', JSON.stringify(selectedData));
+        sessionStorage.setItem('productMapping', JSON.stringify(mapping));
+
+        window.location.href = '/batch';
+    }
+
+    // --- Import Details Modal ---
+
+    function showImportDetails(details) {
+        lastImportDetails = details;
+        document.getElementById('showDetailsBtn').classList.remove('hidden');
+
+        const modalBody = document.getElementById('importDetailsBody');
+        modalBody.innerHTML = `
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-center">
+                    <div class="text-2xl font-bold text-emerald-400">${details.imported_count}</div>
+                    <div class="text-xs uppercase text-emerald-500/70 font-medium">Đã import</div>
+                </div>
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-center">
+                    <div class="text-2xl font-bold text-amber-400">${details.skipped_count}</div>
+                    <div class="text-xs uppercase text-amber-500/70 font-medium">Đã bỏ qua</div>
+                </div>
+                <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center">
+                    <div class="text-2xl font-bold text-red-400">${details.error_count}</div>
+                    <div class="text-xs uppercase text-red-500/70 font-medium">Lỗi</div>
+                </div>
+                <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
+                    <div class="text-2xl font-bold text-blue-400">${details.rows_processed || 0}</div>
+                    <div class="text-xs uppercase text-blue-500/70 font-medium">Đã xử lý</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="bg-slate-900/50 rounded-lg p-4 mb-6 border border-slate-700">
+                <h6 class="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="settings-2" class="w-4 h-4"></i>
+                    Quản lý sản phẩm
+                </h6>
+                <div class="flex gap-2">
+                    <button onclick="showAddProductModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition-colors flex items-center gap-2">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Thêm sản phẩm
+                    </button>
+                    <button onclick="removeSelectedProducts()" class="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium rounded-lg border border-red-500/30 transition-colors flex items-center gap-2">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Xóa đã chọn
+                    </button>
+                    <button onclick="refreshImportDetails()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium rounded-lg transition-colors flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Làm mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Imported List -->
+            <div class="space-y-4">
+                ${details.imported_data && details.imported_data.length > 0 ? `
+                    <div>
+                        <h6 class="text-sm font-medium text-emerald-400 mb-2 flex items-center gap-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            Dữ liệu đã import (${details.imported_data.length})
+                        </h6>
+                        <div class="bg-slate-900/30 border border-slate-700 rounded-lg max-h-60 overflow-y-auto divide-y divide-slate-700/50">
+                            ${details.imported_data.map((item, idx) => `
+                                <div class="p-3 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" class="rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                               onchange="toggleProductSelection('${item.po_number}')">
+                                        <div>
+                                            <div class="text-sm font-medium text-slate-200">${item.product_name || 'N/A'}</div>
+                                            <div class="text-xs text-slate-500">PO: ${item.po_number} | Row: ${item.row_number}</div>
+                                        </div>
+                                    </div>
+                                    <button onclick="deleteSingleProduct('${item.po_number}')" class="p-1.5 text-slate-500 hover:text-red-400 transition-colors">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${details.skipped_rows && details.skipped_rows.length > 0 ? `
+                    <div>
+                        <h6 class="text-sm font-medium text-amber-400 mb-2 flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            Hàng đã bỏ qua (${details.skipped_rows.length})
+                        </h6>
+                        <div class="bg-slate-900/30 border border-slate-700 rounded-lg max-h-40 overflow-y-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-800 text-slate-400 sticky top-0">
+                                    <tr>
+                                        <th class="px-3 py-2">PO</th>
+                                        <th class="px-3 py-2">Product</th>
+                                        <th class="px-3 py-2">Lý do</th>
+                                        <th class="px-3 py-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700/50 text-slate-300">
+                                    ${details.skipped_rows.map(item => `
+                                        <tr>
+                                            <td class="px-3 py-2 font-mono">${item.po_number || '-'}</td>
+                                            <td class="px-3 py-2">${item.product_name || '-'}</td>
+                                            <td class="px-3 py-2 text-slate-500">${item.reason}</td>
+                                            <td class="px-3 py-2">
+                                                <button onclick="addSkippedProduct('${item.po_number}', '${item.product_name}', ${item.row_number})" 
+                                                        class="text-emerald-400 hover:text-emerald-300">
+                                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById('importDetailsModal'));
+        modal.show();
+        lucide.createIcons();
+    }
+
+    function showLastImportDetails() {
+        if (lastImportDetails) showImportDetails(lastImportDetails);
+    }
+
+    function toggleProductSelection(poNumber) {
+        if (selectedProducts.has(poNumber)) selectedProducts.delete(poNumber);
+        else selectedProducts.add(poNumber);
+    }
+
+    function removeSelectedProducts() {
+        if (selectedProducts.size === 0) {
+            showNotification('Chưa chọn sản phẩm nào', 'warning');
+            return;
+        }
+
+        if (!confirm(`Xóa ${selectedProducts.size} sản phẩm đã chọn?`)) return;
+
+        fetch('/api/import/remove-products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ po_numbers: Array.from(selectedProducts) })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    selectedProducts.clear();
+                    refreshImportDetails();
+                } else {
+                    showNotification(data.message, 'error');
+                }
             });
+    }
+
+    function deleteSingleProduct(poNumber) {
+        if (!confirm(`Xóa sản phẩm PO: ${poNumber}?`)) return;
+
+        fetch('/api/import/remove-products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ po_numbers: [poNumber] })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    refreshImportDetails();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            });
+    }
+
+    function showAddProductModal() {
+        const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
+        modal.show();
+    }
+
+    function submitAddProduct() {
+        const po = document.getElementById('newPoNumber').value;
+        const name = document.getElementById('newProductName').value;
+        const row = document.getElementById('newRowNumber').value;
+
+        if (!po || !name) {
+            showNotification('Vui lòng nhập đủ thông tin', 'warning');
+            return;
         }
 
-        function goToBatch() {
-            if (selectedPOs.size === 0) {
-                showNotification('Vui lòng chọn ít nhất một PO', 'warning');
-                return;
-            }
-            
-            // Lấy thông tin chi tiết của các PO đã chọn
-            const selectedPOData = importedPOList.filter(po => selectedPOs.has(po.po_number));
-            
-            // Lấy mapping based product
-            const productMapping = JSON.parse(sessionStorage.getItem('productMapping') || '{}');
-            
-            // Lưu selected POs, data chi tiết và mapping vào sessionStorage
-            sessionStorage.setItem('selectedPOs', JSON.stringify(Array.from(selectedPOs)));
-            sessionStorage.setItem('selectedPOData', JSON.stringify(selectedPOData));
-            sessionStorage.setItem('productMapping', JSON.stringify(productMapping));
-            
-            console.log('Selected PO data:', selectedPOData);
-            console.log('Product mapping:', productMapping);
-            
-            // Chuyển sang batch page
-            window.location.href = '/batch';
-        }
+        fetch('/api/import/add-product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ po_number: po, product_name: name, row_number: row })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+                    refreshImportDetails();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            });
+    }
 
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
-        }
+    function addSkippedProduct(po, name, row) {
+        if (!confirm(`Thêm sản phẩm ${name} (${po})?`)) return;
 
-        function formatFileDate(dateString) {
-            if (!dateString) return 'N/A';
-            
-            // Nếu là format DDMMYYYY (8 chữ số)
-            if (dateString.length === 8 && /^\d{8}$/.test(dateString)) {
-                const day = dateString.substring(0, 2);
-                const month = dateString.substring(2, 4);
-                const year = dateString.substring(4, 8);
-                return `${day}/${month}/${year}`;
-            }
-            
-            // Nếu là format khác, trả về nguyên gốc
-            return dateString;
+        fetch('/api/import/add-product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ po_number: po, product_name: name, row_number: row })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    refreshImportDetails();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            });
+    }
+
+    function refreshImportDetails() {
+        // Close detail modal to refresh data from server if needed, or just re-fetch status
+        // For simplicity, we'll just reload status and PO list
+        updateImportStatus();
+        loadImportedPOList();
+        // Note: To fully refresh the modal content, we'd need an API to get current import details
+        // For now, we assume the user actions (add/remove) update the server state
+        // and we might need to close/re-open or update the modal content manually if we had the data.
+        // Since we don't have a 'get_import_details' API endpoint visible in the code, 
+        // we rely on the response from add/remove to potentially return updated details or we just close the modal.
+
+        // Actually, let's just close the modal to be safe as we don't have fresh details
+        const modal = bootstrap.Modal.getInstance(document.getElementById('importDetailsModal'));
+        if (modal) modal.hide();
+
+        showNotification('Đã cập nhật dữ liệu', 'success');
+    }
+
+    function saveImportChanges() {
+        showNotification('Đã lưu thay đổi', 'success');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('importDetailsModal'));
+        if (modal) modal.hide();
+    }
+
+    // Utility
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatFileDate(dateString) {
+        if (!dateString) return 'N/A';
+        if (dateString.length === 8 && /^\d{8}$/.test(dateString)) {
+            return `${dateString.substring(0, 2)}/${dateString.substring(2, 4)}/${dateString.substring(4, 8)}`;
         }
-    </script>
-</body>
-</html>
+        return dateString;
+    }
+</script>
+{% endblock %}

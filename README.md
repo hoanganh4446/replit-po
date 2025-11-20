@@ -125,3 +125,69 @@ Distributed under the MIT License. See `LICENSE` for more information.
 - Flask team cho framework tuyệt vời
 - Bootstrap team cho UI components
 - Replit team cho platform deployment# replit-po
+
+## 🧩 Nâng cấp UI/UX & Hiệu năng (2025-11-09)
+
+Các thay đổi đã triển khai nhằm hiện đại hóa giao diện, nâng cao trải nghiệm người dùng, và tối ưu hiệu năng mà không thay đổi nền tảng hay luồng chạy trên Replit:
+
+- Giao diện:
+  - Dark mode và chuyển theme trực tiếp trên thanh tác vụ; tự động theo prefers-color-scheme.
+  - A11y: thêm skip link, role="main", focus-visible rõ ràng, aria-live cho thông báo.
+  - Micro-interactions tinh tế, trạng thái rỗng (empty state) khi không có kết quả, skeleton/loading states nhẹ.
+- Hiệu năng:
+  - Debounce tìm kiếm theo sự kiện input, giảm reflow/repaint khi nhập nhanh.
+  - Prefers-reduced-motion để giảm animation nặng trên thiết bị nhạy cảm hoặc cấu hình yếu.
+  - Đồng bộ toast sử dụng container và class để tránh inline style và hạn chế layout thrashing.
+- Chất lượng:
+  - Hợp nhất autosave indicator (#saveIndicator), loại bỏ phần trùng lặp và inline style dư thừa.
+  - Chuẩn hóa CSS/JS để dễ bảo trì, không thay đổi API, đường dẫn, hoặc hành vi cốt lõi.
+
+Tham chiếu các tập tin liên quan:
+- UI chính: [web/templates/index.html](web/templates/index.html)
+- CSS nâng cấp: [web/static/enhancements.css](web/static/enhancements.css)
+- JS nâng cấp: [web/static/enhancements.js](web/static/enhancements.js)
+
+## ⚙️ Hướng dẫn chạy trên Replit (không thay đổi lệnh run)
+
+- Vẫn chạy qua entry point [main.py](main.py) hoặc nút "Run" của Replit.
+- Replit tự động gán PORT qua biến môi trường; không cần chỉnh sửa cấu hình.
+- Không thay đổi `.replit`, `replit.nix`, lệnh run hay cấu trúc thư mục.
+
+## ♿ Accessibility (WCAG 2.1 AA tiệm cận)
+
+- Bỏ qua điều hướng: có skip link “Bỏ qua điều hướng…” nhảy tới nội dung chính.
+- Focus rõ ràng: sử dụng :focus-visible với outline tương phản.
+- Thông báo: toast có aria-live="polite", autosave indicator không gây nhiễu.
+- Tương phản màu: màu sắc được chọn đáp ứng mức tương phản ở chế độ sáng/tối.
+- Bàn phím: hỗ trợ phím tắt (Ctrl/Cmd + K để focus tìm kiếm, Ctrl/Cmd + D chuyển dark mode).
+
+## 🎨 Styleguide
+
+- Xem tài liệu chi tiết hệ thống thiết kế: [STYLEGUIDE.md](STYLEGUIDE.md)
+  - Typography scale, màu sắc chính/phụ, spacing, iconography, trạng thái tương tác.
+  - Quy ước class CSS và guideline viết component (HTML/CSS/JS) nhất quán.
+
+## 🧪 Kiểm thử
+
+- Hướng dẫn kiểm thử, phạm vi, và cách tái chạy: [TESTING.md](TESTING.md)
+  - Test đơn vị/tích hợp cơ bản cho các luồng quan trọng.
+  - Checklist truy cập nhanh để xác nhận UI/UX và A11y.
+
+## 📈 Báo cáo hiệu năng
+
+- Trước/Sau nâng cấp, các chỉ số và cách tự đo (LCP/FCP/TTI) được mô tả trong [PERFORMANCE.md](PERFORMANCE.md).
+- Hướng dẫn sử dụng DevTools và cấu hình đo tại chỗ trên Replit.
+
+## 🚩 Feature Flags / Config
+
+- Dark mode: lưu trạng thái qua localStorage; phím tắt Ctrl/Cmd + D và nút trên taskbar.
+- Có thể mở rộng flags cho các tính năng mới; mặc định không bật các tính năng có rủi ro.
+
+## 🔄 Migration
+
+- Không có thay đổi schema dữ liệu hay API công khai trong đợt nâng cấp này.
+- Không yêu cầu script migrate hoặc thay đổi biến môi trường.
+
+## 📝 Changelog
+
+- Tóm tắt thay đổi chi tiết theo từng phiên bản: [CHANGELOG.md](CHANGELOG.md)

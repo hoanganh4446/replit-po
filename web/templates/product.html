@@ -1,557 +1,443 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ product.name }} - Hệ thống PO</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Phase 1 Enhancements -->
-    <link rel="stylesheet" href="/static/enhancements.css">
-    <script src="/static/enhancements.js" defer></script>
-    
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            margin: 20px auto;
-            padding: 30px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid var(--primary-color);
-        }
-        
-        .form-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        
-        .form-label {
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 8px;
-        }
-        
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-        }
-        
-        .btn-custom {
-            border-radius: 25px;
-            padding: 12px 30px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary-custom {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-            border: none;
-            color: white;
-        }
-        
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .serial-input {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .serial-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .serial-item label {
-            width: 100px;
-            margin-bottom: 0;
-            font-weight: bold;
-        }
-        
-        .product-info {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-            color: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-        
-        .product-type {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-size: 0.9em;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        
-        .type-standard { background: rgba(39, 174, 96, 0.2); color: #27ae60; }
-        .type-special { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
-        .type-merge_cells { background: rgba(23, 162, 184, 0.2); color: #17a2b8; }
-        .type-complex { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
-        .type-unique_row { background: rgba(108, 117, 125, 0.2); color: #6c757d; }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
-        
-        .alert-custom {
-            border-radius: 15px;
-            border: none;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .preview-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-        }
-        
-        .preview-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .preview-item:last-child {
-            border-bottom: none;
-        }
-        
-        .preview-label {
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .preview-value {
-            color: #666;
-        }
-        
-        @media (max-width: 768px) {
-            .main-container {
-                margin: 10px;
-                padding: 20px;
-            }
-            
-            .form-section {
-                padding: 20px;
-            }
-            
-            .serial-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .serial-item label {
-                width: auto;
-                margin-bottom: 5px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="main-container">
-                    <!-- Header -->
-                    <div class="header">
-                        <h1><i class="fas fa-edit"></i> {{ product.name }}</h1>
-                        <p>Chỉnh sửa thông tin và tạo file PO</p>
-                        <a href="/" class="btn btn-outline-secondary btn-custom">
-                            <i class="fas fa-arrow-left"></i> Quay lại trang chủ
-                        </a>
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Hệ thống PO{% endblock %}
+
+{% block page_heading %}
+<div class="flex items-center gap-2">
+    <a href="{{ url_for('index') }}" class="text-slate-400 hover:text-white transition-colors">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </a>
+    <span>{{ product.name }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full overflow-y-auto pb-6">
+    <!-- Left Column: Form -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm">
+            <h3 class="text-lg font-medium text-slate-200 mb-6 flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-5 h-5 text-indigo-400"></i>
+                Thông tin sản phẩm
+            </h3>
+
+            <form id="productForm" class="space-y-6">
+                <!-- Basic Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-400 font-medium">Tên sản phẩm</label>
+                        <input type="text" id="productName" name="product_name" value="{{ product.name }}"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                            required>
                     </div>
-                    
-                    <!-- Product Info -->
-                    <div class="product-info">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <h3>{{ product.name }}</h3>
-                                <div class="product-type type-{{ product.type }}">{{ product.type }}</div>
-                                <p class="mb-0">Template: {{ product.template }}</p>
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-400 font-medium">Số PO</label>
+                        <input type="text" id="poNumber" name="po_number" placeholder="Ví dụ: 20206330"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-400 font-medium">Mã ngày (YYYYMMDD)</label>
+                        <input type="text" id="dateCode" name="date_code" placeholder="Ví dụ: 20251001"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                            required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs text-slate-400 font-medium">Ngày hiện tại</label>
+                        <input type="text" id="currentDate" readonly
+                            class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                    </div>
+                </div>
+
+                <!-- Serial Numbers -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs text-slate-400 font-medium">Serial Numbers (5 số)</label>
+                        <button type="button" onclick="generateSerialNumbers()"
+                            class="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors">
+                            <i data-lucide="wand-2" class="w-3 h-3"></i> Tự động tạo
+                        </button>
+                    </div>
+                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-3">
+                        {% for i in range(1, 6) %}
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-slate-500 w-16">Serial {{ i }}:</span>
+                            <input type="text" id="serial{{ i }}" name="serial{{ i }}" placeholder="Ví dụ: U29ZX509Z4F9"
+                                class="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                                required>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if product.requires_weights %}
+                <!-- Weights -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <label class="text-xs text-slate-400 font-medium">Gross Weight (5 giá trị)</label>
+                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-3">
+                            {% for i in range(1, 6) %}
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-slate-500 w-16">Gross {{ i }}:</span>
+                                <input type="text" id="gross{{ i }}"
+                                    class="gross-weight-input flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                                    placeholder="Ví dụ: 15.20kg">
                             </div>
-                            <div class="col-md-4 text-end">
-                                <i class="fas fa-industry" style="font-size: 4em; opacity: 0.3;"></i>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
-                    
-                    <!-- Form -->
-                    <div class="form-section">
-                        <h4><i class="fas fa-form"></i> Thông tin sản phẩm</h4>
-                        <form id="productForm">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Tên sản phẩm</label>
-                                        <input type="text" class="form-control" id="productName" name="product_name"
-                                               value="{{ product.name }}" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Số PO</label>
-                                        <input type="text" class="form-control" id="poNumber" name="po_number"
-                                               placeholder="Ví dụ: 20206330" required>
-                                    </div>
-                                </div>
+                    <div class="space-y-4">
+                        <label class="text-xs text-slate-400 font-medium">Net Weight (5 giá trị)</label>
+                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-3">
+                            {% for i in range(1, 6) %}
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-slate-500 w-16">Net {{ i }}:</span>
+                                <input type="text" id="net{{ i }}"
+                                    class="net-weight-input flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                                    placeholder="Ví dụ: 14.75kg">
                             </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Mã ngày (YYYYMMDD)</label>
-                                        <input type="text" class="form-control" id="dateCode" name="date_code"
-                                               placeholder="Ví dụ: 20251001" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Ngày hiện tại</label>
-                                        <input type="text" class="form-control" id="currentDate" 
-                                               value="" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Serial Numbers -->
-                            <div class="mb-4">
-                                <label class="form-label">Serial Numbers (5 số)</label>
-                                <div class="serial-input">
-                                    <div class="serial-item">
-                                        <label>Serial 1:</label>
-                                        <input type="text" class="form-control" id="serial1" name="serial1"
-                                               placeholder="Ví dụ: U29ZX509Z4F9" required>
-                                    </div>
-                                    <div class="serial-item">
-                                        <label>Serial 2:</label>
-                                        <input type="text" class="form-control" id="serial2" name="serial2"
-                                               placeholder="Ví dụ: U29ZX509Z4A2" required>
-                                    </div>
-                                    <div class="serial-item">
-                                        <label>Serial 3:</label>
-                                        <input type="text" class="form-control" id="serial3" name="serial3"
-                                               placeholder="Ví dụ: U29ZX509Z4H5" required>
-                                    </div>
-                                    <div class="serial-item">
-                                        <label>Serial 4:</label>
-                                        <input type="text" class="form-control" id="serial4" name="serial4"
-                                               placeholder="Ví dụ: U29ZX509Z4J0" required>
-                                    </div>
-                                    <div class="serial-item">
-                                        <label>Serial 5:</label>
-                                        <input type="text" class="form-control" id="serial5" name="serial5"
-                                               placeholder="Ví dụ: U29ZX509Z4F3" required>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Actions -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <button type="button" class="btn btn-primary-custom btn-custom w-100" 
-                                            onclick="generateFile()">
-                                        <i class="fas fa-file-excel"></i> Tạo file Excel
-                                    </button>
-                                </div>
-                                <div class="col-md-6">
-                                    <button type="button" class="btn btn-outline-secondary btn-custom w-100" 
-                                            onclick="previewData()">
-                                        <i class="fas fa-eye"></i> Xem trước
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <!-- Preview Section -->
-                    <div class="preview-section" id="previewSection" style="display: none;">
-                        <h5><i class="fas fa-eye"></i> Xem trước dữ liệu</h5>
-                        <div id="previewContent"></div>
-                    </div>
-                    
-                    <!-- Loading -->
-                    <div class="loading" id="loading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Đang tạo file...</span>
+                            {% endfor %}
                         </div>
-                        <p class="mt-3">Đang tạo file Excel...</p>
                     </div>
-                    
-                    <!-- Results -->
-                    <div id="results"></div>
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="flex gap-4 pt-4 border-t border-slate-700">
+                    <button type="button" onclick="generateFile()"
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        Tạo file Excel
+                    </button>
+                    <button type="button" onclick="previewData()"
+                        class="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-lg transition-colors flex items-center gap-2">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                        Xem trước
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="empty:hidden"></div>
+    </div>
+
+    <!-- Right Column: Info & Preview -->
+    <div class="space-y-6">
+        <!-- Product Info Card -->
+        <div
+            class="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 rounded-xl border border-indigo-500/30 p-6 backdrop-blur-sm">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h4 class="text-lg font-bold text-white">{{ product.name }}</h4>
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mt-2">
+                        {{ product.type }}
+                    </span>
+                </div>
+                <div class="p-3 bg-indigo-500/20 rounded-lg">
+                    <i data-lucide="box" class="w-6 h-6 text-indigo-400"></i>
+                </div>
+            </div>
+            <div class="space-y-2 text-sm text-indigo-200/80">
+                <div class="flex justify-between">
+                    <span>Template:</span>
+                    <span class="font-mono text-white">{{ product.template }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Weights:</span>
+                    <span class="text-white">{{ 'Yes' if product.requires_weights else 'No' }}</span>
                 </div>
             </div>
         </div>
+
+        <!-- Preview Card -->
+        <div id="previewSection" class="hidden bg-slate-800/50 rounded-xl border border-slate-700 p-6 backdrop-blur-sm">
+            <h3 class="text-lg font-medium text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="eye" class="w-5 h-5 text-emerald-400"></i>
+                Xem trước dữ liệu
+            </h3>
+            <div id="previewContent" class="space-y-3 text-sm">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading"
+            class="hidden bg-slate-800/50 rounded-xl border border-slate-700 p-8 text-center backdrop-blur-sm">
+            <i data-lucide="loader-2" class="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-3"></i>
+            <p class="text-slate-300 font-medium">Đang tạo file Excel...</p>
+            <p class="text-xs text-slate-500 mt-1">Vui lòng đợi trong giây lát</p>
+        </div>
     </div>
-    
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const productId = '{{ product_id }}';
-        const product = {{ product|tojson }};
-        
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            setCurrentDate();
-            loadSampleData();
-        });
-        
-        // Set current date
-        function setCurrentDate() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const dateString = year + month + day;
-            
-            document.getElementById('currentDate').value = dateString;
-            document.getElementById('dateCode').value = dateString;
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const productId = '{{ product_id }}';
+    const productData = {{ product| tojson }};
+    const requiresWeights = Boolean(productData.requires_weights);
+    const sampleData = productData.sample_data || {};
+
+    document.addEventListener('DOMContentLoaded', function () {
+        setCurrentDate();
+        loadSampleData();
+    });
+
+    function setCurrentDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateString = year + month + day;
+
+        document.getElementById('currentDate').value = dateString;
+        document.getElementById('dateCode').value = dateString;
+    }
+
+    function loadSampleData() {
+        document.getElementById('poNumber').value = '20206330';
+
+        const sampleSerials = [
+            'U29ZX509Z4F9', 'U29ZX509Z4A2', 'U29ZX509Z4H5', 'U29ZX509Z4J0', 'U29ZX509Z4F3'
+        ];
+
+        for (let i = 1; i <= 5; i++) {
+            const el = document.getElementById(`serial${i}`);
+            if (el) el.value = sampleSerials[i - 1];
         }
-        
-        // Load sample data
-        function loadSampleData() {
-            // Set sample PO number
-            document.getElementById('poNumber').value = '20206330';
-            
-            // Set sample serial numbers
-            const sampleSerials = [
-                'U29ZX509Z4F9',
-                'U29ZX509Z4A2', 
-                'U29ZX509Z4H5',
-                'U29ZX509Z4J0',
-                'U29ZX509Z4F3'
-            ];
-            
+
+        if (requiresWeights) {
+            const grossWeights = Array.isArray(sampleData.gross_weights) ? sampleData.gross_weights : ['', '', '', '', ''];
+            const netWeights = Array.isArray(sampleData.net_weights) ? sampleData.net_weights : ['', '', '', '', ''];
+
             for (let i = 1; i <= 5; i++) {
-                document.getElementById(`serial${i}`).value = sampleSerials[i-1];
+                const grossInput = document.getElementById(`gross${i}`);
+                if (grossInput) grossInput.value = grossWeights[i - 1] || '';
+
+                const netInput = document.getElementById(`net${i}`);
+                if (netInput) netInput.value = netWeights[i - 1] || '';
             }
         }
-        
-        // Preview data
-        function previewData() {
-            const data = getFormData();
-            if (!data) return;
-            
-            const previewContent = document.getElementById('previewContent');
-            previewContent.innerHTML = `
-                <div class="preview-item">
-                    <span class="preview-label">Tên sản phẩm:</span>
-                    <span class="preview-value">${data.product_name}</span>
+    }
+
+    function previewData() {
+        const data = getFormData();
+        if (!data) return;
+
+        const previewContent = document.getElementById('previewContent');
+        let html = `
+            <div class="flex justify-between py-2 border-b border-slate-700/50">
+                <span class="text-slate-500">Tên sản phẩm</span>
+                <span class="text-slate-200 font-medium text-right">${data.product_name}</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-700/50">
+                <span class="text-slate-500">Số PO</span>
+                <span class="text-slate-200 font-mono text-right">${data.po_number}</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-700/50">
+                <span class="text-slate-500">Mã ngày</span>
+                <span class="text-slate-200 font-mono text-right">${data.date_code}</span>
+            </div>
+            <div class="py-2 border-b border-slate-700/50">
+                <span class="text-slate-500 block mb-1">Serial Numbers</span>
+                <div class="text-slate-200 font-mono text-xs bg-slate-900/50 p-2 rounded border border-slate-700/50 break-all">
+                    ${data.serial_numbers.join(', ')}
                 </div>
-                <div class="preview-item">
-                    <span class="preview-label">Số PO:</span>
-                    <span class="preview-value">${data.po_number}</span>
+            </div>
+        `;
+
+        if (data.gross_weights) {
+            html += `
+            <div class="py-2 border-b border-slate-700/50">
+                <span class="text-slate-500 block mb-1">Gross Weights</span>
+                <div class="text-slate-200 font-mono text-xs bg-slate-900/50 p-2 rounded border border-slate-700/50 break-all">
+                    ${data.gross_weights.join(', ')}
                 </div>
-                <div class="preview-item">
-                    <span class="preview-label">Mã ngày:</span>
-                    <span class="preview-value">${data.date_code}</span>
-                </div>
-                <div class="preview-item">
-                    <span class="preview-label">Serial Numbers:</span>
-                    <span class="preview-value">${data.serial_numbers.join(', ')}</span>
-                </div>
-                <div class="preview-item">
-                    <span class="preview-label">Tên file:</span>
-                    <span class="preview-value">${data.product_name} - PO#${data.po_number} - ${data.date_code}.xlsx</span>
-                </div>
-            `;
-            
-            document.getElementById('previewSection').style.display = 'block';
+            </div>`;
         }
-        
-        // Get form data
-        function getFormData() {
-            const productName = document.getElementById('productName').value.trim();
-            const poNumber = document.getElementById('poNumber').value.trim();
-            const dateCode = document.getElementById('dateCode').value.trim();
-            
-            const serialNumbers = [];
-            for (let i = 1; i <= 5; i++) {
-                const serial = document.getElementById(`serial${i}`).value.trim();
-                if (!serial) {
-                    alert(`Vui lòng nhập Serial ${i}`);
+
+        if (data.net_weights) {
+            html += `
+            <div class="py-2 border-b border-slate-700/50">
+                <span class="text-slate-500 block mb-1">Net Weights</span>
+                <div class="text-slate-200 font-mono text-xs bg-slate-900/50 p-2 rounded border border-slate-700/50 break-all">
+                    ${data.net_weights.join(', ')}
+                </div>
+            </div>`;
+        }
+
+        html += `
+            <div class="pt-2">
+                <span class="text-slate-500 block mb-1">Tên file dự kiến</span>
+                <div class="text-emerald-400 font-mono text-xs break-all">
+                    ${data.product_name} - PO#${data.po_number} - ${data.date_code}.xlsx
+                </div>
+            </div>`;
+
+        previewContent.innerHTML = html;
+        document.getElementById('previewSection').classList.remove('hidden');
+    }
+
+    function getFormData() {
+        const productName = document.getElementById('productName').value.trim();
+        const poNumber = document.getElementById('poNumber').value.trim();
+        const dateCode = document.getElementById('dateCode').value.trim();
+
+        if (!productName || !poNumber || !dateCode) {
+            showNotification('Vui lòng điền đầy đủ thông tin cơ bản', 'warning');
+            return null;
+        }
+
+        if (!/^\d{8}$/.test(dateCode)) {
+            showNotification('Mã ngày phải có định dạng YYYYMMDD (8 chữ số)', 'warning');
+            return null;
+        }
+
+        const serialNumbers = [];
+        for (let i = 1; i <= 5; i++) {
+            const serial = document.getElementById(`serial${i}`).value.trim();
+            if (!serial) {
+                showNotification(`Vui lòng nhập Serial ${i}`, 'warning');
+                return null;
+            }
+            serialNumbers.push(serial);
+        }
+
+        const formData = {
+            product_name: productName,
+            po_number: poNumber,
+            date_code: dateCode,
+            serial_numbers: serialNumbers
+        };
+
+        const grossInputs = document.querySelectorAll('.gross-weight-input');
+        if (grossInputs.length) {
+            const grossWeights = [];
+            for (let i = 0; i < grossInputs.length; i++) {
+                const value = grossInputs[i].value.trim();
+                if (!value) {
+                    showNotification(`Vui lòng nhập Gross Weight ${i + 1}`, 'warning');
                     return null;
                 }
-                serialNumbers.push(serial);
+                grossWeights.push(value);
             }
-            
-            if (!productName || !poNumber || !dateCode) {
-                alert('Vui lòng điền đầy đủ thông tin');
-                return null;
-            }
-            
-            // Validate date code format
-            if (!/^\d{8}$/.test(dateCode)) {
-                alert('Mã ngày phải có định dạng YYYYMMDD (8 chữ số)');
-                return null;
-            }
-            
-            return {
-                product_name: productName,
-                po_number: poNumber,
-                date_code: dateCode,
-                serial_numbers: serialNumbers
-            };
+            formData.gross_weights = grossWeights;
         }
-        
-        // Generate file
-        async function generateFile() {
-            const data = getFormData();
-            if (!data) return;
-            
-            showLoading();
-            
-            try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        data: data
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showSuccess(result);
-                } else {
-                    showError(result.message);
+
+        const netInputs = document.querySelectorAll('.net-weight-input');
+        if (netInputs.length) {
+            const netWeights = [];
+            for (let i = 0; i < netInputs.length; i++) {
+                const value = netInputs[i].value.trim();
+                if (!value) {
+                    showNotification(`Vui lòng nhập Net Weight ${i + 1}`, 'warning');
+                    return null;
                 }
-                
-            } catch (error) {
-                showError('Lỗi kết nối: ' + error.message);
-            } finally {
-                hideLoading();
+                netWeights.push(value);
             }
+            formData.net_weights = netWeights;
         }
-        
-        // Show success
-        function showSuccess(result) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `
-                <div class="alert alert-success alert-custom">
-                    <h5><i class="fas fa-check-circle"></i> Tạo file thành công!</h5>
-                    <p>File đã được tạo và sẵn sàng để tải về.</p>
-                    <div class="mt-3">
-                        <a href="${result.download_url}" class="btn btn-success btn-custom">
-                            <i class="fas fa-download"></i> Tải file về
-                        </a>
-                        <button class="btn btn-outline-primary btn-custom ms-2" onclick="generateFile()">
-                            <i class="fas fa-plus"></i> Tạo file khác
-                        </button>
+
+        return formData;
+    }
+
+    async function generateFile() {
+        const data = getFormData();
+        if (!data) return;
+
+        showLoading();
+        document.getElementById('results').innerHTML = '';
+
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, data: data })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showSuccess(result);
+            } else {
+                showError(result.message);
+            }
+        } catch (error) {
+            showError('Lỗi kết nối: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function showSuccess(result) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+            <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-emerald-500/20 rounded-full text-emerald-400">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-lg font-medium text-emerald-400">Tạo file thành công!</h5>
+                        <p class="text-sm text-emerald-500/80">File đã được tạo và sẵn sàng để tải về.</p>
                     </div>
                 </div>
-            `;
-        }
-        
-        // Show error
-        function showError(message) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `
-                <div class="alert alert-danger alert-custom">
-                    <h5><i class="fas fa-exclamation-triangle"></i> Lỗi!</h5>
-                    <p>${message}</p>
-                    <button class="btn btn-outline-danger btn-custom" onclick="generateFile()">
-                        <i class="fas fa-redo"></i> Thử lại
+                <div class="flex gap-3">
+                    <a href="${result.download_url}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                        <i data-lucide="download" class="w-4 h-4"></i> Tải file về
+                    </a>
+                    <button onclick="generateFile()" class="px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-sm font-medium rounded-lg border border-emerald-600/20 transition-colors flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Tạo lại
                     </button>
                 </div>
-            `;
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function showError(message) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+            <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-red-500/20 rounded-full text-red-400">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-lg font-medium text-red-400">Đã xảy ra lỗi!</h5>
+                        <p class="text-sm text-red-500/80">${message}</p>
+                    </div>
+                </div>
+                <button onclick="generateFile()" class="px-4 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-sm font-medium rounded-lg border border-red-600/20 transition-colors flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Thử lại
+                </button>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function showLoading() {
+        document.getElementById('loading').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').classList.add('hidden');
+    }
+
+    function generateSerialNumbers() {
+        const basePatterns = [
+            'U29ZX509Z4', 'U24ZX505Z1', 'U27ZX501Z0', 'U27ZX506A1',
+            'U27ZX507Z4', 'S06ZX512Z1', 'U22ZX501Z1'
+        ];
+        const basePattern = basePatterns[Math.floor(Math.random() * basePatterns.length)];
+
+        for (let i = 1; i <= 5; i++) {
+            const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Math.floor(Math.random() * 10);
+            document.getElementById(`serial${i}`).value = basePattern + suffix;
         }
-        
-        // Show loading
-        function showLoading() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').innerHTML = '';
-        }
-        
-        // Hide loading
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-        
-        // Auto-generate serial numbers
-        function generateSerialNumbers() {
-            const basePatterns = [
-                'U29ZX509Z4', 'U24ZX505Z1', 'U27ZX501Z0', 'U27ZX506A1',
-                'U27ZX507Z4', 'S06ZX512Z1', 'U22ZX501Z1'
-            ];
-            
-            const basePattern = basePatterns[Math.floor(Math.random() * basePatterns.length)];
-            
-            for (let i = 1; i <= 5; i++) {
-                const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
-                              Math.floor(Math.random() * 10);
-                document.getElementById(`serial${i}`).value = basePattern + suffix;
-            }
-        }
-        
-        // Add generate button
-        document.addEventListener('DOMContentLoaded', function() {
-            const serialSection = document.querySelector('.serial-input');
-            const generateBtn = document.createElement('button');
-            generateBtn.type = 'button';
-            generateBtn.className = 'btn btn-outline-info btn-sm';
-            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Tự động tạo Serial';
-            generateBtn.onclick = generateSerialNumbers;
-            serialSection.appendChild(generateBtn);
-        });
-    </script>
-    
-    <!-- Auto-save Indicator -->
-    <div id="saveIndicator" style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-check-circle"></i>
-        <span>Draft saved</span>
-    </div>
-</body>
-</html>
+        showNotification('Đã tạo ngẫu nhiên Serial Numbers', 'success');
+    }
+</script>
+{% endblock %}

@@ -205,6 +205,52 @@ class UserManager:
         except sqlite3.IntegrityError:
             return False
 
+    def delete_user(self, user_id: int) -> bool:
+        """Xóa người dùng"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            print(f"Error deleting user: {e}")
+            return False
+
+    def update_user(self, user_id: int, data: Dict) -> bool:
+        """Cập nhật thông tin người dùng"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                fields = []
+                values = []
+                
+                if 'password' in data and data['password']:
+                    fields.append("password_hash = ?")
+                    values.append(self.hash_password(data['password']))
+                
+                if 'email' in data:
+                    fields.append("email = ?")
+                    values.append(data['email'])
+                    
+                if 'role' in data:
+                    fields.append("role = ?")
+                    values.append(data['role'])
+                
+                if not fields:
+                    return True
+                    
+                values.append(user_id)
+                query = f"UPDATE users SET {', '.join(fields)} WHERE id = ?"
+                
+                cursor.execute(query, values)
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error updating user: {e}")
+            return False
+
     def authenticate_user(self, username: str, password: str) -> Optional[Dict]:
         """Xác thực người dùng"""
         with self.db_manager.get_connection() as conn:
@@ -947,14 +993,15 @@ class ProductManager:
                     "po": "H4:M5", 
                     "date": "T4:W5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'SV2000': {
                 'name': 'SV2000',
                 'template': 'products/SV2000/SV2000 Pre-Ship.xlsx',
                 'type': 'special',
                 'random_config': [
-                    (2550, 2680, False), (2550, 2680, False), (1260, 1470, "div100")
+                    (2550, 2680, False), (3721, 4059, False), (1260, 1470, "div100")
                 ],
                 'random_columns': ['F', 'G', 'E'],
                 'merge_config': {
@@ -962,7 +1009,8 @@ class ProductManager:
                     "po": "F3:G3",
                     "date": "M3:N3"
                 },
-                'serial_range': 'B9:B13'
+                'serial_range': 'B9:B13',
+                'image_position': 'A1:D2'
             },
             'LA555': {
                 'name': 'LA555',
@@ -980,7 +1028,8 @@ class ProductManager:
                     "po": "H4:M5",
                     "date": "T4:W5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'UV730': {
                 'name': 'UV730',
@@ -997,7 +1046,8 @@ class ProductManager:
                     "po": "H4:K5",
                     "date": "R4:U5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'HX100': {
                 'name': 'HX100',
@@ -1014,7 +1064,8 @@ class ProductManager:
                         "date": "Q4:T4"
                     }
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'HD400': {
                 'name': 'HD400',
@@ -1034,7 +1085,8 @@ class ProductManager:
                     "po": "G3",
                     "date": "S3"
                 },
-                'serial_range': 'A8:A12'
+                'serial_range': 'A8:A12',
+                'image_position': 'A1:B2'
             },
             'LA700': {
                 'name': 'LA700',
@@ -1052,10 +1104,11 @@ class ProductManager:
                     "po": "H4:M5",
                     "date": "T4:W5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'VX100': {
-                'name': 'VS100',
+                'name': 'VX100',
                 'template': 'products/VX100/VS100 - PO#20132547 - 20240905.xlsx',
                 'type': 'unique_row',
                 'special_config': {
@@ -1070,7 +1123,8 @@ class ProductManager:
                         "date": "M4:P5"
                     }
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'LA480': {
                 'name': 'LA480',
@@ -1087,7 +1141,8 @@ class ProductManager:
                     "po": "H4:K5",
                     "date": "R4:U5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'HP152': {
                 'name': 'HP153',
@@ -1124,7 +1179,8 @@ class ProductManager:
                     "po": "H4:J5",
                     "date": "Q4:T5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'VS100': {
                 'name': 'VS100',
@@ -1142,7 +1198,8 @@ class ProductManager:
                         "date": "M4:P5"
                     }
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'AZ3002': {
                 'name': 'AZ3002',
@@ -1161,7 +1218,7 @@ class ProductManager:
                     "date": "T4:W5"
                 },
                 'serial_range': 'A11:A15',
-                'image_path': 'Picture1.png'
+                'image_position': 'A1:C3'
             },
             'IZ381H': {
                 'name': 'IZ381H',
@@ -1181,7 +1238,8 @@ class ProductManager:
                         "date": "I3:J3"
                     }
                 },
-                'serial_range': 'B9:B13'
+                'serial_range': 'B9:B13',
+                'image_position': 'A1:B2'
             },
             'IX141': {
                 'name': 'IX141',
@@ -1197,7 +1255,8 @@ class ProductManager:
                     "po": "F4:I5",
                     "date": "Q4:T5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'UA1450': {
                 'name': 'UA1450',
@@ -1215,7 +1274,8 @@ class ProductManager:
                     "po": "I4",
                     "date": "M4"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'HD700': {
                 'name': 'HD700',
@@ -1254,7 +1314,8 @@ class ProductManager:
                     "po": "F4:H5",
                     "date": "R4:U5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'NV360': {
                 'name': 'NV360',
@@ -1271,7 +1332,8 @@ class ProductManager:
                     "po": "H4:J5",
                     "date": "Q4:T5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'AW261': {
                 'name': 'AW261',
@@ -1288,7 +1350,8 @@ class ProductManager:
                     "po": "F4:H5",
                     "date": "R4:U5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'UH205': {
                 'name': 'UH205',
@@ -1306,7 +1369,8 @@ class ProductManager:
                     "po": "E4:F5",
                     "date": "K4:L5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'FA225': {
                 'name': 'FA225',
@@ -1324,7 +1388,8 @@ class ProductManager:
                     "po": "E4:F5",
                     "date": "K4:L5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
 
             # === SẢN PHẨM HD SERIES ===
@@ -1346,7 +1411,8 @@ class ProductManager:
                     "po": "G3",
                     "date": "S3"
                 },
-                'serial_range': 'A8:A12'
+                'serial_range': 'A8:A12',
+                'image_position': 'A1:B2'
             },
             'HD500': {
                 'name': 'HD500',
@@ -1366,7 +1432,8 @@ class ProductManager:
                     "po": "G3",
                     "date": "S3"
                 },
-                'serial_range': 'A8:A12'
+                'serial_range': 'A8:A12',
+                'image_position': 'A1:B2'
             },
             'HD600': {
                 'name': 'HD600',
@@ -1386,7 +1453,8 @@ class ProductManager:
                     "po": "G3",
                     "date": "S3"
                 },
-                'serial_range': 'A8:A12'
+                'serial_range': 'A8:A12',
+                'image_position': 'A1:B2'
             },
             'HD700': {
                 'name': 'HD700',
@@ -1406,7 +1474,8 @@ class ProductManager:
                     "po": "G3",
                     "date": "S3"
                 },
-                'serial_range': 'A8:A12'
+                'serial_range': 'A8:A12',
+                'image_position': 'A1:B2'
             },
             'HP152': {
                 'name': 'HP152',
@@ -1424,7 +1493,8 @@ class ProductManager:
                     "po": "I4:L5",
                     "date": "M4:N5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'HP301': {
                 'name': 'HP301',
@@ -1442,7 +1512,8 @@ class ProductManager:
                     "po": "I4:L5",
                     "date": "M4:N5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
             'ZU660': {
                 'name': 'ZU660',
@@ -1460,7 +1531,49 @@ class ProductManager:
                     "po": "H4:M5", 
                     "date": "T4:W5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
+            },
+            'TF200': {
+                'name': 'TF200',
+                'template': 'products/TF200/TF200.xlsx',
+                'type': 'tf200',
+                'required_fields': ['gross_weights', 'net_weights'],
+                'requires_weights': True,
+                'tf200_config': {
+                    'rows': [11, 12, 13, 14, 15],
+                    'serial_column': 'A',
+                    'product_range': 'D4:H5',
+                    'po_range': 'I4:J5',
+                    'date_range': 'Q4:S5',
+                    'gross_weight_column': 'N',
+                    'net_weight_column': 'O',
+                    'inactive_value': 'N/A',
+                    'random_columns': [
+                        {'column': 'B', 'min': 24, 'max': 30, 'mode': 'div100'},
+                        {'column': 'C', 'min': 525, 'max': 550, 'mode': 'div100'},
+                        {'column': 'D', 'min': 811, 'max': 849, 'mode': 'div100'},
+                        {'column': 'E', 'min': 1019, 'max': 1055, 'mode': 'div100'},
+                        {'column': 'F', 'min': 1231, 'max': 1279, 'mode': 'div100'},
+                        {'column': 'G', 'min': 1515, 'max': 1585, 'mode': 'div100'},
+                        {'column': 'H', 'min': 2015, 'max': 2120, 'mode': 'div100'},
+                        {'column': 'I', 'min': 2610, 'max': 2760, 'mode': 'div100'},
+                        {'column': 'J', 'min': 3900, 'max': 4050, 'mode': 'div100'},
+                        {'column': 'K', 'min': 4520, 'max': 4699, 'mode': 'div100'},
+                        {'column': 'L', 'min': 5520, 'max': 5590, 'mode': 'div100'},
+                        {'column': 'M', 'min': 8550, 'max': 8700, 'mode': 'div100'},
+                        {'column': 'R', 'min': 1829, 'max': 1832, 'mode': None, 'suffix': 'mm'},
+                        {'column': 'S', 'min': 3, 'max': 9, 'mode': 'div10'}
+                    ],
+                    'single_row_columns': [
+                        {'column': 'P', 'min': 1851, 'max': 1999, 'mode': None, 'suffix': None, 'inactive_value': 'N/A'},
+                        {'column': 'Q', 'min': 24, 'max': 27, 'mode': 'div10', 'suffix': None, 'inactive_value': 'N/A'}
+                    ]
+                },
+                'sample_data': {
+                    'gross_weights': ["15.20kg", "15.35kg", "15.10kg", "15.42kg", "15.27kg"],
+                    'net_weights': ["14.75kg", "14.90kg", "14.68kg", "14.98kg", "14.82kg"]
+                }
             },
             'ZD201': {
                 'name': 'ZD201',
@@ -1478,7 +1591,8 @@ class ProductManager:
                     "po": "H4:M5", 
                     "date": "T4:W5"
                 },
-                'serial_range': 'A11:A15'
+                'serial_range': 'A11:A15',
+                'image_position': 'A1:C3'
             },
         }
 
@@ -1870,154 +1984,23 @@ class ExcelProcessor:
     def process_standard_product_openpyxl(self, ws, config: Dict, data: Dict):
         """Xử lý sản phẩm chuẩn với openpyxl"""
         try:
-            # Fill basic data
-            for field, cell in config.get('fields', {}).items():
-                if field in data:
-                    ws[cell] = data[field]
-
-            # Fill date if available
-            if 'date_code' in data:
-                formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
-                ws['I3'] = formatted_date
-
-            return True
-        except Exception as e:
-            print(f"Error processing standard product with openpyxl: {e}")
-            return False
-
-    def process_special_product_openpyxl(self, ws, config: Dict, data: Dict):
-        """Xử lý sản phẩm đặc biệt với openpyxl"""
-        try:
-            # Fill basic data
-            for field, cell in config.get('fields', {}).items():
-                if field in data:
-                    ws[cell] = data[field]
-
-            # Fill date if available
-            if 'date_code' in data:
-                formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
-                ws['I3'] = formatted_date
-
-            # Handle special configurations
-            if config.get('type') == 'merge_cells':
-                merge_config = config.get('merge_cells', {})
-                if 'date' in merge_config:
-                    # Merge cells for date
-                    date_range = merge_config['date']
-                    ws.merge_cells(date_range)
-                    ws[date_range.split(':')[0]].alignment = openpyxl.styles.Alignment(horizontal='center')
-
-            return True
-        except Exception as e:
-            print(f"Error processing special product with openpyxl: {e}")
-            return False
-
-    def create_excel_file(self, product_id: str, data: Dict, output_path: str) -> bool:
-        """Tạo file Excel với xlwings để giữ hình ảnh"""
-        try:
-            product_manager = ProductManager()
-            config = product_manager.get_product(product_id)
-            if not config:
-                return False
-
-            template_path = os.path.join(BASE_DIR, config['template'])
-            if not os.path.exists(template_path):
-                return False
-
-            # Try xlwings first (preserves images)
-            try:
-                import xlwings as xw
-                return self._create_excel_with_xlwings(template_path, config, data, output_path)
-            except ImportError:
-                print("xlwings not available, falling back to openpyxl")
-                # Fallback to openpyxl - use keep_vba to preserve images
-                wb = openpyxl.load_workbook(template_path, keep_vba=True)
-                ws = wb.active
-                
-                # Copy images from template
-                from openpyxl.drawing.image import Image as OpenpyxlImage
-                from copy import copy
-                
-                # Store images before processing
-                images_to_copy = []
-                if hasattr(ws, '_images'):
-                    for img in ws._images:
-                        images_to_copy.append({
-                            'image': copy(img),
-                            'anchor': str(img.anchor)
-                        })
-
-                if config['type'] in ['merge_cells', 'complex', 'unique_row']:
-                    self.process_special_product_openpyxl(ws, config, data)
-                else:
-                    self.process_standard_product_openpyxl(ws, config, data)
-                
-                # Re-add images after processing (they might have been lost)
-                for img_data in images_to_copy:
-                    try:
-                        ws.add_image(img_data['image'], img_data['anchor'])
-                    except:
-                        pass
-
-                wb.save(output_path)
-                return True
-
-        except Exception as e:
-            print(f"Error creating Excel file: {e}")
-            return False
-
-    def _create_excel_with_xlwings(self, template_path: str, config: Dict, data: Dict, output_path: str) -> bool:
-        """Tạo file Excel với xlwings để giữ hình ảnh"""
-        try:
-            import xlwings as xw
-
-            app = xw.App(visible=False)
-            wb = app.books.open(template_path)
-            ws = wb.sheets[0]
-
-            # Disable alerts and screen updating for better performance
-            app.display_alerts = False
-            app.screen_updating = False
-
-            try:
-                # Process data based on product type
-                if config['type'] in ['merge_cells', 'complex', 'unique_row']:
-                    self.process_special_product_xlwings(ws, config, data)
-                else:
-                    self.process_standard_product_xlwings(ws, config, data)
-
-                # Save with new name (preserves all content including images)
-                wb.save(output_path)
-
-            finally:
-                wb.close()
-                app.quit()
-
-            return True
-
-        except Exception as e:
-            print(f"Error creating Excel with xlwings: {e}")
-            return False
-
-    def process_standard_product_xlwings(self, ws, config: Dict, data: Dict):
-        """Xử lý sản phẩm chuẩn với xlwings"""
-        try:
             # Apply merge_config data
             merge_config = config.get('merge_config', {})
 
             # Product name
             if 'product' in merge_config and 'product_name' in data:
                 product_range = merge_config['product']
-                ws.range(product_range).value = data['product_name']
-                ws.range(product_range).api.HorizontalAlignment = -4108
-                ws.range(product_range).api.VerticalAlignment = -4108
+                ws[product_range.split(':')[0]] = data['product_name']
+                # Apply center alignment
+                from openpyxl.styles import Alignment
+                ws[product_range.split(':')[0]].alignment = Alignment(horizontal='center', vertical='center')
 
             # PO number
             if 'po' in merge_config and 'po_number' in data:
                 po_range = merge_config['po']
-                ws.range(po_range).value = data['po_number']
-                ws.range(po_range).api.HorizontalAlignment = -4108
-                ws.range(po_range).api.VerticalAlignment = -4108
+                ws[po_range.split(':')[0]] = data['po_number']
+                from openpyxl.styles import Alignment
+                ws[po_range.split(':')[0]].alignment = Alignment(horizontal='center', vertical='center')
 
             # Date
             if 'date' in merge_config and 'date_code' in data:
@@ -2026,13 +2009,11 @@ class ExcelProcessor:
                 try:
                     from datetime import datetime
                     formatted_date = datetime.strptime(data['date_code'], "%Y%m%d").strftime("%Y.%m.%d")
-                    ws.range(date_range).value = formatted_date
-                    ws.range(date_range).api.HorizontalAlignment = -4108
-                    ws.range(date_range).api.VerticalAlignment = -4108
+                    ws[date_range.split(':')[0]] = formatted_date
                 except ValueError:
-                    ws.range(date_range).value = data['date_code']
-                    ws.range(date_range).api.HorizontalAlignment = -4108
-                    ws.range(date_range).api.VerticalAlignment = -4108
+                    ws[date_range.split(':')[0]] = data['date_code']
+                from openpyxl.styles import Alignment
+                ws[date_range.split(':')[0]].alignment = Alignment(horizontal='center', vertical='center')
 
             # Handle serial numbers if present
             if 'serial_numbers' in data and config.get('serial_range'):
@@ -2043,26 +2024,28 @@ class ExcelProcessor:
                     for i, serial in enumerate(data['serial_numbers']):
                         if i < 5:  # Limit to 5 serials
                             cell_ref = f"{serial_range[0]}{start_row + i}"
-                            ws.range(cell_ref).value = serial
-                            ws.range(cell_ref).api.HorizontalAlignment = -4108
-                            ws.range(cell_ref).api.VerticalAlignment = -4108
+                            ws[cell_ref] = serial
+                            from openpyxl.styles import Alignment
+                            ws[cell_ref].alignment = Alignment(horizontal='center', vertical='center')
                 elif isinstance(serial_range, list):
                     # List of ranges
                     for i, serial in enumerate(data['serial_numbers']):
                         if i < len(serial_range):
-                            ws.range(serial_range[i]).value = serial
-                            ws.range(serial_range[i]).api.HorizontalAlignment = -4108
-                            ws.range(serial_range[i]).api.VerticalAlignment = -4108
+                            ws[serial_range[i]] = serial
+                            from openpyxl.styles import Alignment
+                            ws[serial_range[i]].alignment = Alignment(horizontal='center', vertical='center')
 
             # Handle random data generation
             if 'random_config' in config and 'random_columns' in config:
-                self._generate_random_data_xlwings(ws, config, data)
+                self._generate_random_data_openpyxl(ws, config, data)
 
+            return True
         except Exception as e:
-            print(f"Error processing standard product with xlwings: {e}")
+            print(f"Error processing standard product with openpyxl: {e}")
+            return False
 
-    def _generate_random_data_xlwings(self, ws, config: Dict, data: Dict):
-        """Generate random data for xlwings"""
+    def _generate_random_data_openpyxl(self, ws, config: Dict, data: Dict):
+        """Generate random data for openpyxl"""
         try:
             import random
             random.seed()
@@ -2093,7 +2076,7 @@ class ExcelProcessor:
 
                     if min_val is None or max_val is None:
                         # Fixed value
-                        ws.range(cell_ref).value = mode
+                        ws[cell_ref] = mode
                     else:
                         # Random number
                         while True:
@@ -2102,31 +2085,749 @@ class ExcelProcessor:
                                 used_numbers.add(val)
                                 break
 
-                        if mode == "div100":
+                        if mode == "div100" or mode is True:
                             val = round(val / 100.0, 2)
                         elif mode == "div10":
                             val = round(val / 10.0, 1)
 
-                        ws.range(cell_ref).value = val
+                        ws[cell_ref] = val
 
                     # Apply center alignment
-                    ws.range(cell_ref).api.HorizontalAlignment = -4108
-                    ws.range(cell_ref).api.VerticalAlignment = -4108
+                    from openpyxl.styles import Alignment
+                    ws[cell_ref].alignment = Alignment(horizontal='center', vertical='center')
 
         except Exception as e:
-            print(f"Error generating random data with xlwings: {e}")
+            print(f"Error generating random data with openpyxl: {e}")
 
-    def process_special_product_xlwings(self, ws, config: Dict, data: Dict):
-        """Xử lý sản phẩm đặc biệt với xlwings"""
+    def process_special_product_openpyxl(self, ws, config: Dict, data: Dict):
+        """Xử lý sản phẩm đặc biệt với openpyxl"""
         try:
-            # Similar to standard but with special handling
-            self.process_standard_product_xlwings(ws, config, data)
+            if config['type'] == 'merge_cells':
+                self.process_hx100_openpyxl(ws, config, data)
+            elif config['type'] == 'complex':
+                self.process_hd400_openpyxl(ws, config, data)
+            elif config['type'] == 'unique_row':
+                if 'IZ381H' in config.get('name', ''):
+                    self.process_iz381h_openpyxl(ws, config, data)
+                elif 'VS100' in config.get('name', ''):
+                    self.process_vs100_openpyxl(ws, config, data)
+                else:
+                    self.process_vx100_openpyxl(ws, config, data)
+            else:
+                self.process_standard_product_openpyxl(ws, config, data)
 
-            # Additional special processing can be added here
-            # based on specific product requirements
+            return True
+        except Exception as e:
+            print(f"Error processing special product with openpyxl: {e}")
+            return False
+
+    def process_hx100_openpyxl(self, ws, config: Dict, data: Dict):
+        """Xử lý HX100 với openpyxl"""
+        try:
+            import random
+            from openpyxl.styles import Alignment
+
+            # Serial numbers
+            for i, sn in enumerate(data['serial_numbers']):
+                ws[f"A{11+i}"] = sn
+                ws[f"A{11+i}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Random data với merge cells
+            special_config = config.get('special_config', {})
+            if 'random_ranges' in special_config:
+                for row in range(11, 16):
+                    for min_val, max_val, cell_range, mode in special_config['random_ranges']:
+                        val = random.randint(min_val, max_val)
+                        if mode == "div100":
+                            val = round(val / 100, 2)
+
+                        start_cell = cell_range.split(":")[0]
+                        ws[f"{start_cell}{row}"] = val
+                        ws[f"{start_cell}{row}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Product info
+            merge_config = special_config.get('merge_config', {})
+
+            # Product name
+            ws["C4"] = data['product_name']
+            try:
+                ws.unmerge_cells(merge_config.get('product', 'C4:E5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('product', 'C4:E5'))
+            ws["C4"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # PO number
+            ws["F4"] = data['po_number']
+            try:
+                ws.unmerge_cells(merge_config.get('po', 'F4:I4'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('po', 'F4:I4'))
+            ws["F4"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Date
+            formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
+            ws["Q4"] = formatted_date
+            try:
+                ws.unmerge_cells(merge_config.get('date', 'Q4:T4'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('date', 'Q4:T4'))
+            ws["Q4"].alignment = Alignment(horizontal='center', vertical='center')
 
         except Exception as e:
-            print(f"Error processing special product with xlwings: {e}")
+            print(f"Error processing HX100 with openpyxl: {e}")
+
+    def process_hd400_openpyxl(self, ws, config: Dict, data: Dict):
+        """Xử lý HD400 với openpyxl"""
+        try:
+            import random
+            from openpyxl.styles import Alignment
+
+            # Serial numbers
+            for i, sn in enumerate(data['serial_numbers']):
+                ws[f"A{8+i}"] = sn
+                ws[f"A{8+i}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Complex random data
+            complex_config = config.get('complex_config', [])
+            for row in range(8, 13):
+                for col_idx, (min_val, max_val, mode) in enumerate(complex_config):
+                    if col_idx >= 20:  # Limit columns
+                        break
+
+                    col_letter = chr(ord('B') + col_idx)  # Start from B
+                    cell_ref = f"{col_letter}{row}"
+
+                    if min_val is None or max_val is None:
+                        # Fixed value
+                        ws[cell_ref] = mode
+                    else:
+                        # Random number
+                        val = random.randint(min_val, max_val)
+                        if mode == "div100":
+                            val = round(val / 100, 2)
+                        ws[cell_ref] = val
+
+                    ws[cell_ref].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Product info
+            merge_config = config.get('merge_config', {})
+
+            # Product name
+            ws["B3"] = data['product_name']
+            ws["B3"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # PO number
+            ws["G3"] = data['po_number']
+            ws["G3"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Date
+            formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
+            ws["S3"] = formatted_date
+            ws["S3"].alignment = Alignment(horizontal='center', vertical='center')
+
+        except Exception as e:
+            print(f"Error processing HD400 with openpyxl: {e}")
+
+    def process_vx100_openpyxl(self, ws, config: Dict, data: Dict):
+        """Xử lý VX100 với openpyxl"""
+        try:
+            import random
+            from openpyxl.styles import Alignment
+
+            # Serial numbers
+            for i, sn in enumerate(data['serial_numbers']):
+                ws[f"A{11+i}"] = sn
+                ws[f"A{11+i}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Unique row logic cho E11:G15
+            def generate_unique_row_e_to_g():
+                while True:
+                    row = [
+                        round(random.randint(8000, 8380) / 100, 2),
+                        round(random.randint(13340, 14050) / 100, 2),
+                        round(random.randint(4070, 4215) / 100, 2),
+                    ]
+                    if len(set(row)) == len(row):
+                        return row
+
+            cols = ["E", "F", "G"]
+            for row_idx in range(5):
+                values = generate_unique_row_e_to_g()
+                for col_idx, val in enumerate(values):
+                    ws[f"{cols[col_idx]}{11+row_idx}"] = val
+                    ws[f"{cols[col_idx]}{11+row_idx}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Product info
+            special_config = config.get('special_config', {})
+            merge_config = special_config.get('merge_config', {})
+
+            # Product name - C4 (merge C4:D5)
+            ws["C4"] = data['product_name']
+            try:
+                ws.unmerge_cells(merge_config.get('product', 'C4:D5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('product', 'C4:D5'))
+            ws["C4"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # PO number - F4 (merge F4:G5)
+            ws["F4"] = data['po_number']
+            try:
+                ws.unmerge_cells(merge_config.get('po', 'F4:G5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('po', 'F4:G5'))
+            ws["F4"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Date - M4 (merge M4:P5)
+            formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
+            ws["M4"] = formatted_date
+            try:
+                ws.unmerge_cells(merge_config.get('date', 'M4:P5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('date', 'M4:P5'))
+            ws["M4"].alignment = Alignment(horizontal='center', vertical='center')
+
+        except Exception as e:
+            print(f"Error processing VX100 with openpyxl: {e}")
+
+    def process_vs100_openpyxl(self, ws, config: Dict, data: Dict):
+        """Xử lý VS100 với openpyxl"""
+        try:
+            import random
+            from openpyxl.styles import Alignment
+
+            # Serial numbers
+            for i, sn in enumerate(data['serial_numbers']):
+                ws[f"A{11+i}"] = sn
+                ws[f"A{11+i}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Unique row logic cho E11:G15 với random ranges của VS100
+            def generate_unique_row_e_to_g():
+                while True:
+                    row = [
+                        round(random.randint(8000, 8450) / 100, 2),  # VS100 range
+                        round(random.randint(14400, 15300) / 100, 2), # VS100 range
+                        round(random.randint(4210, 4590) / 100, 2),   # VS100 range
+                    ]
+                    if len(set(row)) == len(row):
+                        return row
+
+            cols = ["E", "F", "G"]
+            for row_idx in range(5):
+                values = generate_unique_row_e_to_g()
+                for col_idx, val in enumerate(values):
+                    ws[f"{cols[col_idx]}{11+row_idx}"] = val
+                    ws[f"{cols[col_idx]}{11+row_idx}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Product info
+            special_config = config.get('special_config', {})
+            merge_config = special_config.get('merge_config', {})
+
+            # Product name - C4 (merge C4:D5)
+            ws["C4"] = data['product_name']
+            try:
+                ws.unmerge_cells(merge_config.get('product', 'C4:D5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('product', 'C4:D5'))
+            ws["C4"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # PO number - F4 (merge F4:G5)
+            ws["F4"] = data['po_number']
+            try:
+                ws.unmerge_cells(merge_config.get('po', 'F4:G5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('po', 'F4:G5'))
+            ws["F4"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Date - M4 (merge M4:P5)
+            formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
+            ws["M4"] = formatted_date
+            try:
+                ws.unmerge_cells(merge_config.get('date', 'M4:P5'))
+            except:
+                pass
+            ws.merge_cells(merge_config.get('date', 'M4:P5'))
+            ws["M4"].alignment = Alignment(horizontal='center', vertical='center')
+
+        except Exception as e:
+            print(f"Error processing VS100 with openpyxl: {e}")
+
+    def process_iz381h_openpyxl(self, ws, config: Dict, data: Dict):
+        """Xử lý IZ381H với openpyxl"""
+        try:
+            from openpyxl.styles import Alignment
+            import random
+
+            # Serial numbers vào B9:B13 (đúng theo template)
+            for i, sn in enumerate(data['serial_numbers']):
+                ws[f"B{9+i}"] = sn
+                ws[f"B{9+i}"].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Sinh dữ liệu ngẫu nhiên và duy nhất cho mỗi hàng D9:H13
+            def generate_unique_row_d_to_h():
+                while True:
+                    row = [
+                        round(random.randint(8712, 8950) / 100, 2),  # D
+                        round(random.randint(2315, 2750) / 100, 2),  # E
+                        random.randint(1290, 1340),                  # F
+                        random.randint(2350, 2580),                  # G
+                        round(random.randint(3210, 3500) / 100, 2),  # H
+                    ]
+                    if len(set(row)) == len(row):
+                        return row
+
+            cols = ["D", "E", "F", "G", "H"]
+            for r in range(5):
+                values = generate_unique_row_d_to_h()
+                for c_idx, val in enumerate(values):
+                    cell = f"{cols[c_idx]}{9+r}"
+                    ws[cell] = val
+                    ws[cell].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Product info với merge_config trong special_config
+            special_config = config.get('special_config', {})
+            merge_config = special_config.get('merge_config', {})
+
+            # Product name B3:C3 - ghi vào ô đầu mối B3
+            product_range = merge_config.get('product', 'B3:C3')
+            product_top_left = product_range.split(':')[0]
+            try:
+                ws.unmerge_cells(product_range)
+            except Exception:
+                pass
+            ws[product_top_left] = data['product_name']
+            ws.merge_cells(product_range)
+            ws[product_top_left].alignment = Alignment(horizontal='center', vertical='center')
+
+            # PO number E3:F3 - ghi vào ô đầu mối E3
+            po_range = merge_config.get('po', 'E3:F3')
+            po_top_left = po_range.split(':')[0]
+            try:
+                ws.unmerge_cells(po_range)
+            except Exception:
+                pass
+            ws[po_top_left] = data['po_number']
+            ws.merge_cells(po_range)
+            ws[po_top_left].alignment = Alignment(horizontal='center', vertical='center')
+
+            # Date I3:J3 - ghi vào ô đầu mối I3
+            date_range = merge_config.get('date', 'I3:J3')
+            date_top_left = date_range.split(':')[0]
+            try:
+                formatted_date = f"{data['date_code'][:4]}.{data['date_code'][4:6]}.{data['date_code'][6:]}"
+            except Exception:
+                formatted_date = data.get('date_code', '')
+            try:
+                ws.unmerge_cells(date_range)
+            except Exception:
+                pass
+            ws[date_top_left] = formatted_date
+            ws.merge_cells(date_range)
+            ws[date_top_left].alignment = Alignment(horizontal='center', vertical='center')
+
+        except Exception as e:
+            print(f"Error processing IZ381H with openpyxl: {e}")
+
+    def process_tf200_openpyxl(self, ws, config: Dict, data: Dict) -> bool:
+        """Xử lý TF200 với openpyxl"""
+        try:
+            from openpyxl.styles import Alignment
+            import random
+
+            tf200_config = config.get('tf200_config', {})
+            rows = tf200_config.get('rows', [])
+            if len(rows) != 5:
+                raise ValueError("TF200 configuration must define exactly 5 rows")
+
+            alignment = Alignment(horizontal='center', vertical='center')
+
+            serial_numbers = data.get('serial_numbers', [])
+            if len(serial_numbers) != len(rows):
+                raise ValueError("TF200 cần đúng 5 serial numbers")
+
+            gross_weights = data.get('gross_weights', [])
+            net_weights = data.get('net_weights', [])
+            if len(gross_weights) != len(rows):
+                raise ValueError("TF200 cần đúng 5 giá trị Gross Weight")
+            if len(net_weights) != len(rows):
+                raise ValueError("TF200 cần đúng 5 giá trị Net Weight")
+
+            serial_column = tf200_config.get('serial_column', 'A')
+            gross_col = tf200_config.get('gross_weight_column', 'N')
+            net_col = tf200_config.get('net_weight_column', 'O')
+            inactive_value = tf200_config.get('inactive_value', 'N/A')
+
+            # Serial numbers
+            for idx, row in enumerate(rows):
+                serial_cell = f"{serial_column}{row}"
+                ws[serial_cell] = serial_numbers[idx]
+                ws[serial_cell].alignment = alignment
+
+            # Gross & Net weights
+            for idx, row in enumerate(rows):
+                gross_cell = f"{gross_col}{row}"
+                net_cell = f"{net_col}{row}"
+                ws[gross_cell] = gross_weights[idx]
+                ws[gross_cell].alignment = alignment
+                ws[net_cell] = net_weights[idx]
+                ws[net_cell].alignment = alignment
+
+            def transform_value(raw_val: int, mode: Optional[str]) -> float | int:
+                if mode == "div100" or mode is True:
+                    return round(raw_val / 100, 2)
+                if mode == "div10":
+                    return round(raw_val / 10, 1)
+                return raw_val
+
+            # Random columns for each row
+            random_columns = tf200_config.get('random_columns', [])
+            for row in rows:
+                used_values: set[int] = set()
+                for col_cfg in random_columns:
+                    column = col_cfg.get('column')
+                    if not column:
+                        continue
+                    min_val = col_cfg.get('min')
+                    max_val = col_cfg.get('max')
+                    mode = col_cfg.get('mode')
+                    suffix = col_cfg.get('suffix')
+
+                    if min_val is None or max_val is None:
+                        continue
+
+                    attempts = 0
+                    while True:
+                        raw_val = random.randint(min_val, max_val)
+                        if raw_val not in used_values or attempts > (max_val - min_val + 1):
+                            used_values.add(raw_val)
+                            break
+                        attempts += 1
+
+                    value = transform_value(raw_val, mode)
+                    if suffix:
+                        display_value = f"{int(raw_val)}{suffix}"
+                    else:
+                        display_value = value
+
+                    cell_ref = f"{column}{row}"
+                    ws[cell_ref] = display_value
+                    ws[cell_ref].alignment = alignment
+
+            # Single row columns (only apply to first row, others set to inactive)
+            single_row_columns = tf200_config.get('single_row_columns', [])
+            first_row = rows[0]
+            for col_cfg in single_row_columns:
+                column = col_cfg.get('column')
+                min_val = col_cfg.get('min')
+                max_val = col_cfg.get('max')
+                mode = col_cfg.get('mode')
+                suffix = col_cfg.get('suffix')
+                inactive_val = col_cfg.get('inactive_value', inactive_value)
+
+                if column and min_val is not None and max_val is not None:
+                    raw_val = random.randint(min_val, max_val)
+                    value = transform_value(raw_val, mode)
+                    display_value = f"{int(raw_val)}{suffix}" if suffix else value
+
+                    active_cell = f"{column}{first_row}"
+                    ws[active_cell] = display_value
+                    ws[active_cell].alignment = alignment
+
+                    for row in rows[1:]:
+                        inactive_cell = f"{column}{row}"
+                        ws[inactive_cell] = inactive_val
+                        ws[inactive_cell].alignment = alignment
+
+            # Header information
+            merge_config = {
+                'product': tf200_config.get('product_range'),
+                'po': tf200_config.get('po_range'),
+                'date': tf200_config.get('date_range')
+            }
+
+            if merge_config.get('product'):
+                product_range = merge_config['product']
+                top_left = product_range.split(':')[0]
+                try:
+                    ws.unmerge_cells(product_range)
+                except Exception:
+                    pass
+                ws[top_left] = data['product_name']
+                ws.merge_cells(product_range)
+                ws[top_left].alignment = alignment
+
+            if merge_config.get('po'):
+                po_range = merge_config['po']
+                top_left = po_range.split(':')[0]
+                try:
+                    ws.unmerge_cells(po_range)
+                except Exception:
+                    pass
+                ws[top_left] = data['po_number']
+                ws.merge_cells(po_range)
+                ws[top_left].alignment = alignment
+
+            if merge_config.get('date'):
+                date_range = merge_config['date']
+                top_left = date_range.split(':')[0]
+                try:
+                    formatted_date = datetime.strptime(data['date_code'], "%Y%m%d").strftime("%Y.%m.%d")
+                except Exception:
+                    formatted_date = data.get('date_code', '')
+                try:
+                    ws.unmerge_cells(date_range)
+                except Exception:
+                    pass
+                ws[top_left] = formatted_date
+                ws.merge_cells(date_range)
+                ws[top_left].alignment = alignment
+
+            return True
+        except Exception as e:
+            print(f"Error processing TF200 with openpyxl: {e}")
+            return False
+
+    def create_excel_file(self, product_id: str, data: Dict, output_path: str) -> bool:
+        """Tạo file Excel với hình ảnh Shark Ninja"""
+        try:
+            product_manager = ProductManager()
+            config = product_manager.get_product(product_id)
+            if not config:
+                return False
+
+            template_path = os.path.join(BASE_DIR, config['template'])
+            if not os.path.exists(template_path):
+                return False
+
+            # Use openpyxl for Replit compatibility (xlwings doesn't work on Replit)
+            wb = openpyxl.load_workbook(template_path)
+            ws = wb.active
+
+            if config['type'] == 'tf200':
+                self.process_tf200_openpyxl(ws, config, data)
+            elif config['type'] in ['merge_cells', 'complex', 'unique_row']:
+                self.process_special_product_openpyxl(ws, config, data)
+            else:
+                self.process_standard_product_openpyxl(ws, config, data)
+
+            # Insert Shark Ninja image with openpyxl
+            self._insert_shark_image_openpyxl(ws, config)
+
+            wb.save(output_path)
+            return True
+
+        except Exception as e:
+            print(f"Error creating Excel file: {e}")
+            return False
+
+    def _create_excel_with_xlwings_and_image(self, template_path: str, config: Dict, data: Dict, output_path: str) -> bool:
+        """Tạo file Excel với xlwings và chèn hình ảnh Shark Ninja"""
+        try:
+            import xlwings as xw
+
+            app = xw.App(visible=False)
+            wb = app.books.open(template_path)
+            ws = wb.sheets[0]
+
+            # Disable alerts and screen updating for better performance
+            app.display_alerts = False
+            app.screen_updating = False
+
+            try:
+                # Process data based on product type
+                if config['type'] in ['merge_cells', 'complex', 'unique_row']:
+                    self.process_special_product_xlwings(ws, config, data)
+                else:
+                    self.process_standard_product_xlwings(ws, config, data)
+
+                # Insert Shark Ninja image based on product
+                self._insert_shark_image(ws, config)
+
+                # Save with new name (preserves all content including images)
+                wb.save(output_path)
+
+            finally:
+                wb.close()
+                app.quit()
+
+            return True
+
+        except Exception as e:
+            print(f"Error creating Excel with xlwings: {e}")
+            return False
+
+    def _insert_shark_image(self, ws, config: Dict):
+        """Chèn hình ảnh Shark Ninja vào vị trí phù hợp"""
+        try:
+            import xlwings as xw
+
+            # Đường dẫn đến file hình ảnh
+            shark_image_path = os.path.join(BASE_DIR, 'image', 'shark.png')
+
+            if not os.path.exists(shark_image_path):
+                print(f"Shark image not found at: {shark_image_path}")
+                return
+
+            # Xác định vị trí chèn hình dựa trên sản phẩm
+            image_position = self._get_image_position(config)
+            if not image_position:
+                print(f"No image position defined for product: {config.get('name', 'Unknown')}")
+                return
+
+            # Chèn hình ảnh
+            try:
+                # Xóa hình ảnh cũ nếu có (để tránh trùng lặp)
+                try:
+                    ws.pictures.clear()
+                except:
+                    pass
+
+                # Chèn hình ảnh mới
+                picture = ws.pictures.add(shark_image_path, 
+                                        left=ws.range(image_position['left']).left,
+                                        top=ws.range(image_position['top']).top,
+                                        width=ws.range(image_position['width']).width,
+                                        height=ws.range(image_position['height']).height)
+
+                print(f"Successfully inserted Shark image for {config.get('name', 'Unknown')} at {image_position}")
+
+            except Exception as e:
+                print(f"Error inserting image: {e}")
+
+        except Exception as e:
+            print(f"Error in _insert_shark_image: {e}")
+
+    def _get_image_position(self, config: Dict) -> Dict:
+        """Xác định vị trí chèn hình ảnh dựa trên sản phẩm"""
+        product_name = config.get('name', '')
+
+        # Mapping vị trí hình ảnh cho từng sản phẩm
+        image_positions = {
+            # A1:C3 products
+            'AW261': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'AZ3002': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'FA225': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'HP152': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'HP301': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'HX100': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'IX141': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'LA480': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'LA555': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'LA700': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'LA800': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'NV360': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'UA1450': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'UH205': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'UV440': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'UV730': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'VS100': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'VX100': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'WD161': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'ZD201': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+            'ZU660': {'left': 'A1', 'top': 'A1', 'width': 'C1', 'height': 'A3'},
+
+            # A1:B2 products
+            'HD300': {'left': 'A1', 'top': 'A1', 'width': 'B1', 'height': 'A2'},
+            'HD400': {'left': 'A1', 'top': 'A1', 'width': 'B1', 'height': 'A2'},
+            'HD500': {'left': 'A1', 'top': 'A1', 'width': 'B1', 'height': 'A2'},
+            'HD600': {'left': 'A1', 'top': 'A1', 'width': 'B1', 'height': 'A2'},
+            'HD700': {'left': 'A1', 'top': 'A1', 'width': 'B1', 'height': 'A2'},
+            'IZ381H': {'left': 'A1', 'top': 'A1', 'width': 'B1', 'height': 'A2'},
+
+            # A1:D2 products (special)
+            'SV2000': {'left': 'A1', 'top': 'A1', 'width': 'D1', 'height': 'A2'}
+        }
+
+        return image_positions.get(product_name)
+
+    def _insert_shark_image_openpyxl(self, ws, config: Dict):
+        """Chèn hình ảnh Shark Ninja với openpyxl"""
+        try:
+            from openpyxl.drawing.image import Image
+            from openpyxl.drawing import Drawing
+            from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, TwoCellAnchor
+
+            # Đường dẫn đến file hình ảnh
+            shark_image_path = os.path.join(BASE_DIR, 'image', 'shark.png')
+
+            if not os.path.exists(shark_image_path):
+                print(f"Shark image not found at: {shark_image_path}")
+                return
+
+            # Xác định vị trí chèn hình dựa trên sản phẩm
+            image_position = self._get_image_position(config)
+            if not image_position:
+                print(f"No image position defined for product: {config.get('name', 'Unknown')}")
+                return
+
+            try:
+                # Load hình ảnh
+                img = Image(shark_image_path)
+
+                # Tính toán kích thước và vị trí
+                # Lấy kích thước của range để điều chỉnh hình ảnh
+                left_cell = image_position['left']
+                top_cell = image_position['top']
+                width_cell = image_position['width']
+                height_cell = image_position['height']
+
+                # Tính toán số cột và hàng
+                def cell_to_col_row(cell_ref):
+                    col = 0
+                    row = 0
+                    for char in cell_ref:
+                        if char.isalpha():
+                            col = col * 26 + (ord(char.upper()) - ord('A') + 1)
+                        else:
+                            row = row * 10 + int(char)
+                    return col - 1, row - 1  # Convert to 0-based indexing
+
+                left_col, left_row = cell_to_col_row(left_cell)
+                top_col, top_row = cell_to_col_row(top_cell)
+                width_col, width_row = cell_to_col_row(width_cell)
+                height_col, height_row = cell_to_col_row(height_cell)
+
+                # Tính toán số cột và hàng cho anchor
+                col_span = width_col - left_col + 1
+                row_span = height_row - top_row + 1
+
+                # Tạo anchor để định vị hình ảnh
+                anchor = TwoCellAnchor()
+                anchor._from = AnchorMarker(col=left_col, colOff=0, row=left_row, rowOff=0)
+                anchor.to = AnchorMarker(col=left_col + col_span, colOff=0, row=top_row + row_span, rowOff=0)
+
+                # Gán anchor cho hình ảnh
+                img.anchor = anchor
+
+                # Thêm hình ảnh vào worksheet
+                ws.add_image(img)
+
+                print(f"Successfully inserted Shark image for {config.get('name', 'Unknown')} at {image_position}")
+
+            except Exception as e:
+                print(f"Error inserting image with openpyxl: {e}")
+                # Fallback: thử cách đơn giản hơn
+                try:
+                    img = Image(shark_image_path)
+                    # Resize hình ảnh nếu cần
+                    img.width = 200  # pixels
+                    img.height = 100  # pixels
+                    # Đặt vị trí đơn giản
+                    img.anchor = left_cell
+                    ws.add_image(img)
+                    print(f"Successfully inserted Shark image (fallback method) for {config.get('name', 'Unknown')}")
+                except Exception as e2:
+                    print(f"Fallback image insertion also failed: {e2}")
+
+        except Exception as e:
+            print(f"Error in _insert_shark_image_openpyxl: {e}")
 
 # Khởi tạo managers
 product_manager = ProductManager()
@@ -2163,7 +2864,7 @@ def admin_required(f):
 def index():
     """Trang chủ"""
     products = sorted(product_manager.list_products())  # Sort alphabetically
-    return render_template('index.html', products=products)
+    return render_template('index.html', products=products, active_page='index')
 
 @app.route('/product/<product_id>')
 def product_page(product_id):
@@ -2173,7 +2874,7 @@ def product_page(product_id):
         flash('Sản phẩm không tồn tại!', 'error')
         return redirect(url_for('index'))
 
-    return render_template('product.html', product_id=product_id, product=product)
+    return render_template('product.html', product_id=product_id, product=product, active_page='product')
 
 @app.route('/api/products')
 def api_products():
@@ -2184,7 +2885,9 @@ def api_products():
         products[product_id] = {
             'name': product['name'],
             'type': product['type'],
-            'template_exists': product_manager.validate_template(product_id)
+            'template_exists': product_manager.validate_template(product_id),
+            'requires_weights': product.get('requires_weights', False),
+            'sample_data': product.get('sample_data', {})
         }
     return jsonify(products)
 
@@ -2196,17 +2899,31 @@ def api_generate():
         product_id = data.get('product_id')
         product_data = data.get('data', {})
 
+        product_config = product_manager.get_product(product_id) if product_id else None
+        if not product_config:
+            return jsonify({'success': False, 'message': 'Sản phẩm không tồn tại'})
+
         if not product_id or not product_data:
             return jsonify({'success': False, 'message': 'Thiếu dữ liệu'})
 
         # Validate data
         required_fields = ['product_name', 'po_number', 'date_code', 'serial_numbers']
+        extra_required = product_config.get('required_fields', [])
+        if extra_required:
+            required_fields.extend(extra_required)
+
         for field in required_fields:
             if field not in product_data:
                 return jsonify({'success': False, 'message': f'Thiếu trường: {field}'})
 
         if len(product_data['serial_numbers']) != 5:
             return jsonify({'success': False, 'message': 'Cần đúng 5 serial numbers'})
+
+        if 'gross_weights' in product_data and len(product_data['gross_weights']) != 5:
+            return jsonify({'success': False, 'message': 'TF200 cần đúng 5 giá trị Gross Weight'})
+
+        if 'net_weights' in product_data and len(product_data['net_weights']) != 5:
+            return jsonify({'success': False, 'message': 'TF200 cần đúng 5 giá trị Net Weight'})
 
         # Tạo file
         today_str = datetime.today().strftime("%Y-%m-%d")
@@ -2257,7 +2974,7 @@ def download_file(filename):
 @app.route('/batch')
 def batch_page():
     """Trang xử lý hàng loạt"""
-    return render_template('batch.html')
+    return render_template('batch.html', active_page='batch')
 
 @app.route('/api/batch', methods=['POST'])
 def api_batch():
@@ -2276,7 +2993,8 @@ def api_batch():
             product_id = item.get('product_id')
             product_data = item.get('data', {})
 
-            if not product_id or not product_data:
+            product_config = product_manager.get_product(product_id) if product_id else None
+            if not product_id or not product_data or not product_config:
                 results.append({'success': False, 'message': 'Thiếu dữ liệu'})
                 continue
 
@@ -2286,6 +3004,35 @@ def api_batch():
             output_dir = os.path.join(OUTPUT_DIR, today_str, file_name)
             os.makedirs(output_dir, exist_ok=True)
             output_path = os.path.join(output_dir, f"{file_name}.xlsx")
+
+            extra_required = product_config.get('required_fields', [])
+            missing_extra = [
+                field for field in extra_required
+                if field not in product_data
+            ]
+            if missing_extra:
+                results.append({
+                    'success': False,
+                    'product': product_data.get('product_name', product_id),
+                    'message': f"Thiếu dữ liệu: {', '.join(missing_extra)}"
+                })
+                continue
+
+            if 'gross_weights' in product_data and len(product_data['gross_weights']) != 5:
+                results.append({
+                    'success': False,
+                    'product': product_data.get('product_name', product_id),
+                    'message': 'TF200 cần đúng 5 giá trị Gross Weight'
+                })
+                continue
+
+            if 'net_weights' in product_data and len(product_data['net_weights']) != 5:
+                results.append({
+                    'success': False,
+                    'product': product_data.get('product_name', product_id),
+                    'message': 'TF200 cần đúng 5 giá trị Net Weight'
+                })
+                continue
 
             success = excel_processor.create_excel_file(product_id, product_data, output_path)
 
@@ -2335,7 +3082,7 @@ def login():
         else:
             flash('Tên đăng nhập hoặc mật khẩu không đúng!', 'error')
 
-    return render_template('login.html')
+    return render_template('login.html', active_page='login', body_class='auth-layout')
 
 @app.route('/logout')
 def logout():
@@ -2349,7 +3096,7 @@ def logout():
 def dashboard():
     """Dashboard analytics"""
     dashboard_data = analytics_manager.get_dashboard_data()
-    return render_template('dashboard.html', data=dashboard_data)
+    return render_template('dashboard.html', data=dashboard_data, active_page='dashboard')
 
 @app.route('/users')
 @admin_required
@@ -2363,7 +3110,7 @@ def users_page():
         ''')
         users = cursor.fetchall()
 
-    return render_template('users.html', users=users)
+    return render_template('users.html', users=users, active_page='users')
 
 @app.route('/api/users', methods=['GET'])
 @admin_required
@@ -2416,11 +3163,45 @@ def create_user():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+@admin_required
+def delete_user(user_id):
+    """API xóa người dùng"""
+    try:
+        # Prevent deleting self
+        if session.get('user_id') == user_id:
+            return jsonify({'success': False, 'message': 'Không thể tự xóa chính mình!'})
+
+        success = user_manager.delete_user(user_id)
+        if success:
+            return jsonify({'success': True, 'message': 'Xóa người dùng thành công!'})
+        else:
+            return jsonify({'success': False, 'message': 'Không tìm thấy người dùng hoặc lỗi khi xóa!'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+
+@app.route('/api/users/<int:user_id>', methods=['PUT'])
+@admin_required
+def update_user(user_id):
+    """API cập nhật người dùng"""
+    try:
+        data = request.get_json()
+        success = user_manager.update_user(user_id, data)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Cập nhật thành công!'})
+        else:
+            return jsonify({'success': False, 'message': 'Lỗi khi cập nhật!'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+
 @app.route('/bulk')
 @login_required
 def bulk_page():
     """Trang bulk operations"""
-    return render_template('bulk.html')
+    return render_template('bulk.html', active_page='bulk')
 
 @app.route('/api/bulk/generate', methods=['POST'])
 @login_required
@@ -2765,7 +3546,7 @@ def get_import_status():
 @login_required
 def import_page():
     """Trang import Excel riêng"""
-    return render_template('import.html')
+    return render_template('import.html', active_page='import')
 
 @app.route('/analytics')
 @login_required
@@ -2774,7 +3555,7 @@ def analytics_page():
     days = request.args.get('days', 30, type=int)
     dashboard_data = analytics_manager.get_dashboard_data(days)
 
-    return render_template('analytics.html', data=dashboard_data, days=days)
+    return render_template('analytics.html', data=dashboard_data, days=days, active_page='analytics')
 
 @app.route('/api/analytics/operations')
 @login_required
@@ -2872,7 +3653,64 @@ def get_stats():
 @app.route('/config')
 def config_page():
     """Trang cấu hình"""
-    return render_template('config.html')
+    return render_template('config.html', active_page='config')
+
+@app.route('/api/product-image/<product_id>')
+def get_product_image(product_id):
+    """API lấy hình ảnh sản phẩm"""
+    try:
+        # Tìm file ảnh trong thư mục sản phẩm
+        product_dir = os.path.join(PRODUCTS_DIR, product_id)
+        
+        if not os.path.exists(product_dir):
+            return jsonify({'success': False, 'message': 'Sản phẩm không tồn tại'}), 404
+        
+        # Tìm file ảnh (png, jpg, jpeg)
+        image_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+        image_path = None
+        
+        for file in os.listdir(product_dir):
+            if any(file.lower().endswith(ext) for ext in image_extensions):
+                image_path = os.path.join(product_dir, file)
+                break
+        
+        if image_path and os.path.exists(image_path):
+            return send_file(image_path, mimetype='image/png')
+        else:
+            # Trả về ảnh mặc định nếu không tìm thấy
+            default_image = os.path.join(BASE_DIR, 'image', 'shark.png')
+            if os.path.exists(default_image):
+                return send_file(default_image, mimetype='image/png')
+            return jsonify({'success': False, 'message': 'Không tìm thấy hình ảnh'}), 404
+            
+    except Exception as e:
+        logger.error(f"Error getting product image: {str(e)}")
+        return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+
+@app.route('/api/files-count')
+def api_files_count():
+    """API đếm số file đã tạo trong thư mục output"""
+    try:
+        file_count = 0
+        
+        # Đếm tất cả file .xlsx trong thư mục output và các thư mục con
+        if os.path.exists(OUTPUT_DIR):
+            for root, dirs, files in os.walk(OUTPUT_DIR):
+                # Chỉ đếm file .xlsx (file Excel đã tạo)
+                file_count += sum(1 for file in files if file.endswith('.xlsx'))
+        
+        return jsonify({
+            'success': True,
+            'count': file_count
+        })
+    
+    except Exception as e:
+        logger.error(f"Error counting files: {str(e)}")
+        return jsonify({
+            'success': False,
+            'count': 0,
+            'message': f'Lỗi: {str(e)}'
+        })
 
 # Initialize admin user and bulk manager
 def initialize_app():

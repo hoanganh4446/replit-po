@@ -1,222 +1,248 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xử lý hàng loạt - Hệ thống PO</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151f32',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 5 (Retained for functionality) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (Retained for legacy icons) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Phase 1 Enhancements -->
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom Scripts -->
     <link rel="stylesheet" href="/static/enhancements.css">
     <script src="/static/enhancements.js" defer></script>
-    
-    <!-- Batch Auto-save -->
     <script src="/static/batch-autosave.js" defer></script>
-    
+    <link rel="stylesheet" href="/static/notifications.css">
+    <script src="/static/notifications.js" defer></script>
+
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
+        /* Utility to hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-        
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        /* --- CSS Variables --- */
+        :root {
+            --background-color: #050509;
+            --card-background: #0f172a;
+            /* slate-900 */
+            --border-color: #1e293b;
+            /* slate-800 */
+            --text-color: #cbd5e1;
+            /* slate-300 */
+            --text-color-secondary: #64748b;
+            /* slate-500 */
+            --primary-color: #6366f1;
+            /* indigo-500 */
+            --primary-text-color: #ffffff;
+            --button-hover: #1e293b;
+            /* slate-800 */
+            --button-active: #334155;
+            /* slate-700 */
+            --success-color: #10b981;
+            /* emerald-500 */
+            --warning-color: #f59e0b;
+            /* amber-500 */
+            --danger-color: #ef4444;
+            /* red-500 */
+        }
+
+        /* --- Reset và Kiểu dáng Chung --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
             position: relative;
             overflow-x: hidden;
         }
-        
-        /* Animated background particles */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
+
+        .container-fluid {
             width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
-            animation: backgroundFloat 20s ease-in-out infinite;
-            z-index: -1;
+            padding: 0 1.5rem;
         }
-        
-        @keyframes backgroundFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(1deg); }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
         }
-        
+
         .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            box-shadow: 
-                0 25px 50px rgba(0,0,0,0.15),
-                0 0 0 1px rgba(255,255,255,0.1);
-            margin: 20px auto;
-            padding: 40px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            animation: containerFloat 6s ease-in-out infinite;
-        }
-        
-        @keyframes containerFloat {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid var(--primary-color);
-        }
-        
-        .batch-section {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 25px;
-            padding: 35px;
-            margin-bottom: 35px;
-            box-shadow: 
-                0 15px 35px rgba(0,0,0,0.1),
-                0 0 0 1px rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            background-color: var(--background-color);
+            padding: 3rem 0;
             position: relative;
-            overflow: hidden;
         }
-        
-        .batch-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #667eea, #764ba2);
-            background-size: 300% 100%;
-            animation: cardShimmer 4s ease-in-out infinite;
+
+        .header {
+            background-color: var(--background-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
         }
-        
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .header p {
+            color: var(--text-color-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .batch-section {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .batch-section h4 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
         /* Enhanced Product Selector Styles */
         .product-selector-card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 
-                0 15px 30px rgba(0,0,0,0.08),
-                0 0 0 1px rgba(255,255,255,0.1);
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
         }
-        
-        .product-selector-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 20px;
-            padding: 3px;
-            background: linear-gradient(135deg, #667eea, #764ba2, #667eea);
-            background-size: 200% 200%;
-            animation: cardShimmer 3s ease-in-out infinite;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        @keyframes cardShimmer {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-            100% { background-position: 0% 0%; }
-        }
-        
+
         .product-selector-card .card-body {
             padding: 20px;
             position: relative;
             z-index: 2;
         }
-        
+
         /* Fix button hover border */
         .btn-outline-danger {
             border-radius: 0 15px 15px 0;
             border-left: none;
             border-color: rgba(220, 53, 69, 0.3);
-            background: rgba(255,255,255,0.9);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
         }
-        
+
         .btn-outline-danger:hover {
             background: rgba(220, 53, 69, 0.1);
             border-color: rgba(220, 53, 69, 0.5);
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
         }
-        
+
         .enhanced-product-selector .search-section,
         .enhanced-product-selector .filter-section {
             position: relative;
         }
-        
+
         .enhanced-product-selector .search-input-group {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             overflow: hidden;
         }
-        
+
         .enhanced-product-selector .search-input-group .input-group-text {
             border: none;
             font-weight: bold;
         }
-        
+
         .enhanced-product-selector .search-input {
             border: none;
             font-size: 1rem;
             padding: 12px 15px;
         }
-        
+
         .enhanced-product-selector .search-input:focus {
             box-shadow: none;
             border-color: transparent;
         }
-        
+
         .enhanced-product-selector .filter-buttons {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             overflow: hidden;
         }
-        
+
         .enhanced-product-selector .filter-btn {
             border: none;
             font-weight: 600;
             padding: 12px 15px;
             transition: all 0.3s ease;
         }
-        
+
         .enhanced-product-selector .filter-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
-        
+
         .enhanced-product-selector .filter-btn.active {
             background: var(--primary-color);
             color: white;
             box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
         }
-        
+
         .enhanced-product-selector .view-mode-toggle {
             display: flex;
             align-items: center;
@@ -225,25 +251,25 @@
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 10px;
         }
-        
+
         .enhanced-product-selector .view-mode-btn {
             border: none;
             font-weight: 600;
             padding: 10px 15px;
             transition: all 0.3s ease;
         }
-        
+
         .enhanced-product-selector .view-mode-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
-        
+
         .enhanced-product-selector .view-mode-btn.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-color: #667eea;
         }
-        
+
         /* Products Grid */
         .products-grid {
             display: grid;
@@ -251,120 +277,53 @@
             gap: 12px;
             margin-top: 15px;
         }
-        
+
         .products-grid.grid-mode {
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         }
-        
+
         .products-grid.list-mode {
             grid-template-columns: 1fr;
         }
-        
+
         .products-grid.compact-mode {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         }
-        
+
         .product-item {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 15px;
-            box-shadow: 
-                0 6px 20px rgba(0,0,0,0.06),
-                0 0 0 1px rgba(255,255,255,0.5);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            overflow: hidden;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.2s ease;
             cursor: pointer;
-            position: relative;
-            backdrop-filter: blur(5px);
         }
-        
-        .product-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 15px;
-            padding: 2px;
-            background: linear-gradient(135deg, #667eea, #764ba2, #667eea);
-            background-size: 200% 200%;
-            animation: shimmer 3s ease-in-out infinite;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .product-item-body {
-            position: relative;
-            z-index: 2;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-            100% { background-position: 0% 0%; }
-        }
-        
+
         .product-item:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 
-                0 12px 30px rgba(0,0,0,0.12),
-                0 0 0 1px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-color);
         }
-        
-        .product-item.selected::before {
-            background: linear-gradient(135deg, #28a745, #20c997, #28a745);
-            animation: shimmer-selected 2s ease-in-out infinite;
+
+        .product-item.selected {
+            border-color: var(--primary-color);
+            background-color: #1a1a1a;
         }
-        
-        @keyframes shimmer-selected {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-            100% { background-position: 0% 0%; }
-        }
-        
-        .product-item-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .product-item-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: headerShine 4s ease-in-out infinite;
-        }
-        
-        @keyframes headerShine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-        
+
         .product-item-body {
             padding: 12px;
         }
-        
+
         .product-checkbox {
             margin-bottom: 10px;
         }
-        
+
         .product-name {
             font-weight: bold;
             font-size: 1.1rem;
             margin-bottom: 5px;
         }
-        
+
         .product-type {
             display: inline-block;
             padding: 3px 8px;
@@ -374,618 +333,1063 @@
             color: var(--primary-color);
             margin-bottom: 8px;
         }
-        
+
         .product-template-status {
             font-size: 0.9rem;
             color: #666;
         }
-        
+
         .product-template-status.has-template {
             color: var(--success-color);
         }
-        
+
         .product-template-status.no-template {
             color: var(--danger-color);
         }
-        
+
         .batch-item {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 2px solid transparent;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 
-                0 8px 25px rgba(0,0,0,0.08),
-                0 0 0 1px rgba(255,255,255,0.5);
-            backdrop-filter: blur(5px);
-            position: relative;
-            overflow: hidden;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
         }
-        
-        .batch-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-        
+
         .batch-item:hover {
-            border-color: #667eea;
-            box-shadow: 
-                0 15px 35px rgba(0,0,0,0.12),
-                0 0 0 2px rgba(102, 126, 234, 0.2);
-            transform: translateY(-3px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
-        
-        .batch-item.selected {
-            border-color: var(--success-color);
-            background: #e8f5e8;
-        }
-        
+
         .batch-item.collapsed {
             padding: 10px 20px;
         }
-        
+
         .batch-item.expanded {
             padding: 20px;
         }
-        
+
         .batch-summary {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
         }
-        
+
         .batch-summary .product-template-info {
             flex: 1;
         }
-        
+
         .batch-summary .product-template-info h6 {
             margin: 0;
             color: var(--primary-color);
         }
-        
+
         .batch-summary .product-template-info .details {
             font-size: 0.9em;
             color: #666;
             margin-top: 5px;
         }
-        
+
         .batch-summary .controls {
             display: flex;
             gap: 10px;
             align-items: center;
         }
-        
+
         .file-item {
-            background: white;
+            background-color: #1a1a1a;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid #e9ecef;
+            padding: 1rem;
+            margin: 0.75rem 0;
         }
-        
+
         .file-item.collapsed {
             padding: 8px 15px;
         }
-        
+
         .file-item.expanded {
             padding: 15px;
         }
-        
+
         .file-summary {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 5px 0;
         }
-        
+
         .file-summary .file-info {
             flex: 1;
         }
-        
+
         .file-summary .file-name {
             font-weight: bold;
-            color: var(--primary-color);
+            color: var(--text-color);
             margin: 0;
         }
-        
+
         .file-summary .file-status {
             font-size: 0.8em;
-            color: #666;
+            color: var(--text-color-secondary);
         }
-        
+
         .file-summary .file-controls {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-        
+
         .file-summary .file-controls .btn {
             margin-right: 3px;
         }
-        
+
         .sort-controls {
-            margin-bottom: 20px;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            border: 1px solid #dee2e6;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        
-        .sort-controls .form-label {
-            font-weight: 600;
-            color: var(--primary-color);
-            font-size: 0.9em;
-        }
-        
-        .sort-controls .form-select-sm {
-            border-radius: 8px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-        
-        .sort-controls .form-select-sm:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-        }
-        
-        .sort-controls .btn-sm {
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .sort-controls .btn-sm:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
+
         .filter-options {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
         }
-        
-        .filter-options .form-check-label {
-            font-weight: 500;
-            color: var(--primary-color);
-        }
-        
-        .filter-options .form-check-input:checked {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-        }
-        
-        .hidden-products {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 10px;
-        }
-        
-        .hidden-product-item {
-            background: white;
+
+        /* Taskbar Styles */
+        .taskbar {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 0.75rem 1rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .taskbar .time {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .taskbar .username {
+            color: var(--text-color-secondary);
+            font-weight: 500;
+        }
+
+        .taskbar .dark-mode-toggle {
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .taskbar .dark-mode-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .taskbar .logout-btn {
+            background-color: #1a1a1a;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .taskbar .logout-btn:hover {
+            background-color: #ff6b6b;
+            color: #ffffff;
+        }
+
+        /* Stats Cards */
+        .stats-card {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem 0.75rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 100px;
+            flex: 1;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-number {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stats-label {
+            color: var(--text-color-secondary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        /* Alert Custom */
+        .alert-custom {
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: var(--card-background);
+            color: var(--text-color);
+        }
+
+        .alert-custom h5 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Search & Sort Styles */
+        .search-input-group {
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-input-group .input-group-text {
+            background-color: var(--primary-color);
+            border: none;
+            color: var(--primary-text-color);
+            padding: 0.75rem 1rem;
+        }
+
+        .search-input {
+            background-color: var(--card-background);
+            border: none;
+            color: var(--text-color);
+            padding: 0.75rem 1rem;
+            flex: 1;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background-color: var(--card-background);
+            color: var(--text-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-color-secondary);
+        }
+
+        .search-input-group .btn-outline-danger {
+            background-color: var(--card-background);
+            border: none;
+            color: #ff6b6b;
+            padding: 0.75rem 1rem;
+        }
+
+        .search-input-group .btn-outline-danger:hover {
+            background-color: var(--button-hover);
+            color: #ff6b6b;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #050505;
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 0 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-color-secondary);
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden-products {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        .hidden-product-item {
+            background-color: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .btn-custom {
-            border-radius: 20px;
-            padding: 15px 30px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-custom::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        
-        .btn-custom:hover::before {
-            left: 100%;
+
+        .btn-custom svg,
+        .btn-custom i {
+            width: 18px;
+            height: 18px;
         }
-        
-        .btn-custom:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        
-        .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        /* Primary button - White background */
+        .btn-primary-custom,
+        .btn.btn-primary {
+            background-color: var(--primary-color);
+            color: var(--primary-text-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary-custom:hover,
+        .btn.btn-primary:hover {
+            background-color: #e0e0e0;
+            border-color: #e0e0e0;
+        }
+
+        /* Secondary/Dark buttons */
+        .btn-secondary,
+        .btn-outline-secondary {
+            background-color: #252525;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover,
+        .btn-outline-secondary:hover {
+            background-color: var(--button-hover);
+            border-color: var(--button-hover);
+        }
+
+        /* Success/Info/Warning buttons - Now monochrome */
+        .btn-success,
+        .btn-info,
+        .btn-warning,
+        .btn-outline-success,
+        .btn-outline-info,
+        .btn-outline-warning,
+        .btn-outline-primary {
+            background-color: var(--card-background);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-success:hover,
+        .btn-info:hover,
+        .btn-warning:hover,
+        .btn-outline-success:hover,
+        .btn-outline-info:hover,
+        .btn-outline-warning:hover,
+        .btn-outline-primary:hover {
+            background-color: var(--button-hover);
+            border-color: var(--button-hover);
+            color: var(--text-color);
+        }
+
+        .btn-success-custom {
+            background-color: var(--primary-color);
+            color: var(--primary-text-color);
             border: none;
-            color: white;
         }
-        
-        .btn-primary-custom:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            color: white;
+
+        .btn-success-custom:hover {
+            background-color: #e0e0e0;
+            color: var(--primary-text-color);
         }
-        
+
+        .btn-success-custom:disabled {
+            background-color: #555555;
+            color: #999999;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Danger button - Keep subtle red for critical actions */
+        .btn-danger,
+        .btn-outline-danger {
+            background-color: #1a1a1a;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .btn-danger:hover,
+        .btn-outline-danger:hover {
+            background-color: #ff6b6b;
+            color: #ffffff;
+            border-color: #ff6b6b;
+        }
+
         .form-control {
-            border-radius: 15px;
-            border: 2px solid rgba(102, 126, 234, 0.2);
-            padding: 15px 20px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
             font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
         }
-        
+
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 
-                0 0 0 3px rgba(102, 126, 234, 0.1),
-                0 8px 25px rgba(102, 126, 234, 0.15);
-            background: rgba(255,255,255,1);
-            transform: translateY(-2px);
+            outline: none;
+            background-color: var(--card-background);
+            border-color: var(--primary-color);
+            color: var(--text-color);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
         }
-        
-        .form-control:hover {
-            border-color: rgba(102, 126, 234, 0.4);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+
+        .form-control::placeholder {
+            color: var(--text-color-secondary);
         }
-        
+
+        .form-label {
+            color: var(--text-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
         .loading {
             display: none;
             text-align: center;
-            padding: 40px;
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 20px;
-            box-shadow: 
-                0 15px 35px rgba(0,0,0,0.1),
-                0 0 0 1px rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            padding: 20px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             margin: 20px 0;
         }
-        
+
         .spinner-border {
             width: 3rem;
             height: 3rem;
             border-width: 4px;
-            border-color: rgba(102, 126, 234, 0.3);
-            border-top-color: #667eea;
-            animation: spin 1s linear infinite;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
+
         .progress-section {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 20px;
-            padding: 30px;
-            margin-top: 30px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
             display: none;
-            box-shadow: 
-                0 10px 30px rgba(0,0,0,0.08),
-                0 0 0 1px rgba(255,255,255,0.5);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
         }
-        
+
         .progress {
-            height: 12px;
-            border-radius: 10px;
-            background: rgba(102, 126, 234, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            background-color: #333333;
             overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .progress-bar {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
+            background-color: var(--primary-color);
             transition: width 0.6s ease;
-            position: relative;
-            overflow: hidden;
         }
-        
-        .progress-bar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: progressShine 2s ease-in-out infinite;
-        }
-        
-        @keyframes progressShine {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
+
         .result-item {
-            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            box-shadow: 
-                0 6px 20px rgba(0,0,0,0.08),
-                0 0 0 1px rgba(255,255,255,0.5);
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
         }
-        
+
         .result-item:hover {
-            transform: translateX(5px);
-            box-shadow: 
-                0 10px 30px rgba(0,0,0,0.12),
-                0 0 0 1px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
-        
+
         .result-item.success {
-            border-left-color: #27ae60;
+            border-left: 4px solid #27ae60;
         }
-        
+
         .result-item.error {
-            border-left-color: #e74c3c;
+            border-left: 4px solid #e74c3c;
         }
-        
-        .template-selector {
-            background: #e9ecef;
-            border-radius: 10px;
-            padding: 15px;
+
+        /* Results management section */
+        .results-management-section {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .results-header {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        
-        .template-item {
+
+        .results-controls {
             display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
             align-items: center;
-            padding: 10px;
-            margin-bottom: 10px;
-            background: white;
+        }
+
+        .results-controls .btn {
             border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .results-controls .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .results-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .results-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .results-list::-webkit-scrollbar-track {
+            background: var(--card-background);
+            border-radius: 3px;
+        }
+
+        .results-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .results-list::-webkit-scrollbar-thumb:hover {
+            background: #e0e0e0;
+        }
+
+        .result-item.selectable {
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
-        .template-item:hover {
-            background: #f8f9fa;
+
+        .result-item.selectable:hover {
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
             transform: translateX(5px);
         }
-        
-        .template-item.selected {
-            background: var(--secondary-color);
-            color: white;
+
+        .result-item.selectable .form-check-input {
+            transform: scale(1.2);
         }
-        
-        .serial-generator {
-            background: #fff3cd;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
+
+        .result-item.selectable .form-check-input:checked {
+            background-color: #28a745;
+            border-color: #28a745;
         }
-        
+
+        .failed-results-section {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-left: 4px solid #e74c3c;
+            margin-top: 1rem;
+        }
+
+        .failed-results-section h6 {
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .results-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .results-controls .btn {
+                margin-bottom: 5px;
+            }
+
+            .results-header .d-flex {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .results-header .d-flex h5 {
+                margin-bottom: 15px;
+                text-align: center;
+            }
+        }
+
+        .template-selector {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-color);
+        }
+
+        .modal-header {
+            background-color: var(--card-background);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            color: var(--text-color);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            background-color: var(--card-background);
+            color: var(--text-color);
+        }
+
+        .modal-footer {
+            background-color: var(--card-background);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+
+        .btn-close {
+            filter: invert(1);
+        }
+
+        /* Badge Styles */
+        .badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .badge.bg-primary {
+            background-color: var(--primary-color) !important;
+            color: var(--primary-text-color) !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: #555555 !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
         @media (max-width: 768px) {
             .main-container {
-                margin: 10px;
-                padding: 20px;
+                padding: 1.5rem 0;
             }
-            
+
             .batch-section {
-                padding: 20px;
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .taskbar {
+                top: 0.5rem;
+                right: 0.5rem;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+                gap: 0.5rem;
+            }
+
+            .taskbar .time {
+                display: none;
+            }
+
+            .taskbar .logout-btn {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .results-controls {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="main-container">
-                    <!-- Header -->
-                    <div class="header">
-                        <h1><i class="fas fa-layer-group"></i> Xử lý hàng loạt</h1>
-                        <p>Tạo nhiều file PO cùng lúc với dữ liệu tùy chỉnh</p>
-                        <a href="/" class="btn btn-outline-primary btn-custom">
-                            <i class="fas fa-home"></i> Trang chủ
-                        </a>
-                        <a href="/import" class="btn btn-primary-custom btn-custom ms-2">
-                            <i class="fas fa-upload"></i> Truy cập Import
-                        </a>
-                    </div>
-                    
-                    <!-- Enhanced Product Selector -->
-                    <div class="card product-selector-card">
-                        <div class="card-body">
-                            <div class="row align-items-center mb-4">
-                                <div class="col-lg-8">
-                                    <h5 class="mb-1">
-                                        Chọn sản phẩm
-                                    </h5>
-                                    <small class="text-muted">Chọn sản phẩm để xử lý hàng loạt</small>
-                                </div>
-                                <div class="col-lg-4 text-end">
-                                    <div class="batch-stats">
-                                        <span class="badge bg-primary me-1" id="selectedCount">0</span>
-                                        <span class="badge bg-secondary" id="totalCount">26</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Enhanced Product Selector -->
-                            <div class="enhanced-product-selector">
-                                <!-- Search & Filter -->
-                                <div class="row mb-2">
-                                    <div class="col-lg-8 mb-2 mb-lg-0">
-                                        <div class="input-group search-input-group">
-                                            <span class="input-group-text bg-primary text-white">
-                                                <i class="fas fa-search"></i>
-                                            </span>
-                                            <input type="text" class="form-control search-input" id="batchSearchInput" 
-                                                   placeholder="Tìm sản phẩm..." onkeyup="searchBatchProducts()">
-                                            <button class="btn btn-outline-danger" type="button" onclick="clearBatchSearch()" title="Xóa">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-lg-4">
-                                        <div class="btn-group w-100 filter-buttons" role="group">
-                                            <button class="btn btn-outline-primary btn-sm filter-btn active" onclick="filterBatchProducts('all')" title="Tất cả">
-                                                Tất cả
-                                            </button>
-                                            <button class="btn btn-outline-primary btn-sm filter-btn" onclick="filterBatchProducts('HD')" title="HD">
-                                                HD
-                                            </button>
-                                            <button class="btn btn-outline-primary btn-sm filter-btn" onclick="filterBatchProducts('LA')" title="LA">
-                                                LA
-                                            </button>
-                                            <button class="btn btn-outline-primary btn-sm filter-btn" onclick="filterBatchProducts('UV')" title="UV">
-                                                UV
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- View Mode Toggle -->
-                                <div class="row mb-2">
-                                    <div class="col-12">
-                                        <div class="btn-group float-end" role="group">
-                                            <button class="btn btn-outline-primary btn-sm view-mode-btn active" onclick="setBatchViewMode('grid')" title="Lưới">
-                                                <i class="fas fa-th"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary btn-sm view-mode-btn" onclick="setBatchViewMode('list')" title="Danh sách">
-                                                <i class="fas fa-list"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary btn-sm view-mode-btn" onclick="setBatchViewMode('compact')" title="Compact">
-                                                <i class="fas fa-compress-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Product Grid -->
-                                <div class="template-selector" id="templateSelector">
-                                    <div id="templateList" class="products-grid"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Batch Items -->
-                    <div class="batch-section" id="batchItems" style="display: none;">
-                        <h4><i class="fas fa-edit"></i> Thông tin sản phẩm</h4>
-                        
-                        <!-- Sort Controls -->
-                        <div class="sort-controls">
-                            <div class="row align-items-end">
-                                <div class="col-md-4">
-                                    <label class="form-label mb-1">Sắp xếp theo:</label>
-                                    <select class="form-select form-select-sm" id="sortSelect" onchange="sortProducts()">
-                                        <option value="name">Tên sản phẩm</option>
-                                        <option value="time">Thời gian nhập</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()">
-                                            <i class="fas fa-compress-alt"></i> Thu nhỏ tất cả
-                                        </button>
-                                        <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()">
-                                            <i class="fas fa-expand-alt"></i> Mở rộng tất cả
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-end">
-                                        <small class="text-muted">
-                                            <i class="fas fa-info-circle"></i> 
-                                            Sử dụng các nút để quản lý hiển thị sản phẩm
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Filter Options -->
-                        <div class="filter-options">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="hideCompleted" onchange="toggleCompletedFilter()">
-                                <label class="form-check-label" for="hideCompleted">
-                                    Ẩn sản phẩm đã hoàn thành
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div id="batchItemsList"></div>
-                        
-                        <!-- Hidden Products Section -->
-                        <div class="hidden-products" id="hiddenProducts" style="display: none;">
-                            <h6><i class="fas fa-eye-slash"></i> Sản phẩm đã ẩn</h6>
-                            <div id="hiddenProductsList"></div>
-                        </div>
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <button class="btn btn-primary-custom btn-custom w-100" onclick="processBatch()">
-                                    <i class="fas fa-play"></i> Xử lý hàng loạt (<span id="totalFiles">0</span> files)
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-secondary btn-custom w-100" onclick="clearAll()">
-                                    <i class="fas fa-trash"></i> Xóa tất cả
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
 
-                    
-                    <!-- Loading -->
-                    <div class="loading" id="loading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Đang xử lý...</span>
-                        </div>
-                        <p class="mt-3">Đang xử lý hàng loạt...</p>
+<body class="h-full bg-[#050509] text-slate-300 font-sans overflow-hidden">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="flex w-64 flex-col border-r border-slate-800 bg-[#050509] hidden md:flex transition-all duration-300">
+            <!-- Brand -->
+            <div id="sidebarHeader"
+                class="flex h-16 items-center px-4 border-b border-slate-800 transition-all duration-300">
+                <div class="flex items-center overflow-hidden whitespace-nowrap">
+                    <div
+                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-400">
+                        <div class="h-4 w-4 rounded-full bg-black"></div>
                     </div>
-                    
-                    <!-- Progress -->
-                    <div class="progress-section" id="progressSection">
-                        <h5><i class="fas fa-tasks"></i> Tiến trình xử lý</h5>
-                        <div class="progress mb-3">
-                            <div class="progress-bar" role="progressbar" style="width: 0%" id="progressBar"></div>
-                        </div>
-                        <div id="progressText">Chuẩn bị...</div>
+                    <div class="ml-3 sidebar-text transition-opacity duration-300">
+                        <div class="text-[15px] font-semibold tracking-tight text-white">PO System</div>
                     </div>
-                    
-                    <!-- Results -->
-                    <div id="results"></div>
                 </div>
             </div>
-        </div>
+            <!-- Nav -->
+            <nav class="flex-1 overflow-y-auto px-3 pt-4 pb-6">
+                <div class="space-y-1 text-[13px]">
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="layout-dashboard"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Tổng quan</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg bg-slate-100/5 px-3 py-2 text-slate-50 sidebar-btn">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="layers"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Xử lý hàng loạt</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/dashboard'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="bar-chart-2"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Dashboard</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/analytics'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="pie-chart"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Analytics</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/bulk'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="layers"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Bulk Operation</span>
+                    </button>
+                    {% if session.role == 'admin' %}
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="window.location.href='/users'">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="users"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Quản lý người dùng</span>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="mt-6 border-t border-slate-800 pt-4 space-y-1">
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-[13px] text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="showConfigModal()">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="settings"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Cấu hình</span>
+                    </button>
+                    <button
+                        class="flex w-full items-center rounded-lg px-3 py-2 text-[13px] text-slate-300 hover:bg-slate-900/60 sidebar-btn"
+                        onclick="showHelpModal()">
+                        <span class="mr-3 flex h-5 w-5 items-center justify-center"><i data-lucide="help-circle"
+                                class="h-4 w-4"></i></span>
+                        <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Trợ giúp</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Toggle Button Area -->
+            <div id="sidebarToggleArea" class="px-3 py-2 border-t border-slate-800 transition-all duration-300">
+                <button onclick="toggleSidebar()"
+                    class="flex w-full items-center rounded-lg px-3 py-2 text-slate-400 hover:bg-slate-900/60 hover:text-white transition-colors focus:outline-none sidebar-btn">
+                    <span class="mr-3 flex h-5 w-5 items-center justify-center shrink-0">
+                        <i data-lucide="chevron-left" id="sidebarToggleIcon"
+                            class="h-5 w-5 transition-transform duration-300"></i>
+                    </span>
+                    <span class="flex-1 text-left font-medium tracking-tight sidebar-text">Thu gọn</span>
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div id="sidebarFooter" class="border-t border-slate-800 px-4 py-3 transition-all duration-300">
+                <div class="flex items-center gap-3 transition-all duration-300">
+                    <div
+                        class="h-8 w-8 shrink-0 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
+                        {% if session.username %}{{ session.username[:2].upper() }}{% else %}GU{% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0 sidebar-text transition-opacity duration-300">
+                        <div class="text-[13px] font-medium text-white truncate">{% if session.username %}{{
+                            session.username }}{% else %}Guest{% endif %}</div>
+                        <div class="text-[11px] text-slate-500 truncate">Online</div>
+                    </div>
+                    <button onclick="logout()" class="shrink-0 text-slate-400 hover:text-red-400 transition-colors"><i
+                            data-lucide="log-out" class="h-4 w-4"></i></button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 bg-[#050509] flex flex-col h-full overflow-hidden relative">
+            <!-- Top Bar -->
+            <div class="flex h-16 items-center justify-between border-b border-slate-800 px-6 shrink-0">
+                <div class="flex flex-1 justify-center">
+                    <div
+                        class="flex w-full max-w-3xl items-center rounded-xl border border-slate-800 bg-[#050509] px-4 py-2 focus-within:border-slate-600 transition-colors">
+                        <i data-lucide="search" class="h-4 w-4 text-slate-500 mr-2"></i>
+                        <input
+                            class="flex-1 bg-transparent text-[13px] text-slate-300 placeholder:text-slate-500 focus:outline-none"
+                            id="searchInput" placeholder="Tìm kiếm sản phẩm..." onkeyup="searchBatchProducts()"
+                            autocomplete="off">
+                        <button class="text-slate-500 hover:text-slate-300" onclick="clearBatchSearch()"
+                            title="Xóa tìm kiếm">
+                            <i data-lucide="x" class="h-3 w-3"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="ml-6 flex items-center space-x-5 text-[13px]">
+                    <button
+                        class="relative flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-900 transition-colors">
+                        <i data-lucide="bell" class="h-4 w-4 text-slate-300"></i>
+                        <span class="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                    </button>
+                    <div class="text-slate-400 text-xs" id="currentTime"></div>
+                </div>
+            </div>
+
+            <!-- Stats & Filters -->
+            <div class="border-b border-slate-800 px-8 py-4 shrink-0">
+                <div class="flex flex-col gap-3 md:flex-row md:items-center justify-between">
+                    <!-- Stats -->
+                    <div class="flex gap-4 text-[13px]">
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <span class="font-medium text-slate-200" id="selectedCount">0</span> Đã chọn
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <span class="font-medium text-slate-200" id="totalCount">0</span> Tổng cộng
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex gap-2">
+                        <div class="flex gap-2" id="dynamicFilterContainer">
+                            <!-- Dynamic buttons will be inserted here -->
+                        </div>
+
+                        <div class="flex rounded-lg border border-slate-800 bg-black p-1">
+                            <button
+                                class="px-3 py-1 rounded-md text-[12px] font-medium bg-slate-800 text-white shadow-sm transition-all"
+                                onclick="setBatchViewMode('grid')"><i data-lucide="grid" class="h-3 w-3"></i></button>
+                            <button
+                                class="px-3 py-1 rounded-md text-[12px] font-medium text-slate-400 hover:text-slate-200 transition-all"
+                                onclick="setBatchViewMode('list')"><i data-lucide="list" class="h-3 w-3"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto px-6 pb-8 pt-6 lg:px-8" id="mainContent">
+
+                <!-- Product Grid -->
+                <div id="products-grid" class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    <!-- Items will be injected here -->
+                </div>
+
+                <!-- Batch Items -->
+                <div class="batch-section mt-8" id="batchItems" style="display: none;">
+                    <h4><i class="fas fa-edit"></i> Thông tin sản phẩm</h4>
+
+                    <!-- Sort Controls -->
+                    <div class="sort-controls">
+                        <div class="row align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Sắp xếp theo:</label>
+                                <select class="form-select form-select-sm" id="sortSelect" onchange="sortProducts()">
+                                    <option value="name">Tên sản phẩm</option>
+                                    <option value="time">Thời gian nhập</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()">
+                                        <i class="fas fa-compress-alt"></i> Thu nhỏ tất cả
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()">
+                                        <i class="fas fa-expand-alt"></i> Mở rộng tất cả
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i>
+                                        Sử dụng các nút để quản lý hiển thị sản phẩm
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Options -->
+                    <div class="filter-options">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hideCompleted"
+                                onchange="toggleCompletedFilter()">
+                            <label class="form-check-label" for="hideCompleted">
+                                Ẩn sản phẩm đã hoàn thành
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="batchItemsList"></div>
+
+                    <!-- Hidden Products Section -->
+                    <div class="hidden-products" id="hiddenProducts" style="display: none;">
+                        <h6><i class="fas fa-eye-slash"></i> Sản phẩm đã ẩn</h6>
+                        <div id="hiddenProductsList"></div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <button class="btn btn-primary-custom btn-custom w-100" onclick="processBatch()">
+                                <i class="fas fa-play"></i> Xử lý hàng loạt (<span id="totalFiles">0</span> files)
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="relative w-100" id="downloadGroup" style="display: none;">
+                                <div class="flex rounded-md shadow-sm" role="group">
+                                    <button type="button"
+                                        class="btn btn-success-custom btn-custom flex-1 rounded-r-none"
+                                        onclick="downloadAllFiles()" id="downloadAllBtn">
+                                        <i class="fas fa-download"></i> Tải tất cả file
+                                    </button>
+                                    <button type="button"
+                                        class="btn btn-success-custom btn-custom px-3 rounded-l-none border-l border-green-600"
+                                        onclick="toggleDownloadDropdown()" id="downloadDropdownBtn"
+                                        aria-label="More download options">
+                                        <i class="fas fa-caret-down"></i>
+                                    </button>
+                                </div>
+                                <div id="downloadDropdownMenu"
+                                    class="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 hidden">
+                                    <div class="py-1" role="menu" aria-orientation="vertical"
+                                        aria-labelledby="downloadDropdownBtn">
+                                        <a href="#"
+                                            class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                                            role="menuitem"
+                                            onclick="downloadAllAsZip(); closeDownloadDropdown(); return false;">
+                                            <i class="fas fa-file-archive mr-2"></i> Tải về dưới dạng ZIP
+                                        </a>
+                                        <a href="#"
+                                            class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                                            role="menuitem"
+                                            onclick="downloadSelectedFiles(); closeDownloadDropdown(); return false;">
+                                            <i class="fas fa-check-square mr-2"></i> Tải các file đã chọn
+                                        </a>
+                                        <hr class="my-1 border-slate-700">
+                                        <a href="#"
+                                            class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                                            role="menuitem"
+                                            onclick="openAllFilesInNewTabs(); closeDownloadDropdown(); return false;">
+                                            <i class="fas fa-external-link-alt mr-2"></i> Mở trong tab mới
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-secondary btn-custom w-100" onclick="clearAll()">
+                                <i class="fas fa-trash"></i> Xóa tất cả
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang xử lý...</span>
+                    </div>
+                    <p class="mt-3">Đang xử lý hàng loạt...</p>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-section" id="progressSection">
+                    <h5><i class="fas fa-tasks"></i> Tiến trình xử lý</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: 0%" id="progressBar"></div>
+                    </div>
+                    <div id="progressText">Chuẩn bị...</div>
+                </div>
+
+                <!-- Results -->
+                <div id="results"></div>
+            </div>
+        </main>
     </div>
-    
-    <!-- Scripts -->
+
+    <!-- Modals -->
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let selectedProducts = [];
@@ -994,18 +1398,135 @@
         let completedProducts = [];
         let hiddenCompleted = false;
         let sortOrder = 'time';
-        
+        let successfulFiles = []; // Lưu trữ danh sách file đã tạo thành công
+
+        // Sidebar Toggle Logic
+        document.addEventListener('DOMContentLoaded', function () {
+            initSidebar();
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const texts = document.querySelectorAll('.sidebar-text');
+            const toggleIcon = document.getElementById('sidebarToggleIcon');
+            const sidebarBtns = document.querySelectorAll('.sidebar-btn');
+            const header = document.getElementById('sidebarHeader');
+            const footer = document.getElementById('sidebarFooter');
+            const footerContent = footer.querySelector('div');
+            const toggleArea = document.getElementById('sidebarToggleArea');
+
+            const isExpanded = sidebar.classList.contains('w-64');
+
+            if (isExpanded) {
+                sidebar.classList.remove('w-64');
+                sidebar.classList.add('w-20');
+                texts.forEach(el => el.classList.add('hidden'));
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+
+                sidebarBtns.forEach(btn => {
+                    btn.classList.add('justify-center');
+                    const iconSpan = btn.querySelector('span:first-child');
+                    if (iconSpan) iconSpan.classList.remove('mr-3');
+                });
+
+                // Header adjustments
+                header.classList.remove('px-4');
+                header.classList.add('px-2', 'justify-center');
+
+                // Toggle Area adjustments
+                toggleArea.classList.remove('px-3');
+                toggleArea.classList.add('px-2');
+
+                // Footer adjustments
+                footer.classList.remove('px-4');
+                footer.classList.add('px-2');
+                footerContent.classList.remove('gap-3');
+                footerContent.classList.add('gap-2', 'justify-center');
+
+                localStorage.setItem('sidebarState', 'collapsed');
+            } else {
+                sidebar.classList.remove('w-20');
+                sidebar.classList.add('w-64');
+                texts.forEach(el => el.classList.remove('hidden'));
+                if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+
+                sidebarBtns.forEach(btn => {
+                    btn.classList.remove('justify-center');
+                    const iconSpan = btn.querySelector('span:first-child');
+                    if (iconSpan) iconSpan.classList.add('mr-3');
+                });
+
+                // Header adjustments
+                header.classList.add('px-4');
+                header.classList.remove('px-2', 'justify-center');
+
+                // Toggle Area adjustments
+                toggleArea.classList.add('px-3');
+                toggleArea.classList.remove('px-2');
+
+                // Footer adjustments
+                footer.classList.add('px-4');
+                footer.classList.remove('px-2');
+                footerContent.classList.add('gap-3');
+                footerContent.classList.remove('gap-2', 'justify-center');
+
+                localStorage.setItem('sidebarState', 'expanded');
+            }
+        }
+
+        function initSidebar() {
+            const state = localStorage.getItem('sidebarState');
+            if (state === 'collapsed') {
+                const sidebar = document.getElementById('sidebar');
+                const texts = document.querySelectorAll('.sidebar-text');
+                const toggleIcon = document.getElementById('sidebarToggleIcon');
+                const sidebarBtns = document.querySelectorAll('.sidebar-btn');
+                const header = document.getElementById('sidebarHeader');
+                const footer = document.getElementById('sidebarFooter');
+                const footerContent = footer ? footer.querySelector('div') : null;
+                const toggleArea = document.getElementById('sidebarToggleArea');
+
+                if (sidebar) {
+                    sidebar.classList.remove('w-64');
+                    sidebar.classList.add('w-20');
+                    texts.forEach(el => el.classList.add('hidden'));
+                    if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+
+                    sidebarBtns.forEach(btn => {
+                        btn.classList.add('justify-center');
+                        const iconSpan = btn.querySelector('span:first-child');
+                        if (iconSpan) iconSpan.classList.remove('mr-3');
+                    });
+
+                    if (header) {
+                        header.classList.remove('px-4');
+                        header.classList.add('px-2', 'justify-center');
+                    }
+                    if (toggleArea) {
+                        toggleArea.classList.remove('px-3');
+                        toggleArea.classList.add('px-2');
+                    }
+                    if (footer && footerContent) {
+                        footer.classList.remove('px-4');
+                        footer.classList.add('px-2');
+                        footerContent.classList.remove('gap-3');
+                        footerContent.classList.add('gap-2', 'justify-center');
+                    }
+                }
+            }
+        }
+
         // Batch Prediction functions
         function predictPOForBatch() {
             const productName = document.getElementById('batchPredictionProduct').value.trim();
-            
+
             if (!productName) {
                 showBatchNotification('Vui lòng nhập tên sản phẩm', 'warning');
                 return;
             }
-            
+
             showBatchNotification('Đang tiên đoán PO...', 'info');
-            
+
             fetch('/api/predict/po', {
                 method: 'POST',
                 headers: {
@@ -1013,54 +1534,54 @@
                 },
                 body: JSON.stringify({ product_name: productName })
             })
-            .then(response => response.json())
-            .then(data => {
-                const resultsDiv = document.getElementById('batchPredictionResults');
-                const contentDiv = document.getElementById('batchPredictionContent');
-                
-                if (data.success) {
-                    const statusClass = data.is_processed ? 'warning' : 'success';
-                    const statusText = data.is_processed ? ' (đã xử lý)' : ' (chưa xử lý)';
-                    
-                    contentDiv.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('batchPredictionResults');
+                    const contentDiv = document.getElementById('batchPredictionContent');
+
+                    if (data.success) {
+                        const statusClass = data.is_processed ? 'warning' : 'success';
+                        const statusText = data.is_processed ? ' (đã xử lý)' : ' (chưa xử lý)';
+
+                        contentDiv.innerHTML = `
                         <div class="alert alert-${statusClass}">
                             <strong>Sản phẩm:</strong> ${productName}<br>
                             <strong>PO dự đoán:</strong> ${data.predicted_po}<br>
                             <strong>Trạng thái:</strong> ${statusText}
                         </div>
                     `;
-                    resultsDiv.style.display = 'block';
-                    showBatchNotification(data.message, statusClass);
-                    
-                    // Auto-fill PO number in batch items if found
-                    autoFillPOInBatch(data.predicted_po);
-                } else {
-                    contentDiv.innerHTML = `
+                        resultsDiv.style.display = 'block';
+                        showBatchNotification(data.message, statusClass);
+
+                        // Auto-fill PO number in batch items if found
+                        autoFillPOInBatch(data.predicted_po);
+                    } else {
+                        contentDiv.innerHTML = `
                         <div class="alert alert-warning">
                             <strong>Sản phẩm:</strong> ${productName}<br>
                             <strong>Kết quả:</strong> ${data.message}
                         </div>
                     `;
-                    resultsDiv.style.display = 'block';
-                    showBatchNotification(data.message, 'warning');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showBatchNotification('Lỗi khi tiên đoán PO', 'error');
-            });
+                        resultsDiv.style.display = 'block';
+                        showBatchNotification(data.message, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showBatchNotification('Lỗi khi tiên đoán PO', 'error');
+                });
         }
 
         function predictProductForBatch() {
             const poNumber = document.getElementById('batchPredictionPO').value.trim();
-            
+
             if (!poNumber) {
                 showBatchNotification('Vui lòng nhập số PO', 'warning');
                 return;
             }
-            
+
             showBatchNotification('Đang tìm sản phẩm...', 'info');
-            
+
             fetch('/api/predict/product', {
                 method: 'POST',
                 headers: {
@@ -1068,38 +1589,38 @@
                 },
                 body: JSON.stringify({ po_number: poNumber })
             })
-            .then(response => response.json())
-            .then(data => {
-                const resultsDiv = document.getElementById('batchPredictionResults');
-                const contentDiv = document.getElementById('batchPredictionContent');
-                
-                if (data.success) {
-                    contentDiv.innerHTML = `
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('batchPredictionResults');
+                    const contentDiv = document.getElementById('batchPredictionContent');
+
+                    if (data.success) {
+                        contentDiv.innerHTML = `
                         <div class="alert alert-success">
                             <strong>PO Number:</strong> ${poNumber}<br>
                             <strong>Sản phẩm:</strong> ${data.product_name}
                         </div>
                     `;
-                    resultsDiv.style.display = 'block';
-                    showBatchNotification(data.message, 'success');
-                    
-                    // Auto-fill product name in batch items if found
-                    autoFillProductInBatch(data.product_name);
-                } else {
-                    contentDiv.innerHTML = `
+                        resultsDiv.style.display = 'block';
+                        showBatchNotification(data.message, 'success');
+
+                        // Auto-fill product name in batch items if found
+                        autoFillProductInBatch(data.product_name);
+                    } else {
+                        contentDiv.innerHTML = `
                         <div class="alert alert-warning">
                             <strong>PO Number:</strong> ${poNumber}<br>
                             <strong>Kết quả:</strong> ${data.message}
                         </div>
                     `;
-                    resultsDiv.style.display = 'block';
-                    showBatchNotification(data.message, 'warning');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showBatchNotification('Lỗi khi tìm sản phẩm', 'error');
-            });
+                        resultsDiv.style.display = 'block';
+                        showBatchNotification(data.message, 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showBatchNotification('Lỗi khi tìm sản phẩm', 'error');
+                });
         }
 
         // Auto-fill PO number in batch items
@@ -1135,13 +1656,13 @@
         // Auto-predict functions for individual fields
         function autoPredictPOFromProduct(itemIndex, fileIndex, productName) {
             if (!productName || productName.trim() === '') return;
-            
+
             // Check if PO is already filled
             const currentFile = batchData[itemIndex]?.files?.[fileIndex];
             if (currentFile && currentFile.po_number && currentFile.po_number.trim() !== '') {
                 return; // Don't override existing PO
             }
-            
+
             fetch('/api/predict/po', {
                 method: 'POST',
                 headers: {
@@ -1149,28 +1670,28 @@
                 },
                 body: JSON.stringify({ product_name: productName })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.predicted_po) {
-                    updateFileData(itemIndex, fileIndex, 'po_number', data.predicted_po);
-                    displayBatchItems();
-                    showBatchNotification(`Tự động điền PO: ${data.predicted_po}`, 'success');
-                }
-            })
-            .catch(error => {
-                console.error('Auto-predict PO error:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.predicted_po) {
+                        updateFileData(itemIndex, fileIndex, 'po_number', data.predicted_po);
+                        displayBatchItems();
+                        showBatchNotification(`Tự động điền PO: ${data.predicted_po}`, 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Auto-predict PO error:', error);
+                });
         }
 
         function autoPredictProductFromPO(itemIndex, fileIndex, poNumber) {
             if (!poNumber || poNumber.trim() === '') return;
-            
+
             // Check if product name is already filled
             const currentFile = batchData[itemIndex]?.files?.[fileIndex];
             if (currentFile && currentFile.product_name && currentFile.product_name.trim() !== '') {
                 return; // Don't override existing product name
             }
-            
+
             fetch('/api/predict/product', {
                 method: 'POST',
                 headers: {
@@ -1178,131 +1699,123 @@
                 },
                 body: JSON.stringify({ po_number: poNumber })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.product_name) {
-                    updateFileData(itemIndex, fileIndex, 'product_name', data.product_name);
-                    displayBatchItems();
-                    showBatchNotification(`Tự động điền sản phẩm: ${data.product_name}`, 'success');
-                }
-            })
-            .catch(error => {
-                console.error('Auto-predict product error:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.product_name) {
+                        updateFileData(itemIndex, fileIndex, 'product_name', data.product_name);
+                        displayBatchItems();
+                        showBatchNotification(`Tự động điền sản phẩm: ${data.product_name}`, 'success');
+                    }
+                })
+
+                .catch(error => {
+                    console.error('Auto-predict product error:', error);
+                });
         }
 
-        // Batch notification system
+        // Batch notification system - Adapter for new NotificationSystem
         function showBatchNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
-            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            notification.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 3000);
+            // Map 'error' to 'error', 'success' to 'success', 'warning' to 'warning', 'info' to 'info'
+            // The new system supports these types directly.
+            if (typeof showToast === 'function') {
+                showToast(message, type);
+            } else {
+                // Fallback if showToast is not available yet
+                console.log(`[${type}] ${message} `);
+            }
         }
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadProducts().then(() => {
                 loadSelectedPOsFromImport();
             });
         });
-        
+
         // Load selected POs from import page
         function loadSelectedPOsFromImport() {
             try {
                 const selectedPOData = sessionStorage.getItem('selectedPOData');
                 const productMapping = sessionStorage.getItem('productMapping');
-                
+
                 if (selectedPOData) {
                     const poData = JSON.parse(selectedPOData);
                     const mapping = productMapping ? JSON.parse(productMapping) : {};
-                    
+
                     console.log('Loading selected PO data:', poData);
                     console.log('Product mapping:', mapping);
-                    
+
                     // Auto-select products based on mapping and fill with PO data
                     autoSelectProductsFromMapping(mapping, poData);
-                    
+
                     // Clear sessionStorage after loading
                     sessionStorage.removeItem('selectedPOs');
                     sessionStorage.removeItem('selectedPOData');
                     sessionStorage.removeItem('productMapping');
-                    
-                    showBatchNotification(`Đã tự động điền ${poData.length} PO từ Import page với Based Product mapping (Template)`, 'success');
+
+                    showBatchNotification(`Đã tự động điền ${poData.length} PO từ Import page với Based Product mapping(Template)`, 'success');
                 }
             } catch (error) {
                 console.error('Error loading selected POs:', error);
             }
         }
-        
-        
+
+
         // Auto-select products based on mapping and fill with PO data
         // mapping: PO Number -> Based Product (Template ID)
         // poData: Array of PO objects with product_name (actual product name)
         function autoSelectProductsFromMapping(mapping, poData) {
             const uniqueBasedProducts = [...new Set(Object.values(mapping))];
-            
+
             console.log('Auto-selecting Based Products (Templates):', uniqueBasedProducts);
             console.log('Available products:', Object.keys(products));
             console.log('Current batchData:', batchData);
-            
+
             uniqueBasedProducts.forEach(basedProduct => {
                 if (basedProduct && products[basedProduct]) {
-                    console.log(`Processing based product: ${basedProduct}`);
-                    
+                    console.log(`Processing based product: ${basedProduct} `);
+
                     // Check if product is not already selected
                     if (!selectedProducts.includes(basedProduct)) {
                         selectedProducts.push(basedProduct);
-                        console.log(`Added ${basedProduct} to selectedProducts:`, selectedProducts);
-                        
+                        console.log(`Added ${basedProduct} to selectedProducts: `, selectedProducts);
+
                         // Add visual selection
-                        const productItem = document.querySelector(`[onclick="toggleProduct('${basedProduct}')"]`);
+                        const productItem = document.querySelector(`[onclick = "toggleProduct('${basedProduct}')"]`);
                         if (productItem) {
                             productItem.closest('.product-item').classList.add('selected');
                             console.log(`Added visual selection for ${basedProduct}`);
                         }
-                        
+
                         // Add to batch data with PO information
                         addBatchItemWithPOData(basedProduct, mapping, poData);
                     } else {
                         console.log(`${basedProduct} already selected`);
                     }
-                } else {
-                    console.log(`Product ${basedProduct} not found in products or invalid`);
                 }
             });
-            
+
             console.log('Final selectedProducts:', selectedProducts);
             console.log('Final batchData:', batchData);
-            
+
             updateBatchStats();
             updateBatchSection();
-            
-            console.log(`Auto-selected Based Products (Templates): ${uniqueBasedProducts.join(', ')}`);
+
+            console.log(`Auto - selected Based Products(Templates): ${uniqueBasedProducts.join(', ')} `);
         }
-        
+
         // Smart product mapping function
         function mapProductToBaseSpec(productName) {
             if (!productName) return '';
-            
+
             // Get all available products
             const availableProducts = Object.keys(products || {});
-            
+
             // Direct match first
             if (availableProducts.includes(productName)) {
                 return productName;
             }
-            
+
             // Smart mapping patterns
             const patterns = [
                 // Pattern 1: Remove last digit and try (LA701 -> LA700)
@@ -1319,7 +1832,7 @@
                     }
                     return null;
                 },
-                
+
                 // Pattern 2: Remove suffix and try (SV2000UK -> SV2000)
                 (name) => {
                     const baseName = name.replace(/[A-Z]+$/, '');
@@ -1328,7 +1841,7 @@
                     }
                     return null;
                 },
-                
+
                 // Pattern 3: Remove prefix and try
                 (name) => {
                     const baseName = name.replace(/^[A-Z]+/, '');
@@ -1338,11 +1851,11 @@
                     }
                     return null;
                 },
-                
+
                 // Pattern 4: Partial match
                 (name) => {
-                    const candidates = availableProducts.filter(p => 
-                        p.includes(name.substring(0, 3)) || 
+                    const candidates = availableProducts.filter(p =>
+                        p.includes(name.substring(0, 3)) ||
                         name.includes(p.substring(0, 3))
                     );
                     if (candidates.length > 0) {
@@ -1351,26 +1864,27 @@
                     return null;
                 }
             ];
-            
+
             // Try each pattern
             for (const pattern of patterns) {
                 const result = pattern(productName);
                 if (result) {
-                    console.log(`Mapped ${productName} -> ${result}`);
+                    console.log(`Mapped ${productName} -> ${result} `);
                     return result;
                 }
             }
-            
+
             // Fallback: return original name
             console.log(`Could not map ${productName}, using original`);
             return productName;
         }
-        
+
         // Load products
         async function loadProducts() {
             try {
                 const response = await fetch('/api/products');
                 products = await response.json();
+                generateFilterButtons(); // Generate filter buttons
                 displayTemplateList();
                 updateBatchStats();
                 console.log('Products loaded:', products);
@@ -1378,164 +1892,130 @@
                 console.error('Error loading products:', error);
             }
         }
-        
+
+        // Generate dynamic filter buttons
+        // Generate dynamic filter buttons
+        function generateFilterButtons() {
+            const container = document.getElementById('dynamicFilterContainer');
+            if (!container) return;
+
+            // Extract unique categories
+            const categories = new Set();
+            Object.keys(products).forEach(id => {
+                const details = productDetails[id];
+                if (details && details.category) {
+                    categories.add(details.category);
+                }
+            });
+
+            const sortedCategories = Array.from(categories).sort();
+
+            let html = `
+                <button class="px-3 py-1 rounded-md text-[12px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all filter-btn active"
+            onclick="filterBatchProducts('all')" title="Tất cả">
+                All
+                </button>
+                `;
+
+            sortedCategories.forEach(category => {
+                html += `
+                <button class="px-3 py-1 rounded-md text-[12px] font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all filter-btn"
+            onclick="filterBatchProducts('${category}')" title="${category}">
+                ${category}
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
         // Product detailed information
+        const productImages = {
+            'AZ3002': 'AZ3002_01.avif',
+            'IX141': 'IX141H_01.avif',
+            'IZ381H': 'IZ382H_mobileLarge_02.avif',
+            'LA480': 'la486.avif',
+            'LA555': 'la555.jpg',
+            'LA700': 'la700.jpg',
+            'LA800': 'LA802_mobileLarge_01.avif',
+            'NV360': 'NV360_01.avif',
+            'SV2000': 'SV2000.avif',
+            'UV440': 'uv440.jpeg',
+            'UV730': 'uv730.jpg',
+            'ZD201': 'zd201.jpg',
+            'ZU660': 'zd660.webp',
+            'AW261': 'wd261.jpg',
+            'WD161': 'WD161_01.avif',
+            'VX100': 'VX100_Hero_Gallery_Desktop_01.avif',
+            'VS100': 'vs100.jpeg',
+            'HX100': 'hx100.webp',
+            'HP152': 'HP152_01.avif',
+            'HP301': 'HP301_01.avif',
+            'UA1450': 'UA1450_01.avif',
+            'FA225': 'FA202_02.avif',
+            'TF200': 'TF200-ATF-01B.webp',
+            'UH205': 'uh205.webp',
+            'HD300': 'hd300.jpg',
+            'HD400': 'HD400BKSN_02.avif',
+            'HD500': 'HD500_02.avif',
+            'HD600': 'hd600.jpg',
+            'HD700': 'HD700_02.avif'
+        };
+
         const productDetails = {
-            'WD261': {
-                category: 'Máy hút bụi 3 trong 1',
-                specs: 'Không dây, Pin 21.6V, Thời gian sử dụng 23 phút, Trọng lượng 8.5 lbs',
-                description: 'Shark HydroVac MessMaster Cordless 3-in-1 Cleaner - Máy hút bụi không dây 3 trong 1, hút bụi, lau sàn và tự làm sạch'
-            },
-            'WD161': {
-                category: 'Máy hút bụi 3 trong 1',
-                specs: 'Có dây, Công suất cao, Tự làm sạch brushroll',
-                description: 'Shark HydroVac MessMaster Corded 3-in-1 Vacuum Mop - Máy hút bụi có dây 3 trong 1, hút bụi và lau sàn'
-            },
-            'AZ3002': {
-                category: 'Máy hút bụi đứng',
-                specs: 'DuoClean, PowerFins, HairPro, Công nghệ chống tắc',
-                description: 'Shark Stratos DuoClean PowerFins HairPro Upright Vacuum - Máy hút bụi đứng với công nghệ PowerFins và HairPro'
-            },
-            'FA222': {
-                category: 'Quạt làm mát',
-                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
-                description: 'Shark FlexBreeze Fan with InstaCool Mist Attachment - Quạt làm mát với phụ kiện phun sương'
-            },
-            'HD700': {
-                category: 'Máy sấy tóc',
-                specs: 'SpeedStyle Pro, 3 tốc độ, 2 chế độ nhiệt, Ion technology',
-                description: 'Shark SpeedStyle Pro Hair Dryer - Máy sấy tóc chuyên nghiệp cho tóc thẳng và xoăn'
-            },
-            'HD600': {
-                category: 'Máy sấy tóc',
-                specs: 'Glam Ceramic, 3 tốc độ, 2 chế độ nhiệt, Ceramic technology',
-                description: 'Shark Glam Ceramic Powerful Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng gốm'
-            },
-            'HD500': {
-                category: 'Máy sấy tóc',
-                specs: 'SpeedStyle Pro Flex, Tùy chỉnh, 3 tốc độ, Ion technology',
-                description: 'Shark SpeedStyle Pro Flex - Máy sấy tóc linh hoạt có thể tùy chỉnh'
-            },
-            'HD400': {
-                category: 'Máy sấy tóc',
-                specs: 'FlexStyle, Air styling, 3 tốc độ, 2 chế độ nhiệt',
-                description: 'Shark FlexStyle Air Styling & Drying System - Hệ thống tạo kiểu và sấy tóc bằng không khí'
-            },
-            'HD300': {
-                category: 'Máy sấy tóc',
-                specs: 'SpeedStyle 3-in-1, Tóc thẳng và xoăn, 3 tốc độ',
-                description: 'Shark SpeedStyle 3-in-1 Hair Dryer - Máy sấy tóc 3 trong 1 cho tóc thẳng và xoăn'
-            },
-            'HP152': {
-                category: 'Máy lọc không khí',
-                specs: 'NeverChange, HEPA filter, CADR 200, 3 tốc độ',
-                description: 'Shark NeverChange Air Purifier - Máy lọc không khí không cần thay bộ lọc'
-            },
-            'HP301': {
-                category: 'Máy lọc không khí',
-                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
-                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
-            },
-            'HX100': {
-                category: 'Máy làm sạch vết bẩn',
-                specs: 'StainForce, Không dây, Pin lithium, Áp suất cao',
-                description: 'Shark StainForce Cordless Spot Cleaner - Máy làm sạch vết bẩn không dây'
-            },
-            'IX141': {
-                category: 'Máy hút bụi không dây',
-                specs: 'Pet cordless, DuoClean, PowerFins, Pin lithium',
-                description: 'Shark Pet Cordless Stick Vacuum - Máy hút bụi không dây chuyên dụng cho thú cưng'
-            },
-            'IZ381H': {
-                category: 'Máy hút bụi không dây',
-                specs: 'PowerPro Flex, Reveal Plus, DuoClean, Pin lithium',
-                description: 'Shark PowerPro Flex Reveal Plus Cordless Vacuum - Máy hút bụi không dây linh hoạt cao cấp'
-            },
-            'LA480': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Lift Away, PowerFins, HairPro, Odor neutralizer',
-                description: 'Shark Lift Away with PowerFins HairPro - Máy hút bụi có thể tháo rời với công nghệ PowerFins'
-            },
-            'LA555': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Lift Away Deluxe, DuoClean, PowerFins',
-                description: 'Shark Lift Away Deluxe - Máy hút bụi cao cấp có thể tháo rời'
-            },
-            'LA700': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Rotator Pet, Lift Away Advanced, DuoClean, PowerFins',
-                description: 'Shark Rotator Pet Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp cho thú cưng'
-            },
-            'LA800': {
-                category: 'Máy hút bụi đứng',
-                specs: 'DetectPro, Lift Away Advanced, DuoClean, PowerFins',
-                description: 'Shark DetectPro Lift Away Advanced Upright Vacuum - Máy hút bụi đứng cao cấp với công nghệ DetectPro'
-            },
-            'NV360': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
-                description: 'Shark Navigator Lift Away Deluxe Upright Vacuum - Máy hút bụi đứng cao cấp Navigator'
-            },
-            'SV2000': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Freestyle Pro, Không dây, DuoClean, Pin lithium',
-                description: 'Shark Freestyle Pro Cordless Upright Vacuum - Máy hút bụi đứng không dây Freestyle Pro'
-            },
-            'UA1450': {
-                category: 'Máy lọc không khí',
-                specs: 'NeverChange Max, HEPA filter, CADR 300, 4 tốc độ',
-                description: 'Shark NeverChange Air Purifier Max - Máy lọc không khí cao cấp không cần thay bộ lọc'
-            },
-            'UH205': {
-                category: 'Quạt làm mát',
-                specs: 'FlexBreeze, InstaCool Mist, Điều khiển từ xa, 3 tốc độ',
-                description: 'Shark FlexBreeze Fan with InstaCool Mist - Quạt làm mát với phụ kiện phun sương'
-            },
-            'UV440': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Navigator, Lift Away Deluxe, DuoClean, PowerFins',
-                description: 'Shark Navigator Lift Away Deluxe - Máy hút bụi đứng cao cấp Navigator'
-            },
-            'UV730': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
-                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
-            },
-            'VS100': {
-                category: 'Máy hút bụi cầm tay',
-                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
-                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
-            },
-            'VX100': {
-                category: 'Máy hút bụi cầm tay',
-                specs: 'MessMaster, Portable, Wet/Dry, Áp suất cao',
-                description: 'Shark MessMaster Portable Wet/Dry Vacuum - Máy hút bụi cầm tay ướt/khô'
-            },
-            'ZU660': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Navigator, Lift Away, Self-Cleaning, Anti-Allergen',
-                description: 'Shark Navigator Lift Away Self-Cleaning Anti-Allergen - Máy hút bụi Navigator tự làm sạch'
-            },
-            'ZD201': {
-                category: 'Máy hút bụi đứng',
-                specs: 'Self-Cleaning, Anti-Allergen, DuoClean, PowerFins',
-                description: 'Shark Self-Cleaning Anti-Allergen Technology Vacuum - Máy hút bụi tự làm sạch chống dị ứng'
-            }
+            // Vacuum Cleaner
+            'AZ3002': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark AZ3002 Stratos Upright Vacuum' },
+            'IX141': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark IX141 Pet Cordless Stick Vacuum' },
+            'IZ381H': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark IZ381H Vertex Cordless Stick Vacuum' },
+            'LA480': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA480 Rotator Lift-Away Upright Vacuum' },
+            'LA555': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA555 Rotator Lift-Away Upright Vacuum' },
+            'LA700': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA700 Rotator Lift-Away Upright Vacuum' },
+            'LA800': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark LA800 Rotator Lift-Away Upright Vacuum' },
+            'NV360': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark NV360 Navigator Lift-Away Deluxe Upright Vacuum' },
+            'SV2000': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark SV2000 Freestyle Pro Cordless Upright Vacuum' },
+            'UV440': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark UV440 Navigator Lift-Away Deluxe Upright Vacuum' },
+            'UV730': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark UV730 Rotator Lift-Away Upright Vacuum' },
+            'ZD201': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark ZD201 Lift-Away Upright Vacuum' },
+            'ZU660': { category: 'Vacuum Cleaner', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark ZU660 Navigator Lift-Away Upright Vacuum' },
+
+            // Wet Cleaner
+            'AW261': { category: 'Wet Cleaner', specs: 'Performance, water flow, speed', description: 'Shark AW261 HydroVac Cordless Pro XL' },
+            'WD161': { category: 'Wet Cleaner', specs: 'Performance, water flow, speed', description: 'Shark WD161 HydroVac Corded Pro' },
+
+            // Wet & Dry
+            'VX100': { category: 'Wet & Dry', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark VX100 Wet/Dry Vacuum' },
+            'VS100': { category: 'Wet & Dry', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark VS100 MessMaster Portable Wet/Dry Vacuum' },
+            'HX100': { category: 'Wet & Dry', specs: 'Performance Nozzle vs Hose - Hard floor, Speed', description: 'Shark HX100 Wet/Dry Vacuum' },
+
+            // Air Purifier
+            'HP152': { category: 'Air Purifier', specs: 'Speed, Power draw, Sensor filter', description: 'Shark HP152 Air Purifier' },
+            'HP301': { category: 'Air Purifier', specs: 'Speed, Power draw, Sensor filter', description: 'Shark HP301 Air Purifier' },
+            'UA1450': { category: 'Air Purifier', specs: 'Speed, Power draw, Sensor filter', description: 'Shark UA1450 Air Purifier' },
+
+            // Fan
+            'FA225': { category: 'Fan', specs: 'Air flow, Speed, Power', description: 'Shark FA225 FlexBreeze Fan' },
+            'TF200': { category: 'Fan', specs: 'Air flow, Speed, Power', description: 'Shark TF200 Tower Fan' },
+            'UH205': { category: 'Fan', specs: 'Air flow, Speed, Power', description: 'Shark UH205 FlexBreeze Fan' },
+
+            // Hair Dryer
+            'HD300': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD300 HyperAIR Hair Dryer' },
+            'HD400': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD400 SpeedStyle Hair Dryer' },
+            'HD500': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD500 FlexStyle Air Styling & Drying System' },
+            'HD600': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD600 Hair Dryer' },
+            'HD700': { category: 'Hair Dryer', specs: 'Air Flow, Power', description: 'Shark HD700 Hair Dryer' }
         };
 
         // Enhanced product display
         function displayTemplateList() {
-            const templateList = document.getElementById('templateList');
-            templateList.innerHTML = '';
-            
-            // Get current view mode
-            const currentViewMode = window.batchViewMode || 'grid';
-            templateList.className = `products-grid ${currentViewMode}-mode`;
-            
+            const productsGrid = document.getElementById('products-grid');
+            if (!productsGrid) return;
+
+            productsGrid.innerHTML = '';
+
             // Get current filter
             const activeFilterBtn = document.querySelector('.filter-btn.active');
             const currentFilter = activeFilterBtn ? activeFilterBtn.getAttribute('onclick').match(/filterBatchProducts\('([^']+)'\)/)[1] : 'all';
-            
+
             // Sort products based on sortOrder
             let sortedProducts = Object.keys(products);
             if (sortOrder === 'name') {
@@ -1547,74 +2027,112 @@
             } else if (sortOrder === 'id-desc') {
                 sortedProducts.sort().reverse();
             }
-            
+
             // Filter products
             const filteredProducts = sortedProducts.filter(productId => {
-                return currentFilter === 'all' || productId.startsWith(currentFilter);
+                if (currentFilter === 'all') return true;
+                const details = productDetails[productId];
+                return details && details.category === currentFilter;
             });
-            
+
             filteredProducts.forEach(productId => {
                 const product = products[productId];
                 const details = productDetails[productId];
-                const productItem = document.createElement('div');
-                productItem.className = 'product-item';
-                
-                if (details) {
-                    productItem.innerHTML = `
-                        <div class="product-item-body" onclick="toggleProduct('${productId}')">
-                            <div class="product-name mb-2">${product.name}</div>
-                            <div class="product-summary mb-2" style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 500;">
-                                ${details.category} • ${productId}
-                            </div>
-                            <div class="product-info" style="font-size: 0.8rem; color: #666; line-height: 1.4;">
-                                <div style="margin-bottom: 3px;"><strong>Thông số:</strong> ${details.specs}</div>
-                            </div>
+
+                const isSelected = selectedProducts.includes(productId);
+                const cardClass = isSelected ? 'border-indigo-500 ring-1 ring-indigo-500 bg-indigo-500/5' : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900';
+                const btnClass = isSelected ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-slate-100 text-slate-900 hover:bg-white';
+                const btnText = isSelected ? '<i data-lucide="minus" class="mr-2 h-4 w-4 inline-block"></i> Bỏ chọn' : '<i data-lucide="plus" class="mr-2 h-4 w-4 inline-block"></i> Chọn';
+
+                const card = document.createElement('div');
+                card.className = `group relative flex flex-col overflow-hidden rounded-xl border transition-all duration-300 product-card ${cardClass}`;
+                card.setAttribute('data-product', productId);
+                card.setAttribute('onclick', `toggleProduct('${productId}')`);
+
+                card.innerHTML = `
+                <!-- Card Header/Image Placeholder -->
+                <div class="relative aspect-[2/1] overflow-hidden bg-slate-950">
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10"></div>
+                        ${productImages[productId] ?
+                        `<img src="/static/images/${productImages[productId]}" alt="${productId}" class="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity group-hover:opacity-100">` :
+                        `<div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-4xl font-bold text-slate-800 select-none">${productId.substring(0, 2)}</span>
+                            </div>`
+                    }
+
+                        <!--Status Badge-->
+                        <div class="absolute top-3 left-3 z-10">
+                            <span class="inline-flex items-center rounded-md bg-slate-950/90 px-2 py-1 text-xs font-medium text-slate-300 ring-1 ring-inset ring-slate-800">
+                                ${productId}
+                            </span>
                         </div>
-                    `;
-                } else {
-                    productItem.innerHTML = `
-                        <div class="product-item-body" onclick="toggleProduct('${productId}')">
-                            <div class="product-name mb-2">${product.name}</div>
-                            <div class="product-summary mb-2" style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 500;">
-                                Sản phẩm • ${productId}
-                            </div>
-                            <div class="product-info" style="font-size: 0.8rem; color: #666; line-height: 1.4;">
-                                <div>Không có thông tin chi tiết</div>
-                            </div>
+
+                        <!--Type Badge-->
+                        <div class="absolute top-3 right-3 z-10">
+                            <span class="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-400 ring-1 ring-inset ring-indigo-500/20">
+                                ${details ? details.category : 'Product'}
+                            </span>
                         </div>
-                    `;
-                }
-                templateList.appendChild(productItem);
+                        
+                        <!--Selection Indicator-->
+                ${isSelected ?
+                        `<div class="absolute inset-0 flex items-center justify-center bg-indigo-500/20 backdrop-blur-[1px]">
+                                <div class="rounded-full bg-indigo-500 p-2 text-white shadow-lg">
+                                    <i data-lucide="check" class="h-6 w-6"></i>
+                                </div>
+                            </div>` : ''
+                    }
+                    </div>
+
+                    <!--Card Body-->
+                <div class="flex flex-1 flex-col p-4">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-slate-200">${product.name}</h3>
+                        <p class="text-sm text-slate-500 line-clamp-2">${details ? details.description : 'Product Template'}</p>
+                    </div>
+
+                    <div class="mt-auto">
+                        <button class="w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${btnClass}">
+                            ${btnText}
+                        </button>
+                    </div>
+                </div>
+            `;
+
+                productsGrid.appendChild(card);
             });
-            
+
+            // Re-initialize Lucide icons for new elements
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+
             updateBatchStats();
         }
-        
+
+        // Toggle product selection
         // Toggle product selection
         function toggleProduct(productId) {
-            const productItem = document.querySelector(`[onclick="toggleProduct('${productId}')"]`).closest('.product-item');
-            
             if (selectedProducts.includes(productId)) {
                 // Deselect
                 selectedProducts = selectedProducts.filter(id => id !== productId);
-                productItem.classList.remove('selected');
                 removeBatchItem(productId);
             } else {
                 // Select
                 selectedProducts.push(productId);
-                productItem.classList.add('selected');
                 addBatchItem(productId);
             }
-            
-            updateBatchStats();
+
+            // Re-render to update UI state
+            displayTemplateList();
             updateBatchSection();
         }
-        
+
         // Update batch stats
         function updateBatchStats() {
             const selectedCount = document.getElementById('selectedCount');
             const totalCount = document.getElementById('totalCount');
-            
+
             if (selectedCount) {
                 selectedCount.textContent = `${selectedProducts.length} sản phẩm`;
             }
@@ -1622,90 +2140,104 @@
                 totalCount.textContent = `${Object.keys(products).length} tổng cộng`;
             }
         }
-        
+
         // Search batch products
         function searchBatchProducts() {
-            const searchTerm = document.getElementById('batchSearchInput').value.toLowerCase();
-            const productItems = document.querySelectorAll('.product-item');
-            
-            productItems.forEach(item => {
-                const productId = item.querySelector('input[type="checkbox"]').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const productCards = document.querySelectorAll('.product-card');
+
+            productCards.forEach(card => {
+                const productId = card.getAttribute('data-product');
                 const product = products[productId];
-                const searchText = `${productId} ${product.name} ${product.type}`.toLowerCase();
-                
+                const details = productDetails[productId];
+                const searchText = `${productId} ${product.name} ${details ? details.category : ''} `.toLowerCase();
+
                 if (searchText.includes(searchTerm)) {
-                    item.style.display = '';
+                    card.style.display = '';
                 } else {
-                    item.style.display = 'none';
+                    card.style.display = 'none';
                 }
             });
         }
-        
+
         // Clear batch search
         function clearBatchSearch() {
-            document.getElementById('batchSearchInput').value = '';
+            document.getElementById('searchInput').value = '';
             searchBatchProducts();
         }
-        
+
         // Filter batch products
         function filterBatchProducts(filter) {
             // Update active filter button
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
+                btn.classList.remove('active', 'bg-indigo-500/10', 'text-indigo-400', 'border-indigo-500/20');
+                btn.classList.add('text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
             });
-            event.target.classList.add('active');
-            
+
+            const activeBtn = event.target.closest('.filter-btn');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:text-slate-200', 'hover:bg-slate-800');
+                activeBtn.classList.add('active', 'bg-indigo-500/10', 'text-indigo-400', 'border-indigo-500/20');
+            }
+
             // Refresh the product list with current filter
             displayTemplateList();
         }
-        
+
         // Set batch view mode
         function setBatchViewMode(mode) {
             window.batchViewMode = mode;
-            
+
             // Update active view mode button
             document.querySelectorAll('.view-mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
-            
+
             // Update grid class
-            const templateList = document.getElementById('templateList');
+            const templateList = document.getElementById('products-grid');
             templateList.className = `products-grid ${mode}-mode`;
         }
-        
+
         // Add batch item
         function addBatchItem(productId) {
             const product = products[productId];
             if (product) {
+                const defaultFile = {
+                    po_number: '',
+                    date_code: getCurrentDate(),
+                    serial_numbers: ['', '', '', '', ''],
+                    product_name: product.name,
+                    is_collapsed: false
+                };
+
+                if (product.requires_weights) {
+                    defaultFile.gross_weights = ['', '', '', '', ''];
+                    defaultFile.net_weights = ['', '', '', '', ''];
+                }
+
                 const newItem = {
                     product_id: productId,
                     product_name: product.name,
                     quantity: 1,
-                    files: [{
-                        po_number: '',
-                        date_code: getCurrentDate(),
-                        serial_numbers: ['', '', '', '', ''],
-                        product_name: product.name,
-                        is_collapsed: false
-                    }],
+                    files: [defaultFile],
                     is_collapsed: false,
                     status: 'active',
                     created_at: new Date().toISOString()
                 };
-                
+
                 batchData.push(newItem);
                 displayBatchItems();
             }
         }
-        
+
         // Add batch item with PO data from import
         function addBatchItemWithPOData(productId, mapping, poData) {
             const product = products[productId];
             if (product) {
                 // Find all PO data for this based product
                 const relatedPOs = poData.filter(po => mapping[po.po_number] === productId);
-                
+
                 const files = relatedPOs.map(po => ({
                     po_number: po.po_number,
                     date_code: getCurrentDate(),
@@ -1713,7 +2245,14 @@
                     product_name: po.product_name || product.name, // Sử dụng tên sản phẩm từ PO data, fallback về product.name
                     is_collapsed: false
                 }));
-                
+
+                if (product.requires_weights) {
+                    files.forEach(file => {
+                        file.gross_weights = ['', '', '', '', ''];
+                        file.net_weights = ['', '', '', '', ''];
+                    });
+                }
+
                 const newItem = {
                     product_id: productId,
                     product_name: product.name,
@@ -1723,13 +2262,13 @@
                     status: 'active',
                     created_at: new Date().toISOString()
                 };
-                
+
                 batchData.push(newItem);
                 console.log('Added batch item:', newItem);
                 displayBatchItems();
             }
         }
-        
+
         // Remove batch item by index
         function removeBatchItemByIndex(itemIndex) {
             if (batchData[itemIndex]) {
@@ -1737,37 +2276,37 @@
                 displayBatchItems();
             }
         }
-        
+
         // Remove batch item
         function removeBatchItem(productId) {
             batchData = batchData.filter(item => item.product_id !== productId);
             displayBatchItems();
         }
-        
+
         // Display batch items
         function displayBatchItems() {
             const batchItemsList = document.getElementById('batchItemsList');
             const hiddenProductsList = document.getElementById('hiddenProductsList');
             const hiddenProducts = document.getElementById('hiddenProducts');
-            
+
             batchItemsList.innerHTML = '';
             hiddenProductsList.innerHTML = '';
-            
+
             // Separate active and completed items
             const activeItems = batchData.filter(item => item.status !== 'completed');
             const completedItems = batchData.filter(item => item.status === 'completed');
-            
+
             // Sort active items
-            const sortedItems = sortOrder === 'name' 
+            const sortedItems = sortOrder === 'name'
                 ? [...activeItems].sort((a, b) => a.product_name.localeCompare(b.product_name))
                 : [...activeItems].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            
+
             // Display active items
             sortedItems.forEach((item, index) => {
                 const originalIndex = batchData.findIndex(batchItem => batchItem === item);
                 batchItemsList.appendChild(createBatchItemElement(item, originalIndex));
             });
-            
+
             // Display completed items if not hidden
             if (!hiddenCompleted && completedItems.length > 0) {
                 hiddenProducts.style.display = 'block';
@@ -1778,19 +2317,19 @@
             } else {
                 hiddenProducts.style.display = 'none';
             }
-            
+
             updateTotalFiles();
         }
-        
+
         // Create batch item element
         function createBatchItemElement(item, index) {
             const batchItem = document.createElement('div');
             batchItem.className = `batch-item ${item.is_collapsed ? 'collapsed' : 'expanded'}`;
             batchItem.setAttribute('data-index', index);
-            
+
             const quantity = item.quantity || 1;
             const fileInputs = [];
-            
+
             for (let i = 0; i < quantity; i++) {
                 const fileData = item.files[i] || {
                     po_number: '',
@@ -1799,13 +2338,13 @@
                     product_name: item.product_name,
                     is_collapsed: false
                 };
-                
+
                 fileInputs.push(createFileDetailsHTML(fileData, index, i));
             }
-            
+
             if (item.is_collapsed) {
                 batchItem.innerHTML = `
-                    <div class="batch-summary">
+                <div class="batch-summary">
                         <div class="product-template-info">
                             <h6>Template: ${item.product_id} | Sản phẩm: ${item.files && item.files[0] ? item.files[0].product_name || 'Chưa nhập' : 'Chưa nhập'}</h6>
                             <div class="details">
@@ -1827,7 +2366,7 @@
                 `;
             } else {
                 batchItem.innerHTML = `
-                    <div class="batch-summary">
+                <div class="batch-summary">
                         <div class="product-template-info">
                             <h6>Template: ${item.product_id} | Sản phẩm: ${item.files && item.files[0] ? item.files[0].product_name || 'Chưa nhập' : 'Chưa nhập'}</h6>
                             <div class="details">
@@ -1849,18 +2388,18 @@
                             </button>
                         </div>
                     </div>
-                    ${fileInputs.join('')}
-                `;
+                ${fileInputs.join('')}
+            `;
             }
-            
+
             return batchItem;
         }
-        
+
         // Create hidden item element
         function createHiddenItemElement(item, index) {
             const hiddenItem = document.createElement('div');
             hiddenItem.className = 'hidden-product-item';
-            
+
             hiddenItem.innerHTML = `
                 <div>
                     <strong>Template: ${item.product_id} | Sản phẩm: ${item.files && item.files[0] ? item.files[0].product_name || 'Chưa nhập' : 'Chưa nhập'}</strong>
@@ -1875,37 +2414,36 @@
                     </button>
                 </div>
             `;
-            
+
             return hiddenItem;
         }
-        
+
         // Create file details HTML
         function createFileDetailsHTML(fileData, itemIndex, fileIndex) {
             const isCollapsed = fileData.is_collapsed || false;
             const fileName = generateFileName(fileData);
-            
+
             if (isCollapsed) {
                 return `
-                    <div class="file-item collapsed">
-                        <div class="file-summary">
-                            <div class="file-info">
-                                <h6 class="file-name">${fileData.product_name || 'Chưa nhập'} - ${fileData.po_number || 'Chưa nhập'} - ${fileData.date_code || 'Chưa nhập'}</h6>
-                                <div class="file-status">${fileData.po_number || 'Chưa nhập PO'} - ${fileData.date_code || 'Chưa nhập ngày'}</div>
-                            </div>
-                            <div class="file-controls">
-                                <button class="btn btn-outline-primary btn-sm" onclick="toggleFileCollapse(${itemIndex}, ${fileIndex})">
-                                    <i class="fas fa-expand-alt"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="removeFile(${itemIndex}, ${fileIndex})">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                <div class="file-item collapsed">
+                    <div class="file-summary">
+                        <div class="file-info">
+                            <h6 class="file-name">${fileData.product_name || 'Chưa nhập'} - ${fileData.po_number || 'Chưa nhập'} - ${fileData.date_code || 'Chưa nhập'}</h6>
+                            <div class="file-status">${fileData.po_number || 'Chưa nhập PO'} - ${fileData.date_code || 'Chưa nhập ngày'}</div>
+                        </div>
+                        <div class="file-controls">
+                            <button class="btn btn-outline-primary btn-sm" onclick="toggleFileCollapse(${itemIndex}, ${fileIndex})">
+                                <i class="fas fa-expand-alt"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="removeFile(${itemIndex}, ${fileIndex})">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 `;
             } else {
                 return `
-                    <div class="file-item expanded">
+                <div class="file-item expanded">
                         <div class="file-summary">
                             <div class="file-info">
                                 <h6 class="file-name">${fileData.product_name || 'Chưa nhập'} - ${fileData.po_number || 'Chưa nhập'} - ${fileData.date_code || 'Chưa nhập'}</h6>
@@ -1922,18 +2460,18 @@
                         </div>
                         <div class="row">
                             ${getInputOrderForProduct(batchData[itemIndex].product_id).map(field => {
-                                switch(field) {
-                                    case 'serial_numbers':
-                                        return `
+                    switch (field) {
+                        case 'serial_numbers':
+                            return `
                                             <div class="col-md-12">
                                                 <label class="form-label">Serial Numbers</label>
                                                 <div class="row">
-                                                    ${[1,2,3,4,5].map(j => `
+                                                    ${[1, 2, 3, 4, 5].map(j => `
                                                         <div class="col-md-2">
                                                             <input type="text" class="form-control form-control-sm" 
                                                                    placeholder="Serial ${j}" 
-                                                                   value="${fileData.serial_numbers[j-1] || ''}"
-                                                                   onchange="updateSerialNumber(${itemIndex}, ${fileIndex}, ${j-1}, this.value)">
+                                                                   value="${fileData.serial_numbers[j - 1] || ''}"
+                                                                   onchange="updateSerialNumber(${itemIndex}, ${fileIndex}, ${j - 1}, this.value)">
                                                         </div>
                                                     `).join('')}
                                                 </div>
@@ -1942,8 +2480,8 @@
                                                 </button>
                                             </div>
                                         `;
-                                    case 'product_name':
-                                        return `
+                        case 'product_name':
+                            return `
                                             <div class="col-md-4">
                                                 <label class="form-label">Tên sản phẩm (trong file Excel)</label>
                                                 <input type="text" class="form-control form-control-sm" 
@@ -1954,8 +2492,8 @@
                                                 <small class="text-muted">Template: ${batchData[itemIndex].product_id}</small>
                                             </div>
                                         `;
-                                    case 'po_number':
-                                        return `
+                        case 'po_number':
+                            return `
                                             <div class="col-md-4">
                                                 <label class="form-label">Số PO</label>
                                                 <input type="text" class="form-control form-control-sm" 
@@ -1965,8 +2503,8 @@
                                                        onblur="autoPredictProductFromPO(${itemIndex}, ${fileIndex}, this.value)">
                                             </div>
                                         `;
-                                    case 'date_code':
-                                        return `
+                        case 'date_code':
+                            return `
                                             <div class="col-md-4">
                                                 <label class="form-label">Mã ngày</label>
                                                 <input type="text" class="form-control form-control-sm" 
@@ -1975,47 +2513,85 @@
                                                        onchange="updateFileData(${itemIndex}, ${fileIndex}, 'date_code', this.value)">
                                             </div>
                                         `;
-                                    default:
-                                        return '';
-                                }
-                            }).join('')}
+                        case 'gross_weights':
+                            if (!products[batchData[itemIndex].product_id]?.requires_weights) {
+                                return '';
+                            }
+                            return `
+                                            <div class="col-md-12">
+                                                <label class="form-label">Gross Weights</label>
+                                                <div class="row">
+                                                    ${[1, 2, 3, 4, 5].map(j => `
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                   placeholder="Gross ${j}"
+                                                                   value="${(fileData.gross_weights && fileData.gross_weights[j - 1]) || ''}"
+                                                                   onchange="updateWeightValue(${itemIndex}, ${fileIndex}, 'gross_weights', ${j - 1}, this.value)">
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `;
+                        case 'net_weights':
+                            if (!products[batchData[itemIndex].product_id]?.requires_weights) {
+                                return '';
+                            }
+                            return `
+                                            <div class="col-md-12">
+                                                <label class="form-label">Net Weights</label>
+                                                <div class="row">
+                                                    ${[1, 2, 3, 4, 5].map(j => `
+                                                        <div class="col-md-2">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                   placeholder="Net ${j}"
+                                                                   value="${(fileData.net_weights && fileData.net_weights[j - 1]) || ''}"
+                                                                   onchange="updateWeightValue(${itemIndex}, ${fileIndex}, 'net_weights', ${j - 1}, this.value)">
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `;
+                        default:
+                            return '';
+                    }
+                }).join('')}
                         </div>
                     </div>
                 `;
             }
         }
-        
+
         // Generate file name based on product data
         function generateFileName(fileData) {
             const productName = fileData.product_name || '';
             const poNumber = fileData.po_number || '';
             const dateCode = fileData.date_code || '';
-            
+
             if (productName && poNumber && dateCode) {
-                return `Document - PO#${poNumber} - ${dateCode}`;
+                return `Document - PO#${poNumber} - ${dateCode} `;
             } else if (productName) {
                 return `Document - Chưa nhập đầy đủ`;
             } else {
                 return 'Document chưa có tên';
             }
         }
-        
+
         // Update total files count
         function updateTotalFiles() {
             const totalFiles = batchData.reduce((sum, item) => {
                 return sum + (item.quantity || 1);
             }, 0);
-            
+
             document.getElementById('totalFiles').textContent = totalFiles;
         }
-        
+
         // Update batch item
         function updateBatchItem(index, field, value) {
             if (batchData[index]) {
                 batchData[index][field] = value;
             }
         }
-        
+
         // Toggle collapse/expand for product
         function toggleCollapse(index) {
             if (batchData[index]) {
@@ -2023,7 +2599,7 @@
                 displayBatchItems();
             }
         }
-        
+
         // Mark product as completed
         function markAsCompleted(index) {
             if (batchData[index]) {
@@ -2032,13 +2608,13 @@
                 displayBatchItems();
             }
         }
-        
+
         // Toggle completed filter
         function toggleCompletedFilter() {
             hiddenCompleted = !hiddenCompleted;
             displayBatchItems();
         }
-        
+
         // Sort products
         function sortProducts() {
             const sortSelect = document.getElementById('sortSelect');
@@ -2046,7 +2622,7 @@
             displayTemplateList(); // Sort product cards
             displayBatchItems(); // Sort batch items
         }
-        
+
         // Collapse all products
         function collapseAll() {
             batchData.forEach(item => {
@@ -2054,7 +2630,7 @@
             });
             displayBatchItems();
         }
-        
+
         // Expand all products
         function expandAll() {
             batchData.forEach(item => {
@@ -2062,7 +2638,7 @@
             });
             displayBatchItems();
         }
-        
+
         // Restore completed product
         function restoreProduct(index) {
             if (batchData[index]) {
@@ -2071,13 +2647,13 @@
                 displayBatchItems();
             }
         }
-        
+
         // Remove completed product
         function removeCompletedProduct(index) {
             batchData.splice(index, 1);
             displayBatchItems();
         }
-        
+
         // Add new file to product
         function addFile(index) {
             if (batchData[index]) {
@@ -2088,30 +2664,35 @@
                     product_name: batchData[index].product_name,
                     is_collapsed: false
                 };
-                
+
+                if (products[batchData[index].product_id]?.requires_weights) {
+                    newFile.gross_weights = ['', '', '', '', ''];
+                    newFile.net_weights = ['', '', '', '', ''];
+                }
+
                 if (!batchData[index].files) {
                     batchData[index].files = [];
                 }
-                
+
                 batchData[index].files.push(newFile);
                 batchData[index].quantity = batchData[index].files.length;
                 displayBatchItems();
             }
         }
-        
+
         // Remove file from product
         function removeFile(itemIndex, fileIndex) {
             if (batchData[itemIndex] && batchData[itemIndex].files) {
                 batchData[itemIndex].files.splice(fileIndex, 1);
                 batchData[itemIndex].quantity = batchData[itemIndex].files.length;
-                
+
                 if (batchData[itemIndex].quantity === 0) {
                     batchData.splice(itemIndex, 1);
                 }
                 displayBatchItems();
             }
         }
-        
+
         // Toggle file collapse
         function toggleFileCollapse(itemIndex, fileIndex) {
             if (batchData[itemIndex] && batchData[itemIndex].files && batchData[itemIndex].files[fileIndex]) {
@@ -2119,19 +2700,19 @@
                 displayBatchItems();
             }
         }
-        
+
         // Update file data
         function updateFileData(itemIndex, fileIndex, field, value) {
             if (batchData[itemIndex] && batchData[itemIndex].files && batchData[itemIndex].files[fileIndex]) {
                 batchData[itemIndex].files[fileIndex][field] = value;
-                
+
                 // Update file name if needed
                 if (field === 'product_name' || field === 'po_number' || field === 'date_code') {
                     updateFileName(itemIndex, fileIndex);
                 }
             }
         }
-        
+
         // Update file name
         function updateFileName(itemIndex, fileIndex) {
             if (batchData[itemIndex] && batchData[itemIndex].files && batchData[itemIndex].files[fileIndex]) {
@@ -2140,44 +2721,51 @@
                 // File name will be updated when displayBatchItems is called
             }
         }
-        
+
         // Update quantity and adjust files array
         function updateQuantity(index, newQuantity) {
             if (batchData[index]) {
                 const oldQuantity = batchData[index].quantity || 1;
                 batchData[index].quantity = newQuantity;
-                
+
                 // Initialize files array if not exists
                 if (!batchData[index].files) {
                     batchData[index].files = [];
                 }
-                
+
                 // Add or remove files based on quantity change
                 if (newQuantity > oldQuantity) {
                     // Add new files
                     for (let i = oldQuantity; i < newQuantity; i++) {
-                        batchData[index].files.push({
+                        const fileObj = {
                             po_number: '',
                             date_code: getCurrentDate(),
-                            serial_numbers: ['', '', '', '', '']
-                        });
+                            serial_numbers: ['', '', '', '', ''],
+                            product_name: batchData[index].product_name,
+                            is_collapsed: false
+                        };
+                        if (products[batchData[index].product_id]?.requires_weights) {
+                            fileObj.gross_weights = ['', '', '', '', ''];
+                            fileObj.net_weights = ['', '', '', '', ''];
+                        }
+                        batchData[index].files.push(fileObj);
                     }
                 } else if (newQuantity < oldQuantity) {
                     // Remove excess files
                     batchData[index].files = batchData[index].files.slice(0, newQuantity);
                 }
-                
+
                 displayBatchItems();
             }
         }
-        
+
         // Update file data
         function updateFileData(index, fileIndex, field, value) {
             if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
                 batchData[index].files[fileIndex][field] = value;
             }
         }
-        
+
         // Update serial number for specific file
         function updateSerialNumber(index, fileIndex, serialIndex, value) {
             if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
@@ -2187,64 +2775,74 @@
                 batchData[index].files[fileIndex].serial_numbers[serialIndex] = value;
             }
         }
-        
+
+        // Update weight value for specific file
+        function updateWeightValue(index, fileIndex, field, weightIndex, value) {
+            if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
+                if (!batchData[index].files[fileIndex][field]) {
+                    batchData[index].files[fileIndex][field] = ['', '', '', '', ''];
+                }
+                batchData[index].files[fileIndex][field][weightIndex] = value;
+            }
+        }
+
         // Generate serials for specific file
         function generateSerialsForFile(index, fileIndex) {
             const pattern = document.getElementById('serialPattern').value;
             const basePattern = pattern.substring(0, pattern.length - 2);
-            
+
             if (batchData[index] && batchData[index].files && batchData[index].files[fileIndex]) {
                 for (let i = 0; i < 5; i++) {
-                    const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
-                                  Math.floor(Math.random() * 10);
+                    const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+                        Math.floor(Math.random() * 10);
                     const serial = basePattern + suffix;
                     updateSerialNumber(index, fileIndex, i, serial);
                 }
-                
+
                 displayBatchItems(); // Refresh display
             }
         }
-        
+
         // Generate serials for specific item (legacy - for all files)
         function generateSerials(index) {
             const pattern = document.getElementById('serialPattern').value;
             const basePattern = pattern.substring(0, pattern.length - 2);
-            
+
             if (batchData[index] && batchData[index].files) {
                 batchData[index].files.forEach((file, fileIndex) => {
                     for (let i = 0; i < 5; i++) {
-                        const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
-                                      Math.floor(Math.random() * 10);
+                        const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+                            Math.floor(Math.random() * 10);
                         const serial = basePattern + suffix;
                         updateSerialNumber(index, fileIndex, i, serial);
                     }
                 });
-                
+
                 displayBatchItems(); // Refresh display
             }
         }
-        
+
         // Generate all serials
         function generateAllSerials() {
             const pattern = document.getElementById('serialPattern').value;
             const basePattern = pattern.substring(0, pattern.length - 2);
-            
+
             batchData.forEach((item, index) => {
                 if (item.files) {
                     item.files.forEach((file, fileIndex) => {
                         for (let i = 0; i < 5; i++) {
-                            const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
-                                          Math.floor(Math.random() * 10);
+                            const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+                                Math.floor(Math.random() * 10);
                             const serial = basePattern + suffix;
                             updateSerialNumber(index, fileIndex, i, serial);
                         }
                     });
                 }
             });
-            
+
             displayBatchItems(); // Refresh display
         }
-        
+
         // Update batch section visibility
         function updateBatchSection() {
             const batchItems = document.getElementById('batchItems');
@@ -2254,7 +2852,7 @@
                 batchItems.style.display = 'none';
             }
         }
-        
+
         // Get current date
         function getCurrentDate() {
             const now = new Date();
@@ -2263,109 +2861,138 @@
             const day = String(now.getDate()).padStart(2, '0');
             return year + month + day;
         }
-        
+
         // Get input order based on product type
         function getInputOrderForProduct(productId) {
             const inputOrders = {
                 // NV360: Serial → Random → Product Name → PO → Date
                 'NV360': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // LA480: Serial → Random → Product Name → PO → Date
                 'LA480': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // HX100: Serial → Random → PO → Date → Product Name
                 'HX100': ['serial_numbers', 'po_number', 'date_code', 'product_name'],
-                
+
                 // HP152: Serial → Random → Product Name → PO → Date
                 'HP152': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // HD600: Product Name → PO → Date → Serial → Random
                 'HD600': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
-                
+
                 // HD500: Product Name → PO → Date → Serial → Random
                 'HD500': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
-                
+
                 // HD300: Product Name → PO → Date → Serial → Random
                 'HD300': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
-                
+
                 // UA1450: Serial → Random → Product Name → PO → Date
                 'UA1450': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // UH205: Serial → Random → Product Name → PO → Date
                 'UH205': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // AW261: Serial → Random → Product Name → PO → Date
                 'AW261': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // LA800: Product Name → Serial → Random → PO → Date
                 'LA800': ['product_name', 'serial_numbers', 'po_number', 'date_code'],
-                
+
                 // HD400: Product Name → PO → Date → Serial → Random
                 'HD400': ['product_name', 'po_number', 'date_code', 'serial_numbers'],
-                
+
                 // LA700: Serial → Random → Product Name → PO → Date
                 'LA700': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // LA555: Serial → Random → Product Name → PO → Date
                 'LA555': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // IZ381H: Product Name → Serial → Random → PO → Date
                 'IZ381H': ['product_name', 'serial_numbers', 'po_number', 'date_code'],
-                
+
                 // AZ3002: Serial → Random → PO → Date → Product Name
                 'AZ3002': ['serial_numbers', 'po_number', 'date_code', 'product_name'],
-                
+
                 // UV730: Serial → Random → Product Name → PO → Date
                 'UV730': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // VS100: Serial → Random → Product Name → PO → Date
                 'VS100': ['serial_numbers', 'product_name', 'po_number', 'date_code'],
-                
+
                 // SV2000: Product Name → Serial → Random → PO → Date
                 'SV2000': ['product_name', 'serial_numbers', 'po_number', 'date_code'],
-                
+
+                // TF200: Serial → Weights → Product Name → PO → Date
+                'TF200': ['serial_numbers', 'gross_weights', 'net_weights', 'product_name', 'po_number', 'date_code'],
+
                 // Default order for other products
                 'default': ['serial_numbers', 'product_name', 'po_number', 'date_code']
             };
-            
+
             return inputOrders[productId] || inputOrders['default'];
         }
-        
+
         // Process batch
         async function processBatch() {
             // Validate data and expand based on files
             const expandedData = [];
-            
-            batchData.forEach(item => {
-                if (item.files) {
-                    item.files.forEach(file => {
-                        if (file.po_number && file.date_code && 
-                            file.serial_numbers.every(s => s.trim() !== '')) {
-                            
-                            const expandedItem = {
-                                product_id: item.product_id,
-                                data: {
-                                    product_name: file.product_name || item.product_name,
-                                    po_number: file.po_number,
-                                    date_code: file.date_code,
-                                    serial_numbers: [...file.serial_numbers]
-                                }
-                            };
-                            
-                            expandedData.push(expandedItem);
+            let validationError = null;
+
+            outerLoop:
+            for (const item of batchData) {
+                if (!item.files) continue;
+                const productInfo = products[item.product_id] || {};
+                for (const file of item.files) {
+                    if (!(file.po_number && file.date_code && file.serial_numbers && file.serial_numbers.every(s => s.trim() !== ''))) {
+                        continue;
+                    }
+
+                    let grossWeights = null;
+                    let netWeights = null;
+
+                    if (productInfo.requires_weights) {
+                        grossWeights = file.gross_weights || [];
+                        netWeights = file.net_weights || [];
+                        const grossValid = grossWeights.length === 5 && grossWeights.every(w => w && w.trim() !== '');
+                        const netValid = netWeights.length === 5 && netWeights.every(w => w && w.trim() !== '');
+                        if (!grossValid || !netValid) {
+                            validationError = `Vui lòng nhập đầy đủ Gross / Net Weight cho sản phẩm ${item.product_name} `;
+                            break outerLoop;
                         }
-                    });
+                    }
+
+                    const expandedItem = {
+                        product_id: item.product_id,
+                        data: {
+                            product_name: file.product_name || item.product_name,
+                            po_number: file.po_number,
+                            date_code: file.date_code,
+                            serial_numbers: [...file.serial_numbers]
+                        }
+                    };
+
+                    if (grossWeights && netWeights) {
+                        expandedItem.data.gross_weights = [...grossWeights];
+                        expandedItem.data.net_weights = [...netWeights];
+                    }
+
+                    expandedData.push(expandedItem);
                 }
-            });
-            
-            if (expandedData.length === 0) {
-                alert('Vui lòng điền đầy đủ thông tin cho ít nhất một file');
+            }
+
+            if (validationError) {
+                showBatchNotification(validationError, 'error');
                 return;
             }
-            
+
+            if (expandedData.length === 0) {
+                showBatchNotification('Vui lòng điền đầy đủ thông tin cho ít nhất một file', 'warning');
+                return;
+            }
+
             showLoading();
             showProgress();
-            
+
             try {
                 const response = await fetch('/api/batch', {
                     method: 'POST',
@@ -2376,15 +3003,15 @@
                         data: expandedData
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     showBatchResults(result);
                 } else {
                     showError(result.message);
                 }
-                
+
             } catch (error) {
                 showError('Lỗi kết nối: ' + error.message);
             } finally {
@@ -2392,24 +3019,24 @@
                 hideProgress();
             }
         }
-        
+
         // Show progress
         function showProgress() {
             document.getElementById('progressSection').style.display = 'block';
             updateProgress(0, 'Chuẩn bị xử lý...');
         }
-        
+
         // Hide progress
         function hideProgress() {
             document.getElementById('progressSection').style.display = 'none';
         }
-        
+
         // Update progress
         function updateProgress(percent, text) {
             document.getElementById('progressBar').style.width = percent + '%';
             document.getElementById('progressText').textContent = text;
         }
-        
+
         // Show batch results
         function showBatchResults(result) {
             const resultsDiv = document.getElementById('results');
@@ -2418,37 +3045,117 @@
                     <h5><i class="fas fa-check-circle"></i> Xử lý hoàn thành!</h5>
                     <p>${result.message}</p>
                 </div>
-            `;
-            
-            result.results.forEach(item => {
-                const statusClass = item.success ? 'success' : 'error';
-                const statusIcon = item.success ? 'check-circle' : 'exclamation-triangle';
-                const statusText = item.success ? 'Thành công' : 'Thất bại';
-                
+                `;
+
+            // Reset successful files array
+            successfulFiles = [];
+
+            // Separate successful and failed results
+            const successfulResults = result.results.filter(item => item.success);
+            const failedResults = result.results.filter(item => !item.success);
+
+            // Add successful files to array
+            successfulResults.forEach(item => {
+                successfulFiles.push({
+                    product: item.product,
+                    download_url: item.download_url,
+                    file_path: item.file_path,
+                    selected: true // Default to selected
+                });
+            });
+
+            // Create results management section
+            if (successfulResults.length > 0) {
                 html += `
-                    <div class="result-item ${statusClass}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>${item.product}</strong>
-                                <br>
-                                <small>${statusText}</small>
-                            </div>
-                            <div>
-                                ${item.success ? 
-                                    `<a href="${item.download_url}" class="btn btn-success btn-sm">
-                                        <i class="fas fa-download"></i> Tải về
-                                    </a>` : 
-                                    `<span class="text-danger">${item.message}</span>`
-                                }
+                < div class="results-management-section" >
+                        <div class="results-header">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-file-download"></i> Kết quả thành công (${successfulResults.length} file)</h5>
+                                <div class="results-controls">
+                                    <button class="btn btn-outline-primary btn-sm me-2" onclick="selectAllFiles()">
+                                        <i class="fas fa-check-square"></i> Chọn tất cả
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="deselectAllFiles()">
+                                        <i class="fas fa-square"></i> Bỏ chọn tất cả
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm me-2" onclick="sortResults()">
+                                        <i class="fas fa-sort-alpha-down"></i> Sắp xếp A-Z
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="downloadSelectedFiles()">
+                                        <i class="fas fa-download"></i> Tải file đã chọn (<span id="selectedCount">${successfulResults.length}</span>)
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        
+                        <div class="results-list" id="resultsList">
                 `;
-            });
-            
+
+                // Sort successful results alphabetically
+                const sortedResults = [...successfulResults].sort((a, b) => a.product.localeCompare(b.product));
+
+                sortedResults.forEach((item, index) => {
+                    html += `
+                        <div class="result-item success selectable" data-index="${index}">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input file-checkbox" type="checkbox" 
+                                           id="file-${index}" checked 
+                                           onchange="updateSelectedCount()">
+                                    <label class="form-check-label" for="file-${index}"></label>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <strong>${item.product}</strong>
+                                    <br>
+                                    <small class="text-success">Thành công</small>
+                                </div>
+                                <div>
+                                    <a href="${item.download_url}" class="btn btn-success btn-sm" 
+                                       onclick="event.stopPropagation()">
+                                        <i class="fas fa-download"></i> Tải về
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div >
+                `;
+            }
+
+            // Show failed results
+            if (failedResults.length > 0) {
+                html += `
+                < div class="failed-results-section mt-4" >
+                    <h6 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Kết quả thất bại (${failedResults.length} file)</h6>
+            `;
+
+                failedResults.forEach(item => {
+                    html += `
+                < div class="result-item error" >
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.product}</strong>
+                            <br>
+                                <small class="text-danger">Thất bại: ${item.message}</small>
+                        </div>
+                    </div>
+                        </div >
+                `;
+                });
+
+                html += `</div > `;
+            }
+
             resultsDiv.innerHTML = html;
+
+            // Show/hide download all button based on successful files
+            updateDownloadAllButton();
         }
-        
+
         // Show error
         function showError(message) {
             const resultsDiv = document.getElementById('results');
@@ -2460,24 +3167,270 @@
                         <i class="fas fa-redo"></i> Thử lại
                     </button>
                 </div>
-            `;
+                `;
         }
-        
+
+        // Toggle custom download dropdown
+        function toggleDownloadDropdown() {
+            const dropdownMenu = document.getElementById('downloadDropdownMenu');
+            dropdownMenu.classList.toggle('hidden');
+        }
+
+        // Close custom download dropdown
+        function closeDownloadDropdown() {
+            const dropdownMenu = document.getElementById('downloadDropdownMenu');
+            dropdownMenu.classList.add('hidden');
+        }
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', function (event) {
+            const downloadGroup = document.getElementById('downloadGroup');
+            const downloadDropdownMenu = document.getElementById('downloadDropdownMenu');
+            if (downloadGroup && downloadDropdownMenu && !downloadGroup.contains(event.target)) {
+                downloadDropdownMenu.classList.add('hidden');
+            }
+        });
+
+        // Update download all button visibility
+        function updateDownloadAllButton() {
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
+            const downloadGroup = document.getElementById('downloadGroup');
+
+            if (successfulFiles.length > 0) {
+                downloadGroup.style.display = 'block';
+                downloadAllBtn.innerHTML = `<i class="fas fa-download"></i> Tải tất cả file (${successfulFiles.length})`;
+            } else {
+                downloadGroup.style.display = 'none';
+            }
+        }
+
+        // Open all files in new tabs
+        function openAllFilesInNewTabs() {
+            if (successfulFiles.length === 0) {
+                showBatchNotification('Không có file nào để mở', 'warning');
+                return;
+            }
+
+            showBatchNotification(`Đang mở ${successfulFiles.length} file trong tab mới...`, 'info');
+
+            successfulFiles.forEach((file, index) => {
+                setTimeout(() => {
+                    window.open(file.download_url, '_blank');
+                }, index * 200); // Delay between opening tabs
+            });
+
+            showBatchNotification(`Đã mở ${successfulFiles.length} file trong tab mới!`, 'success');
+        }
+
+        // Download all files function
+        async function downloadAllFiles() {
+            if (successfulFiles.length === 0) {
+                showBatchNotification('Không có file nào để tải về', 'warning');
+                return;
+            }
+
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
+            const originalText = downloadAllBtn.innerHTML;
+
+            try {
+                // Disable button and show loading
+                downloadAllBtn.disabled = true;
+                downloadAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+
+                showBatchNotification(`Bắt đầu tải ${successfulFiles.length} file...`, 'info');
+
+                // Download files one by one with delay to avoid browser blocking
+                for (let i = 0; i < successfulFiles.length; i++) {
+                    const file = successfulFiles[i];
+
+                    // Update progress
+                    const progress = Math.round(((i + 1) / successfulFiles.length) * 100);
+                    downloadAllBtn.innerHTML = `< i class= "fas fa-spinner fa-spin" ></i > Đang tải...${progress} % `;
+
+                    // Create download link and trigger download
+                    const link = document.createElement('a');
+                    link.href = file.download_url;
+                    link.download = `${file.product} - PO File`;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Small delay between downloads
+                    if (i < successfulFiles.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+
+                showBatchNotification(`Đã tải thành công ${successfulFiles.length} file!`, 'success');
+
+            } catch (error) {
+                console.error('Error downloading files:', error);
+                showBatchNotification('Có lỗi xảy ra khi tải file', 'error');
+            } finally {
+                // Re-enable button
+                downloadAllBtn.disabled = false;
+                downloadAllBtn.innerHTML = originalText;
+            }
+        }
+
+        // Alternative download all method using ZIP (if backend supports it)
+        async function downloadAllAsZip() {
+            if (successfulFiles.length === 0) {
+                showBatchNotification('Không có file nào để tải về', 'warning');
+                return;
+            }
+
+            try {
+                showBatchNotification('Đang tạo file ZIP...', 'info');
+
+                // This would require backend support to create ZIP files
+                // For now, we'll use the individual download method
+                await downloadAllFiles();
+
+            } catch (error) {
+                console.error('Error creating ZIP:', error);
+                showBatchNotification('Không thể tạo file ZIP, sử dụng phương thức tải từng file', 'warning');
+                await downloadAllFiles();
+            }
+        }
+
+        // Results management functions
+        function selectAllFiles() {
+            const checkboxes = document.querySelectorAll('.file-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateSelectedCount();
+            showBatchNotification('Đã chọn tất cả file', 'success');
+        }
+
+        function deselectAllFiles() {
+            const checkboxes = document.querySelectorAll('.file-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedCount();
+            showBatchNotification('Đã bỏ chọn tất cả file', 'info');
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.file-checkbox');
+            const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const selectedCountElement = document.getElementById('selectedCount');
+
+            if (selectedCountElement) {
+                selectedCountElement.textContent = selectedCount;
+            }
+
+            // Update download button state
+            const downloadBtn = document.querySelector('button[onclick="downloadSelectedFiles()"]');
+            if (downloadBtn) {
+                downloadBtn.disabled = selectedCount === 0;
+                downloadBtn.innerHTML = `< i class= "fas fa-download" ></i > Tải file đã chọn(${selectedCount})`;
+            }
+        }
+
+        function sortResults() {
+            const resultsList = document.getElementById('resultsList');
+            if (!resultsList) return;
+
+            const resultItems = Array.from(resultsList.children);
+
+            // Sort by product name
+            resultItems.sort((a, b) => {
+                const nameA = a.querySelector('strong').textContent;
+                const nameB = b.querySelector('strong').textContent;
+                return nameA.localeCompare(nameB);
+            });
+
+            // Re-append sorted items
+            resultItems.forEach(item => {
+                resultsList.appendChild(item);
+            });
+
+            showBatchNotification('Đã sắp xếp theo thứ tự A-Z', 'success');
+        }
+
+        async function downloadSelectedFiles() {
+            const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+            const selectedFiles = Array.from(checkboxes).map(checkbox => {
+                const index = parseInt(checkbox.id.split('-')[1]);
+                return successfulFiles[index];
+            });
+
+            if (selectedFiles.length === 0) {
+                showBatchNotification('Vui lòng chọn ít nhất một file để tải về', 'warning');
+                return;
+            }
+
+            const downloadBtn = document.querySelector('button[onclick="downloadSelectedFiles()"]');
+            const originalText = downloadBtn.innerHTML;
+
+            try {
+                // Disable button and show loading
+                downloadBtn.disabled = true;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+
+                showBatchNotification(`Bắt đầu tải ${selectedFiles.length} file đã chọn...`, 'info');
+
+                // Download files one by one with delay to avoid browser blocking
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+
+                    // Update progress
+                    const progress = Math.round(((i + 1) / selectedFiles.length) * 100);
+                    downloadBtn.innerHTML = `< i class= "fas fa-spinner fa-spin" ></i > Đang tải...${progress} % `;
+
+                    // Create download link and trigger download
+                    const link = document.createElement('a');
+                    link.href = file.download_url;
+                    link.download = `${file.product} - PO File`;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Small delay between downloads
+                    if (i < selectedFiles.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+
+                showBatchNotification(`Đã tải thành công ${selectedFiles.length} file!`, 'success');
+
+            } catch (error) {
+                console.error('Error downloading selected files:', error);
+                showBatchNotification('Có lỗi xảy ra khi tải file', 'error');
+            } finally {
+                // Re-enable button
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = originalText;
+            }
+        }
+
         // Clear all
         function clearAll() {
             // Clear data arrays
             selectedProducts = [];
             batchData = [];
-            
+            successfulFiles = []; // Clear successful files
+
             // Clear batch items display immediately
             document.getElementById('batchItemsList').innerHTML = '';
             document.getElementById('hiddenProductsList').innerHTML = '';
             document.getElementById('results').innerHTML = '';
-            
-            // Hide batch section
+
+            // Hide batch section and download all button group
             document.getElementById('batchItems').style.display = 'none';
-            
+            document.getElementById('batchItems').style.display = 'none';
+            const downloadGroup = document.getElementById('downloadGroup');
+            if (downloadGroup) {
+                downloadGroup.style.display = 'none';
+            }
+
             // Uncheck checkboxes (do this last to avoid UI lag)
+
             setTimeout(() => {
                 document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                     checkbox.checked = false;
@@ -2485,22 +3438,99 @@
                 });
             }, 0);
         }
-        
+
+        // Custom Dropdown Logic
+        function toggleDownloadDropdown() {
+            const dropdown = document.getElementById('downloadDropdownMenu');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+            }
+        }
+
+        function closeDownloadDropdown() {
+            const dropdown = document.getElementById('downloadDropdownMenu');
+            if (dropdown) {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('downloadDropdownMenu');
+            const btn = document.getElementById('downloadDropdownBtn');
+            if (dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(event.target) && !btn.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
         // Show loading
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
         }
-        
+
         // Hide loading
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
         }
+
+        // Update current time (for taskbar)
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('vi-VN', {
+                weekday: 'short',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        // Logout function - show confirmation modal
+        function logout() {
+            confirmAction({
+                title: 'Xác nhận đăng xuất',
+                message: 'Bạn có chắc chắn muốn đăng xuất? Bạn sẽ được chuyển về trang đăng nhập.',
+                type: 'warning',
+                confirmText: 'Đăng xuất',
+                cancelText: 'Hủy',
+                onConfirm: () => {
+                    window.location.href = '/logout';
+                }
+            });
+        }
+
+        // Confirm logout - redirect to logout page (No longer needed but kept for compatibility if referenced elsewhere)
+        function confirmLogout() {
+            window.location.href = '/logout';
+        }
+
+        // Toggle dark mode (placeholder - currently always dark)
+        function toggleDarkMode() {
+            // This is a placeholder for future dark/light mode toggle
+            // Currently the app uses dark mode by default
+            console.log('Dark mode toggle clicked');
+        }
+
+        // Initialize time update on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            lucide.createIcons();
+            updateTime();
+            setInterval(updateTime, 1000); // Update every second
+        });
     </script>
-    
+
     <!-- Auto-save Indicator -->
-    <div id="saveIndicator" style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+    <div id="saveIndicator"
+        style="position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4); opacity: 0; transition: opacity 0.3s ease; z-index: 1000; font-weight: 600; display: flex; align-items: center; gap: 8px;">
         <i class="fas fa-check-circle"></i>
         <span>Draft saved</span>
     </div>
 </body>
+
 </html>
