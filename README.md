@@ -78,6 +78,7 @@ po-system-deployment/
 ### Product Configuration
 
 Mỗi sản phẩm trong folder `products/` chứa:
+
 - `data.py`: Cấu hình sản phẩm
 - `*.py`: Logic xử lý sản phẩm
 - `*.xlsx`: Template Excel
@@ -94,11 +95,14 @@ Mỗi sản phẩm trong folder `products/` chứa:
 ## 🚀 Deployment
 
 ### Replit
+
 - Tự động deploy khi push code lên GitHub
 - Sử dụng `main.py` làm entry point
 - Port được set tự động từ environment
 
 ### Render.com
+
+- Xem hướng dẫn chi tiết tại [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
 - Sử dụng `render.yaml` configuration
 - Build command: `pip install -r requirements.txt`
 - Start command: `gunicorn --bind 0.0.0.0:$PORT src.apps.app:app`
@@ -117,7 +121,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📞 Liên hệ
 
-- Email: your.email@example.com
+- Email: <your.email@example.com>
 - GitHub: [@yourusername](https://github.com/yourusername)
 
 ## 🙏 Acknowledgments
@@ -143,6 +147,7 @@ Các thay đổi đã triển khai nhằm hiện đại hóa giao diện, nâng 
   - Chuẩn hóa CSS/JS để dễ bảo trì, không thay đổi API, đường dẫn, hoặc hành vi cốt lõi.
 
 Tham chiếu các tập tin liên quan:
+
 - UI chính: [web/templates/index.html](web/templates/index.html)
 - CSS nâng cấp: [web/static/enhancements.css](web/static/enhancements.css)
 - JS nâng cấp: [web/static/enhancements.js](web/static/enhancements.js)

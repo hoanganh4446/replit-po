@@ -1,14 +1,94 @@
+# ============================================
+# PO System - Production Order Management
+# Render.com Deployment Configuration
+# ============================================
+
 services:
+  # Web Service Configuration
   - type: web
     name: po-system-web
     env: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT src.apps.app:app
+    region: singapore  # Chọn region gần Việt Nam nhất
+    plan: free  # Free tier, có thể nâng cấp lên starter/standard
+    
+    # Build Configuration
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    
+    # Start Command - Production WSGI Server
+    startCommand: |
+      gunicorn --bind 0.0.0.0:$PORT \
+               --workers 2 \
+               --threads 4 \
+               --timeout 120 \
+               --access-logfile - \
+               --error-logfile - \
+               --log-level info \
+               src.apps.app:app
+    
+    # Health Check Configuration
+    healthCheckPath: /
+    
+    # Auto-Deploy Configuration
+    autoDeploy: true  # Tự động deploy khi push code mới
+    
+    # Environment Variables
     envVars:
+      # Python Configuration
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.11.0"
+      
+      # Flask Configuration
       - key: FLASK_ENV
         value: production
+      
       - key: FLASK_DEBUG
         value: "False"
+      
+      # Application Configuration
+      - key: PORT
+        value: "10000"  # Render default port
+      
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      
+      # Security Configuration (Nên thêm secret key)
+      - key: SECRET_KEY
+        generateValue: true  # Render sẽ tự động tạo secret key
+      
+      # Timezone Configuration
+      - key: TZ
+        value: Asia/Ho_Chi_Minh
+      
+      # Gunicorn Configuration
+      - key: WEB_CONCURRENCY
+        value: "2"  # Số workers, phù hợp với free tier
+      
+      # Logging Configuration
+      - key: LOG_LEVEL
+        value: INFO
+    
+    # Disk Configuration (nếu cần lưu trữ files)
+    disk:
+      name: po-system-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1  # Free tier có 1GB disk
+
+# Optional: Database Service (nếu cần)
+# Uncomment nếu bạn muốn thêm PostgreSQL database
+# - type: pgsql
+#   name: po-system-db
+#   plan: free
+#   databaseName: po_system
+#   user: po_admin
+#   region: singapore
+#   ipAllowList: []  # Empty = allow all
+
+# Optional: Redis Service (nếu cần cache)
+# - type: redis
+#   name: po-system-cache
+#   plan: free
+#   maxmemoryPolicy: allkeys-lru
+#   region: singapore
+#   ipAllowList: []

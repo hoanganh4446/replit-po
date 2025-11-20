@@ -39,29 +39,44 @@ app = Flask(__name__,
            template_folder=os.path.join(BASE_DIR, 'web', 'templates'),
            static_folder=os.path.join(BASE_DIR, 'web', 'static'))
 app.secret_key = 'po_system_secret_key_2024'
-OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "web", "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "web", "static")
 PRODUCTS_DIR = os.path.join(BASE_DIR, "products")
 
-# Tạo thư mục cần thiết
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# Tạo thư mục static/templates nếu chưa có
 os.makedirs(TEMPLATES_DIR, exist_ok=True)
 os.makedirs(STATIC_DIR, exist_ok=True)
+logger = logging.getLogger(__name__)
 
-# Cấu hình logging
+# Cấu hình database
+# Cấu hình Data Directory (cho Render persistence)
+DATA_DIR = os.environ.get('DATA_DIR')
+if DATA_DIR:
+    # Nếu có DATA_DIR (trên Render), sử dụng nó
+    os.makedirs(DATA_DIR, exist_ok=True)
+    DB_PATH = os.path.join(DATA_DIR, 'po_system.db')
+    OUTPUT_DIR = os.path.join(DATA_DIR, "output")
+    LOG_DIR = os.path.join(DATA_DIR, "logs")
+else:
+    # Local development
+    DB_PATH = os.path.join(BASE_DIR, 'config', 'database', 'po_system.db')
+    OUTPUT_DIR = os.path.join(BASE_DIR, "output")
+    LOG_DIR = os.path.join(BASE_DIR, 'logs')
+
+# Tạo các thư mục dữ liệu
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Cấu hình logging (sau khi đã xác định LOG_DIR)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(BASE_DIR, 'logs', 'app.log')),
+        logging.FileHandler(os.path.join(LOG_DIR, 'app.log')),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger(__name__)
-
-# Cấu hình database
-DB_PATH = os.path.join(BASE_DIR, 'config', 'database', 'po_system.db')
 
 class DatabaseManager:
     """Quản lý database SQLite"""
