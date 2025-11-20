@@ -46,7 +46,7 @@ Nếu bạn không muốn dùng Blueprint:
    - **Name**: `po-system`
    - **Runtime**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT src.apps.app:app`
+   - **Start Command**: `gunicorn --bind 0.0.0.0:$PORT wsgi:app`
 4. Vào tab **Environment**:
    - Thêm `PYTHON_VERSION`: `3.11.0`
    - Thêm `DATA_DIR`: `/opt/render/project/src/data` (Quan trọng để lưu dữ liệu)
