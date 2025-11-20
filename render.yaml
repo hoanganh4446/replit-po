@@ -25,7 +25,7 @@ services:
                --access-logfile - \
                --error-logfile - \
                --log-level info \
-               src.apps.app:app
+               wsgi:app
     
     # Health Check Configuration
     healthCheckPath: /
